@@ -7,8 +7,14 @@ $repo    = 'C:\web-repo'
 # 1. Git
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     Write-Host "Installing Git..."
-    winget install --id Git.Git -e --silent --accept-source-agreements --accept-package-agreements
+    [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+    $rel = Invoke-RestMethod 'https://api.github.com/repos/git-for-windows/git/releases/latest' -Headers @{ 'User-Agent' = 'ps' }
+    $url = ($rel.assets | Where-Object { $_.name -like 'Git-*-64-bit.exe' } | Select-Object -First 1).browser_download_url
+    $exe = "$env:TEMP\git-setup.exe"
+    Invoke-WebRequest $url -OutFile $exe -UseBasicParsing
+    Start-Process $exe -ArgumentList '/VERYSILENT','/NORESTART','/NOCANCEL','/SP-','/COMPONENTS=gitlfs' -Wait
     $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) { $env:Path += ';C:\Program Files\Git\cmd' }
 }
 
 # 2. Clone (private repo -> Git will prompt once for GitHub login via browser; credential is cached)
