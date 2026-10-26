@@ -24,7 +24,7 @@ if (-not (Test-Path "$repo\.git")) {
 git -C $repo config --global --add safe.directory $repo
 
 # 3. First deploy
-& "$repo\deploy\deploy.ps1"
+& "$repo\deploy\deploy.ps1" -Force
 
 # 4. Scheduled task every 5 minutes as SYSTEM
 $action  = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -File $repo\deploy\deploy.ps1"

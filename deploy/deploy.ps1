@@ -1,5 +1,6 @@
 # Pulls the latest www/ from GitHub into IIS wwwroot.
 # Runs every 5 minutes via Scheduled Task "web-deploy" (see setup-server.ps1).
+param([switch]$Force)
 $ErrorActionPreference = 'Stop'
 $repo   = 'C:\web-repo'
 $wwwroot = 'C:\inetpub\wwwroot'
@@ -12,7 +13,7 @@ try {
     $before = git rev-parse HEAD
     git fetch --quiet origin main
     $after = git rev-parse origin/main
-    if ($before -eq $after) { exit 0 }   # nothing new
+    if ($before -eq $after -and -not $Force) { exit 0 }   # nothing new
 
     git reset --hard --quiet origin/main
     # Mirror www/ -> wwwroot (deletes files removed from repo, keeps web.config if present in repo)
