@@ -70,6 +70,11 @@
     list: '<path d="M2 3h12v2H2zm0 4h12v2H2zm0 4h12v2H2z"/>',
     table: '<path fill-rule="evenodd" d="M1 2h14v12H1zm1.500 1.500v2.700h5.200V3.500zm6.700 0v2.700h4.100V3.500zM2.500 7.600v4.900h5.200V7.600zm6.700 0v4.900h4.100V7.600z"/>',
     chart: '<path d="M2 12h3V7H2zm4.500 0h3V3h-3zM11 12h3V9h-3zM1 13h14v1.500H1z"/>',
+    calendar: '<path fill-rule="evenodd" d="M2 3h12v11H2zm1.500 3v6.500h9V6z"/><path d="M4 1h2v3H4zm6 0h2v3h-2z"/>',
+    meter: '<path d="M8 3a6 6 0 0 1 6 6h-2a4 4 0 0 0-8 0H2a6 6 0 0 1 6-6z"/><path d="m7.300 9.700 3.200-3.900.800.600-2.600 4.300z"/><circle cx="8" cy="10" r="1.500"/>',
+    spinbox: '<path d="M1 5h3v6H1zm11 0h3v6h-3z"/><path fill-rule="evenodd" d="M5 4h6v8H5zm1.500 1.500v5h3v-5z"/>',
+    led: '<circle cx="8" cy="8" r="4"/><path d="M7 1h2v2H7zm0 12h2v2H7zM1 7h2v2H1zm12 0h2v2h-2z"/>',
+    keypad: '<path d="M2 2h3v3H2zm4.500 0h3v3h-3zM11 2h3v3h-3zM2 6.500h3v3H2zm4.500 0h3v3h-3zM11 6.500h3v3h-3zM2 11h3v3H2zm4.500 0h3v3h-3zM11 11h3v3h-3z"/>',
     divider: '<path d="M1 7h14v2H1z"/>',
     column: '<path fill-rule="evenodd" d="M2 2h12v12H2zm1.500 1.500v3.700h9V3.500zm0 5.300v3.700h9V8.800z"/>',
     row: '<path fill-rule="evenodd" d="M2 2h12v12H2zm1.500 1.500v9h3.700v-9zm5.300 0v9h3.700v-9z"/>',
@@ -104,6 +109,11 @@
     list: { title: 'List', type: 'list', props: { items: 'First\nSecond\nThird', w: 'fill', h: '200' } },
     table: { title: 'Table', type: 'table', props: { cells: 'Name,Value\nFirst,1\nSecond,2', colw: '140', h: 'content' } },
     chart: { title: 'Chart', type: 'chart', props: { kind: 'line', values: '10,40,25,70,55,90', min: '0', max: '100', color: 'accent', w: 'fill', h: '160' } },
+    calendar: { title: 'Calendar', type: 'calendar', props: { w: '320', h: '300' } },
+    meter: { title: 'Meter', type: 'meter', props: { min: '0', max: '100', value: '50', color: 'accent', w: '180', h: '180' } },
+    spinbox: { title: 'Spinbox', type: 'spinbox', props: { min: '0', max: '100', value: '10', step: '1', digits: '3' } },
+    led: { title: 'LED', type: 'led', props: { color: 'ok', w: '28', h: '28' } },
+    keypad: { title: 'Keypad', type: 'keypad', props: { keys: '1,2,3\n4,5,6\n7,8,9\nBACKSPACE,0,OK', w: '240', h: '220' } },
     column: { title: 'Column', type: 'box', base: 'column', props: { layout: 'column', gap: '8', w: 'fill', h: 'content' } },
     row: { title: 'Row', type: 'box', base: 'row', props: { layout: 'row', cross: 'center', gap: '8', w: 'fill', h: 'content' } },
     card: { title: 'Card', type: 'box', base: 'card', props: { kind: 'card', layout: 'column', gap: '8', w: 'fill', h: 'content' } },
@@ -111,11 +121,13 @@
     spacer: { title: 'Spacer', type: 'box', base: 'spacer', props: { layout: 'free', w: 'fill', h: 'fill' } },
     divider: { title: 'Divider', type: 'divider', props: { color: 'border', w: 'fill', h: '1' } }
   };
-  const PALETTE = [['Text', ['label', 'field']], ['Buttons', ['button', 'check', 'switch']],
-    ['Widgets', ['icon', 'slider', 'bar', 'arc', 'spinner', 'dropdown', 'roller', 'qr']], ['Data', ['list', 'table', 'chart']],
+  const PALETTE = [['Text', ['label', 'field']], ['Buttons', ['button', 'check', 'switch', 'keypad']],
+    ['Widgets', ['icon', 'slider', 'bar', 'arc', 'meter', 'spinner', 'led', 'dropdown', 'roller', 'spinbox', 'qr', 'calendar']],
+    ['Data', ['list', 'table', 'chart']],
     ['Layouts', ['column', 'row', 'card', 'free', 'spacer', 'divider']]];
   const ROWICON = { label: 'label', field: 'field', button: 'button', check: 'check', switch: 'switch', icon: 'icon', slider: 'slider', bar: 'bar',
-    arc: 'arc', spinner: 'spinner', dropdown: 'dropdown', roller: 'roller', qr: 'qr', list: 'list', table: 'table', chart: 'chart', divider: 'divider' };
+    arc: 'arc', spinner: 'spinner', dropdown: 'dropdown', roller: 'roller', qr: 'qr', list: 'list', table: 'table', chart: 'chart', divider: 'divider',
+    calendar: 'calendar', meter: 'meter', spinbox: 'spinbox', led: 'led', keypad: 'keypad' };
   function nodeIcon(n) {
     if (n.type === 'root') return 'screen';
     if (n.type !== 'box') return ROWICON[n.type];
@@ -141,17 +153,24 @@
     options: ['Options', 'area'], selected: ['Selected', 'number'], rows: ['Rows shown', 'number'], size: ['Size', 'number'],
     items: ['Items', 'area'], cells: ['Cells', 'area'], colw: ['Column width', 'number'], values: ['Values', 'line'],
     kind2: ['Chart type', 'select', [['line', 'Line'], ['bar', 'Bars']]],
-    iconname: ['Icon', 'select', DRAWN.map(function (s) { return [s, s]; })]
+    iconname: ['Icon', 'select', DRAWN.map(function (s) { return [s, s]; })],
+    toggle: ['Toggle', YESNO], date: ['Today (YYYY-MM-DD)', 'line'],
+    header: ['Month header', 'select', [['', 'Arrows'], ['dropdown', 'Dropdowns'], ['none', 'None']]],
+    ticks: ['Ticks', 'number'], major: ['Major tick every', 'number'], labels: ['Tick labels', 'select', [['', 'Shown'], ['0', 'Hidden']]],
+    step: ['Step', 'number'], digits: ['Digits', 'number'], decimals: ['Decimals', 'number'],
+    lit: ['Lit', 'select', [['', 'On'], ['0', 'Off']]], keys: ['Keys', 'area']
   };
   const KEYS = { max2: 'max', kind2: 'kind', iconname: 'icon' };   /* one key in the design, two meanings on the panel */
   const CONTENT = {
     label: ['text', 'symbol', 'font', 'color', 'talign', 'long'], field: ['hint', 'text', 'font', 'oneline', 'password', 'max', 'accept', 'kb'],
-    button: ['text', 'symbol', 'color', 'font'], icon: ['iconname', 'color'], check: ['text', 'symbol', 'font', 'checked', 'fg'],
+    button: ['text', 'symbol', 'color', 'font', 'toggle', 'checked'], icon: ['iconname', 'color'], check: ['text', 'symbol', 'font', 'checked', 'fg'],
     switch: ['checked', 'color'], slider: ['min', 'max2', 'value', 'color'], bar: ['min', 'max2', 'value', 'color'], arc: ['min', 'max2', 'value', 'color'],
     spinner: ['color'], dropdown: ['options', 'selected', 'font', 'fg'], roller: ['options', 'selected', 'rows', 'font'], qr: ['text', 'size'],
-    list: ['items', 'font'], table: ['cells', 'colw', 'font'], chart: ['kind2', 'values', 'min', 'max2', 'color'], divider: ['color'], box: [], root: []
+    list: ['items', 'font'], table: ['cells', 'colw', 'font'], chart: ['kind2', 'values', 'min', 'max2', 'color'], divider: ['color'],
+    calendar: ['date', 'header', 'font'], meter: ['min', 'max2', 'value', 'ticks', 'major', 'labels', 'color', 'font'],
+    spinbox: ['min', 'max2', 'value', 'step', 'digits', 'decimals', 'font'], led: ['color', 'lit'], keypad: ['keys', 'font'], box: [], root: []
   };
-  const VALUE_TYPES = ['switch', 'check', 'slider', 'dropdown', 'roller', 'field', 'arc'];
+  const VALUE_TYPES = ['switch', 'check', 'slider', 'dropdown', 'roller', 'field', 'arc', 'calendar', 'spinbox', 'keypad'];
   const C_WORDS = 'auto break case char const continue default do double else enum extern float for goto if inline int long register return short signed sizeof static struct switch typedef union unsigned void volatile while body ui e'.split(' ');
 
   /* ---------------------------------------------------------------- the project */
@@ -950,6 +969,8 @@
         walkAll(function (x) { if (x.props.on === 'screen' && x.props.onv === s.name) x.props.onv = v; });
         s.name = v;
       })));
+      a.append(selectField(n, 'anim', 'Comes in', [['', 'At once'], ['fade', 'Fading in'], ['left', 'Sliding in from the right'],
+        ['right', 'Sliding in from the left'], ['up', 'Sliding up from below'], ['down', 'Sliding down from above']]));
     } else {
       const i = el('input', { type: 'text', spellcheck: 'false', title: 'The widget in the C: ui.' + n.name });
       a.append(field('Id', i, bind(i, function () { return n.name; }, function (v) { n.name = v; })));
@@ -1036,7 +1057,7 @@
   }
   function eventAttrs(a, n, sec) {
     const value = VALUE_TYPES.includes(n.type);
-    sec(value ? 'When it changes' : 'When it is tapped');
+    sec(n.type === 'keypad' ? 'When a key is tapped' : value ? 'When it changes' : 'When it is tapped');
     a.append(selectField(n, 'on', 'Do', [['', 'Nothing'], ['toast', 'Show a message'], ['screen', 'Open a screen'], ['back', 'Go back'], ['call', 'Call a function']], true));
     const on = n.props.on;
     if (on === 'toast') {
@@ -1211,6 +1232,8 @@
         if (n.props.on === 'call' && (!cid.test(n.props.onv || '') || C_WORDS.includes(n.props.onv))) add('error', n.name + ': "' + (n.props.onv || '') + '" is not a function name', n, i);
         const fills = (par.props.layout === 'column' && n.props.h === 'fill' && par.props.h === 'content') || (par.props.layout === 'row' && n.props.w === 'fill' && par.props.w === 'content');
         if (fills) add('warning', n.name + ': fills a parent that fits its content, so it has nothing to fill', n, i);
+        if (n.type === 'keypad' && !(n.props.keys || '').trim()) add('warning', n.name + ': no keys', n, i);
+        if (n.type === 'calendar' && n.props.date && !/^\d{4}-\d{1,2}-\d{1,2}$/.test(n.props.date)) add('error', n.name + ': the date is YYYY-MM-DD', n, i);
       }, null);
     });
     if (!/^[a-z][a-z0-9_]{0,22}$/.test(P.app.file)) add('error', 'File name "' + P.app.file + '": a-z, 0-9 and _, starting with a letter', 'app', 0);
@@ -1426,6 +1449,7 @@
       overlay.classList.remove('running');
       $('#run').classList.remove('on');
       $('#run span').textContent = 'Run';
+      M.ccall('sim_design_run', null, ['number'], [0]);
       msg('');
       if (!M._sim_design_active()) M.ccall('sim_design_app', null, ['string'], [P.app.name]);
       refresh();
@@ -1433,6 +1457,8 @@
     }
     if (mode === 'code') setMode('design');
     run = { stack: [screen().name] };
+    M.ccall('sim_design_run', null, ['number'], [1]);
+    setTimeout(function () { showInRun(screen().name); }, 0);     /* comes in as the design says, like the app opening */
     overlay.classList.add('running');
     $('#run').classList.add('on');
     $('#run span').textContent = 'Stop';

@@ -45,7 +45,8 @@
     it; a Free area keeps each widget where you put it, anchored to a corner, an edge or the centre.</p></li>
   <li><p><b>Set them up</b> in Attributes. Sizes that fill or fit their content move with the screen; pixel sizes do not.
     Colours by name follow the light and dark theme on the device.</p></li>
-  <li><p><b>Say what happens</b> when a widget is tapped: a message, another screen, back, or a function of yours.</p></li>
+  <li><p><b>Say what happens</b> when a widget is tapped: a message, another screen, back, or a function of yours. A screen
+    can come in fading or sliding (Screen › Comes in); the way back is the way in, reversed.</p></li>
   <li><p><b>Run</b> tries it on the screen, with the mouse as a finger and Esc as the back swipe.</p></li>
   <li><p><b>Problems</b> at the bottom checks the screen on every board, both ways round: a widget that runs off the
     edge, a name C can't use.</p></li>
@@ -63,7 +64,8 @@ cd appkit
 <table>
   <tr><th>File</th><th>What it is</th></tr>
   <tr><td><code>main/ui.c</code>, <code>main/ui.h</code></td><td>The screens, made from the design. Don't edit them: change
-    the design and export again. <code>ui.h</code> has the widgets by their id, <code>ui.title</code>.</td></tr>
+    the design and export again. <code>ui.h</code> has the widgets by their id, <code>ui.title</code>; a meter's needle is
+    <code>ui.gauge_needle</code>, a spinbox's row of buttons <code>ui.qty_box</code>.</td></tr>
   <tr><td><code>main/app.c</code></td><td>Yours: the app's start, and the functions the widgets call. A function you have
     not written yet shows a message instead.</td></tr>
   <tr><td><code>myapp.design</code></td><td>The design. Open it in Studio to change the screens, then copy the new
@@ -77,6 +79,10 @@ cd appkit
   <li>Pictures of your own are not in Studio yet. Drawn icons and LVGL symbols are; add an image in <code>app.c</code> with
     <code>ros_ui_png()</code>.</li>
   <li>Run shows the design. It does not run your <code>app.c</code>: that needs a device.</li>
+  <li>Keypad keys: a row a line, a comma between keys; a key named like an LVGL symbol (<code>OK</code>,
+    <code>BACKSPACE</code>, <code>LEFT</code> ...) shows the symbol. A calendar with no date shows the device's month.</li>
+  <li>The calendar, meter, spinbox, LED, keypad, toggle buttons and the screen transitions came after firmware 1.4.0: a
+    device on 1.4.0 or older can't open an app that uses them (Settings › About › Check online).</li>
   <li>The build server builds one app at a time; a board's first build of the day can take a few minutes. It accepts
     the three sources only, and an <code>#include</code> of a header by its name.</li>
 </ul>
