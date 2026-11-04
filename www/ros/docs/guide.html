@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>App kit guide · Reload OS</title>
+<meta name="description" content="How to build, install and debug apps for Reload OS with the app kit.">
+<link rel="canonical" href="https://server.re-loader.com/ros/docs/guide.html">
+<meta property="og:title" content="App kit guide · Reload OS">
+<meta property="og:description" content="How to build, install and debug apps for Reload OS with the app kit.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html" aria-current="page">Developers</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html">Overview &amp; download</a></li><li><a href="studio.html">Studio</a></li><li><a href="guide.html" aria-current=page>App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav><nav class="doc-toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="l2"><a href="#requirements">Requirements</a></li><li class="l2"><a href="#build-the-example">Build the example</a></li><li class="l3"><a href="#in-vs-code">In VS Code</a></li><li class="l2"><a href="#put-it-on-the-device">Put it on the device</a></li><li class="l2"><a href="#your-own-app">Your own app</a></li><li class="l2"><a href="#what-an-app-can-call">What an app can call</a></li><li class="l2"><a href="#rules-the-ones-that-restart-the-device-when-broken">Rules - the ones that restart the device when broken</a></li><li class="l2"><a href="#when-something-is-wrong">When something is wrong</a></li></ul></nav></aside><article class="docs-main"><h1>App kit guide</h1><p class="lead">The guide that comes with the app kit of Reload OS 1.4.0 (<code>README.md</code> in the kit), as it is in the kit.</p><p>Build your own apps for a Reload OS device - the 7" ESP32-P4 touch kiosk by Reloader Co.,Ltd. - without the firmware's source. An app is a small ELF file that you copy into the <code>apps/</code> folder of the device's flash drive or SD card; the launcher shows it as a tile, and the device loads it when the tile is tapped. <code>hello/</code> is a complete example. The kit matches the firmware version in <code>reloados/VERSION</code>.</p>
+<pre class="code"><code>appkit/
+  README.md          this file
+  build.sh           ./build.sh &lt;app&gt; [jc|jc4880|jc8012|matouch]   builds one app for one board
+  new.sh             ./new.sh &lt;name&gt;                 starts a new app from the Hello example
+  hello/             the example: CMakeLists.txt, main/hello.c, main/CMakeLists.txt, main/idf_component.yml
+  reloados/          from the firmware - do not edit:
+    VERSION          which firmware this kit belongs to
+    api.txt          every function and variable an app may call
+    main/ros.h       the Reload OS API (and ros_board.h: the boards)
+    sdkconfig.*      the firmware&#x27;s configuration, which the app is built against
+    elfapp.cmake     the build rules; components/: the firmware&#x27;s menu, needed by ros_board.h</code></pre>
+<h2 id="requirements"><a class="anchor" href="#requirements">#</a>Requirements</h2>
+<ul><li><strong>ESP-IDF v5.5.4</strong> - exactly this version, the one the firmware is built with (an app is linked against the firmware on the device; LVGL's and FreeRTOS's structures must be laid out the same way). Install it as Espressif describes (<a href="https://docs.espressif.com/projects/esp-idf/en/v5.5.4/esp32p4/get-started/">https://docs.espressif.com/projects/esp-idf/en/v5.5.4/esp32p4/get-started/</a>), with the ESP32-P4 target, and run its <code>export.sh</code> in the terminal you build from. <code>build.sh</code> finds an installation in <code>~/.espressif/v5.5.4/esp-idf</code> or <code>~/esp/esp-idf</code> by itself.</li><li>Internet for the first build: the component manager downloads LVGL 9.2.2, the ELF loader 1.3.3 and cmake_utilities 0.5.3 (the versions in <code>main/idf_component.yml</code>; don't change them).</li><li>macOS or Linux (bash). Keep the kit outside folders that a cloud drive syncs (iCloud Drive, OneDrive, Dropbox): they evict and re-download the thousands of files a build makes.</li></ul>
+<h2 id="build-the-example"><a class="anchor" href="#build-the-example">#</a>Build the example</h2>
+<pre class="code"><code class=lang-bash>./build.sh hello              # -&gt; hello/jc1060p470c/hello.elf   (the JC1060P470C, the production board)
+./build.sh hello matouch      # -&gt; hello/matouch-p4-7/hello.elf  (the Makerfabs MaTouch development board)
+./build.sh hello jc4880       # -&gt; hello/jc4880p443/hello.elf    (the Guition JC4880P443, 4.3&quot; 480x800)
+./build.sh hello jc8012       # -&gt; hello/jc8012p4a1/hello.elf    (the Guition JC8012P4A1, 10.1&quot; 800x1280)</code></pre>
+<p>An app is <strong>built for one board</strong> (it gets that board's configuration and pins); the device refuses the other board's file with a message naming both. The script ends with a check that everything the app calls is in the firmware's table - see "What an app can call".</p>
+<h3 id="in-vs-code"><a class="anchor" href="#in-vs-code">#</a>In VS Code</h3>
+<p>Open the <code>appkit</code> folder (File › Open Folder). <strong>Terminal › Run Build Task</strong> (⇧⌘B) builds the app whose file is open in the editor (<code>hello</code> when none is) with <code>./build.sh</code>, for the JC1060P470C; the other tasks build for the MaTouch and start a new app. Build in the integrated terminal with <code>./build.sh hello</code> works just the same.</p>
+<p>VS Code opens a new folder in Restricted Mode, where tasks don't run: trust the folder (the banner's <strong>Manage</strong> › Trust). The ESP-IDF extension picks the newest ESP-IDF installed and the <code>esp32</code> target for a folder it has not seen: set them to <strong>v5.5.4</strong> and <strong>esp32p4</strong> in the status bar. (<code>build.sh</code> looks for v5.5.4 itself when the terminal holds another version, and stops when there is none.)</p>
+<p><strong>Don't use the ESP-IDF extension's Build / Flash / Monitor buttons on this folder:</strong> they build and link a whole firmware, which an app is not (its functions are the firmware's, found when it is loaded), so that build fails - and an app is never flashed, it is copied to the device. The extension may still write its <code>.vscode/settings.json</code> and <code>.clangd</code> here; they do no harm. For IntelliSense after the first build, point clangd or the C/C++ extension at <code>&lt;app&gt;/build_jc/compile_commands.json</code>.</p>
+<h2 id="put-it-on-the-device"><a class="anchor" href="#put-it-on-the-device">#</a>Put it on the device</h2>
+<p>Copy the <code>.elf</code> into the <code>apps/</code> folder (make it if it is not there) of</p>
+<ul><li><strong>the device's flash drive</strong> - the usual place. From a browser: the remote desktop's Files page, <code>http://&lt;device&gt;/files</code> (Settings › Remote desktop on the device gives the address and the login) - Flash › apps › Upload. Or with the device plugged into a PC as a USB drive (Settings › USB › USB_OTG port: Drive for PC), or from a card with the device's Files app (long-press the file › Copy › Flash).</li><li><strong>or the SD card</strong> (<code>apps/</code> on the card, in a card reader).</li></ul>
+<p>Then restart the device: the launcher reads the folders at start. The flash drive is read first, the card second; a file both have opens from the flash drive (the card's copy opens only when the flash drive's can't be used). To update an app that is on the flash drive, replace it there - a newer file on the card alone does not run.</p>
+<p>The tile shows the app's name, icon and colour from its <code>ROS_ELFAPP_META(...)</code> line (read from the file without loading it). Tap it: the file is read into PSRAM, checked, linked against the firmware and run. Back (swipe from the left edge) or the home button closes it; when nothing of it runs any more it is unloaded.</p>
+<h2 id="your-own-app"><a class="anchor" href="#your-own-app">#</a>Your own app</h2>
+<pre class="code"><code class=lang-bash>./new.sh myapp                # -&gt; myapp/ : a copy of hello/ under the new name
+# edit myapp/main/myapp.c
+./build.sh myapp              # -&gt; myapp/jc1060p470c/myapp.elf</code></pre>
+<p>The shape of an app (<code>hello/main/hello.c</code>):</p>
+<pre class="code"><code class=lang-c>#include &quot;ros.h&quot;
+
+static void create(lv_obj_t *body)   /* build the screen inside body; runs on the LVGL task */
+{
+    ros_ui_label(body, &amp;lv_font_montserrat_32, ROS_C_TEXT, &quot;Hello&quot;);
+}
+
+static void destroy(void)            /* the app closes: delete timers, stop what you started */
+{
+}
+
+ROS_ELFAPP_META(&quot;Hello&quot;, LV_SYMBOL_SD_CARD, 0x6B4FBB);      /* the tile: name, glyph, colour */
+
+static const ros_elfapp_t s_app = {
+    .abi = ROS_ELFAPP_ABI, .board = ROS_BOARD_SHORT, .meta = &amp;ros_elfapp_meta,
+    .app = { .name = &quot;Hello&quot;, .icon = LV_SYMBOL_SD_CARD, .color = 0x6B4FBB, .create = create, .destroy = destroy },
+};
+
+int main(int argc, char *argv[])     /* only hands the app back; the work starts in create() */
+{
+    if (argc &gt; 0 &amp;&amp; argv[0]) *(const ros_elfapp_t **)argv[0] = &amp;s_app;
+    return 0;
+}</code></pre>
+<ul><li><code>body</code> is an empty full-screen LVGL object under the status bar; everything you create inside it is deleted by the system when the app closes. The screen is <strong>1024×600 or 600×1024</strong>: the device may be mounted horizontally or vertically. Use <code>ROS_SCR_W</code>, <code>ROS_SCR_H</code> and <code>ROS_PORTRAIT</code> (values, not constants) and check both ways.</li><li><code>ros.h</code> is the API: <code>ros_ui_label()</code>, <code>ros_ui_button()</code>, <code>ros_toast()</code>, the colours <code>ROS_C_*</code> (they follow the device's light / dark theme), <code>ros_lock()</code> / <code>ros_unlock()</code> for LVGL calls from your own tasks, <code>ros_audio_*</code>, <code>ros_settings()</code>, the network, SD card, camera, USB, printer and card reader services. Every LVGL 9.2.2 function the firmware itself uses is available too (<code>api.txt</code>), and the fonts <code>lv_font_montserrat_14</code> ... <code>48</code> and the Thai fonts <code>rld_font_thai_*</code>.</li><li>The icon is an <code>LV_SYMBOL_*</code> glyph, or <code>&quot;@name&quot;</code> for one of the firmware's drawn icons. A picture instead: <code>ROS_ELFAPP_META_FLAGS(..., ROS_ELFAPP_ON_WHITE)</code> and <code>ROS_ELFAPP_TILE(&quot;path/to/icon.png&quot;)</code> (PNG, at most 64 KB; the path is best given from <code>main/CMakeLists.txt</code> with <code>target_compile_definitions</code>). Files an app needs (pictures, sounds) go into the app with <code>EMBED_FILES</code> in <code>main/CMakeLists.txt</code>, as any ESP-IDF project embeds them.</li><li>Headers of ESP-IDF parts you use (<code>nvs_flash</code>, <code>esp_driver_uart</code>, ...) are added to <code>REQUIRES</code> in <code>main/CMakeLists.txt</code> - for the headers only; the functions are the firmware's, if it exports them.</li></ul>
+<h2 id="what-an-app-can-call"><a class="anchor" href="#what-an-app-can-call">#</a>What an app can call</h2>
+<p>Only what the firmware exports: the names in <code>reloados/api.txt</code> (the Reload OS API from <code>ros.h</code>, the LVGL functions the firmware uses, the fonts, the C library, FreeRTOS and ESP-IDF basics). <code>build.sh</code> compares your app with the list and refuses to call it usable when a name is missing - on the device such an app is refused with "Needs a function this firmware doesn't have", and the device's log names it. If you need something that is not in the list, tell Reloader: the next firmware can export it (a name costs 8 bytes), and your app then needs that firmware or newer.</p>
+<p>The interface number <code>ROS_ELFAPP_ABI</code> (in <code>ros.h</code>) is checked when the app is opened: a kit of a later firmware may carry a new number, and apps are then rebuilt with it ("Made for app interface N, this firmware has M" on the screen). Apps built with this kit run on this firmware version and on later ones with the same number.</p>
+<h2 id="rules-the-ones-that-restart-the-device-when-broken"><a class="anchor" href="#rules-the-ones-that-restart-the-device-when-broken">#</a>Rules - the ones that restart the device when broken</h2>
+<p>An app runs with the firmware's full rights, in the firmware's memory: a crash in it restarts the device, and so does blocking the screen.</p>
+<ul><li><strong>Nothing that waits on the LVGL task.</strong> <code>create()</code>, <code>destroy()</code>, LVGL event and timer callbacks run on the LVGL task: no network, file, serial or card-reader work there - start a task for it and send the result back (<code>ros_lock(ms)</code> / <code>ros_unlock()</code> around LVGL calls from the task, and check the app is still open). A screen that does not respond for 60 s restarts the device.</li><li><strong>Count your tasks.</strong> The app's code is freed when it is unloaded, so nothing may still run it: every task of your own adds 1 to a counter before it is created (<code>__atomic_add_fetch(&amp;s_live, 1, __ATOMIC_SEQ_CST)</code>), the app gives <code>.tasks = &amp;s_live</code>, and each task ends with <code>ros_task_end(&amp;s_live, false)</code> - <strong>never</strong> with <code>vTaskDelete()</code>. The firmware unloads the app only when the counter is back to 0 (a task still finishing a network call simply ends first).</li><li><strong>Clean up in <code>destroy()</code>:</strong> LVGL timers, anything you put on <code>lv_layer_top()</code> (keyboards, message boxes), display event callbacks, sounds you started.</li><li><strong>Every load starts with fresh variables.</strong> What the app makes once and keeps across opens (a queue, a mutex, a buffer) is made again at every load: give <code>.unload = fn</code> and free it there, or it leaks.</li><li>Big buffers come from PSRAM: <code>heap_caps_malloc(size, MALLOC_CAP_SPIRAM)</code>. Internal RAM is the scarce one (about 100 KB free), and <code>malloc()</code> of less than 4 KB takes it.</li><li>A stream buffer you delete gets its own memory (<code>xStreamBufferCreateStatic()</code> on a PSRAM block, then <code>vStreamBufferDelete()</code> + <code>free()</code>): ESP-IDF 5.5.4's <code>vStreamBufferDeleteWithCaps()</code> frees it twice.</li><li>Don't edit <code>reloados/</code>: <code>ros.h</code> describes the firmware's structures as they are - a changed header builds an app that reads the wrong bytes.</li></ul>
+<h2 id="when-something-is-wrong"><a class="anchor" href="#when-something-is-wrong">#</a>When something is wrong</h2>
+<div class="table"><table><thead><tr><th>On the device</th><th>Why</th></tr></thead><tbody><tr><td>no tile for the file</td><td>not in <code>apps/</code> of the flash drive or the card, or the device was not restarted; a file name longer than about 65 characters is left out (the log says)</td></tr><tr><td>"Built for the X, this is a Y"</td><td>built for the other board: <code>./build.sh &lt;app&gt; jc</code> for the JC1060P470C</td></tr><tr><td>"Made for app interface N, this firmware has M"</td><td>the kit and the firmware don't match: use the kit of that firmware</td></tr><tr><td>"Needs a function this firmware doesn't have"</td><td>a name not in <code>api.txt</code> (<code>build.sh</code> would have said) - or a kit newer than the firmware</td></tr><tr><td>"Damaged or not a Reload OS app"</td><td>the copy is incomplete - copy the file again</td></tr><tr><td>the device restarts when the app runs</td><td>a crash in the app; the device's log (USB serial, 115200) and Settings › About show the crash record</td></tr></tbody></table></div>
+<p>Questions and names to export: Reloader Co.,Ltd.</p></article></div>
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>

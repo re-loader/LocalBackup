@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Developers · Reload OS</title>
+<meta name="description" content="Build apps for Reload OS devices with the app kit: the download, a quick start, the rules, the guide and the API reference.">
+<link rel="canonical" href="https://server.re-loader.com/ros/docs/">
+<meta property="og:title" content="Developers · Reload OS">
+<meta property="og:description" content="Build apps for Reload OS devices with the app kit: the download, a quick start, the rules, the guide and the API reference.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html" aria-current="page">Developers</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html" aria-current=page>Overview &amp; download</a></li><li><a href="studio.html">Studio</a></li><li><a href="guide.html">App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav></aside><article class="docs-main"><h1>Build apps for Reload OS</h1>
+<p class="lead">An app is a small ELF file in the <code>apps/</code> folder of the device's flash drive or SD card. The
+  launcher shows it as a tile; a tap reads it into memory, links it against the firmware and runs it. The app kit builds
+  one without the firmware's source.</p>
+
+<div class="download" id="download"><div><h3>App kit 1.4.0</h3><p class="muted" style="margin:0">The app kit is not on the site yet: ask Reloader for it. It will be here to download with the next release.</p></div><a class="btn primary" href="https://www.re-loader.com">Ask Reloader</a></div>
+<p class="muted">In it: <code>build.sh</code> and <code>new.sh</code>, the <code>hello</code> example, and
+  <code>reloados/</code> - the firmware's <code>ros.h</code>, its configuration and <code>api.txt</code>, the list of
+  everything an app may call. A kit belongs to one firmware version (<code>reloados/VERSION</code>); the apps it builds
+  run on that version and on later ones with the same app interface.</p>
+
+<h2 id="quick-start">Quick start</h2>
+<ol class="steps">
+  <li><p><b>Install ESP-IDF v5.5.4</b> - exactly this version, the one the firmware is built with - with the target of
+    your board's chip, and run its <code>export.sh</code> in the terminal you build from. macOS or Linux.</p></li>
+  <li><p><b>Unpack the kit and build the example</b> - the first build downloads LVGL and the ELF loader.</p>
+    <pre class="code"><code class="lang-bash">unzip ReloadOS-1.4.0-appkit.zip
+cd appkit
+./build.sh hello            # -> hello/jc1060p470c/hello.elf</code></pre></li>
+  <li><p><b>Copy it to the device</b>: open <code>http://&lt;device&gt;/files</code> in a browser (Settings › Remote
+    desktop on the device shows the address and the login), then Flash › apps › Upload. Or use the device as a USB drive
+    for a PC, or an SD card.</p></li>
+  <li><p><b>Restart the device and tap the new tile.</b></p></li>
+</ol>
+<p>Your own app: <code>./new.sh myapp</code>, write <code>myapp/main/myapp.c</code>, <code>./build.sh myapp</code>.
+  The <a href="guide.html">app kit guide</a> has every step, the boards and what to do when something goes wrong.</p>
+
+<h2 id="shape">The shape of an app</h2>
+<pre class="code"><code class="lang-c">#include "ros.h"
+
+static void create(lv_obj_t *body)   /* build the screen inside body; runs on the LVGL task */
+{
+    ros_ui_label(body, &amp;lv_font_montserrat_32, ROS_C_TEXT, "Hello");
+}
+
+static void destroy(void)            /* the app closes: delete timers, stop what you started */
+{
+}
+
+ROS_ELFAPP_META("Hello", LV_SYMBOL_SD_CARD, 0x6B4FBB);      /* the tile: name, glyph, colour */
+
+static const ros_elfapp_t s_app = {
+    .abi = ROS_ELFAPP_ABI, .board = ROS_BOARD_SHORT, .meta = &amp;ros_elfapp_meta,
+    .app = { .name = "Hello", .icon = LV_SYMBOL_SD_CARD, .color = 0x6B4FBB, .create = create, .destroy = destroy },
+};
+
+int main(int argc, char *argv[])     /* only hands the app back; the work starts in create() */
+{
+    if (argc &gt; 0 &amp;&amp; argv[0]) *(const ros_elfapp_t **)argv[0] = &amp;s_app;
+    return 0;
+}</code></pre>
+
+<h2 id="rules">The rules, in short</h2>
+<div class="callout"><p style="margin:0">An app runs with the firmware's full rights, in the firmware's memory: a crash in
+  it restarts the device, and so does a screen that stops responding. The
+  <a href="guide.html#rules-the-ones-that-restart-the-device-when-broken">guide's rules</a> say why and how.</p></div>
+<ul class="ticks">
+  <li>Nothing that waits on the LVGL task: network, files, serial lines and card readers go on a task of your own, with
+    <a href="api.html#ros_lock"><code>ros_lock()</code></a> / <code>ros_unlock()</code> around its LVGL calls.</li>
+  <li>Count your tasks, and end each with <a href="api.html#ros_task_end"><code>ros_task_end()</code></a> - never
+    <code>vTaskDelete()</code>: the app's code is unloaded only when none is left.</li>
+  <li>Clean up in <code>destroy()</code>; free what you keep across opens in <code>unload()</code> - every load starts
+    with fresh variables.</li>
+  <li>Big buffers from PSRAM: internal RAM is the scarce one.</li>
+  <li>Both orientations and every screen size: <code>ROS_SCR_W</code>, <code>ROS_SCR_H</code>, <code>ROS_PORTRAIT</code>
+    are values, read them in <code>create()</code>.</li>
+  <li>Only what the firmware exports (<code>reloados/api.txt</code>): <code>build.sh</code> checks it, and so does the
+    device.</li>
+</ul>
+
+<h2 id="more">More</h2>
+<div class="cards">
+  <div class="card"><div class="ico"><i class="i-code"></i></div><h3><a href="guide.html">App kit guide</a></h3>
+    <p>Build, install, your own app, what an app can call, the rules, and what each message on the device means.</p></div>
+  <div class="card"><div class="ico teal"><i class="i-apps"></i></div><h3><a href="api.html">API reference</a></h3>
+    <p>Every function, type and macro of <code>ros.h</code> that an app can use, with the header's own descriptions.</p></div>
+  <div class="card"><div class="ico"><i class="i-refresh"></i></div><h3>Need a function?</h3>
+    <p>If an app needs something the firmware does not export, tell <a href="https://www.re-loader.com">Reloader</a>:
+      the next firmware can export it.</p></div>
+</div>
+</article></div>
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>

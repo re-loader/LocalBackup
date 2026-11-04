@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boards · Reload OS</title>
+<meta name="description" content="The boards Reload OS runs on: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC4848S040 and JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1 and the Espressif ESP32-P4-Function-EV-Board.">
+<link rel="canonical" href="https://server.re-loader.com/ros/en/boards.html">
+<meta property="og:title" content="Boards · Reload OS">
+<meta property="og:description" content="The boards Reload OS runs on: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC4848S040 and JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1 and the Espressif ESP32-P4-Function-EV-Board.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html" aria-current="page">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a class="lang" href="../boards.html" hreflang="th" lang="th">ไทย</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Boards</p>
+    <h1>The boards it runs on</h1>
+    <p class="lead">Eight boards from one source tree: six with the ESP32-P4 and a MIPI-DSI panel, two with the ESP32-S3.
+      The system asks what a board has - Ethernet, a clock chip, a card socket, a camera - and shows only what is
+      there.</p>
+    <div class="legend">
+      <span><span class="badge ok">Production</span> the kiosks Reloader ships</span>
+      <span><span class="badge teal">Released</span> in Reload OS 1.4.0</span>
+      <span><span class="badge accent">Next release</span> runs now, ships after 1.4.0</span>
+      <span><span class="badge warn">In development</span> not run on hardware yet</span>
+    </div>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap">
+    <h2>ESP32-P4</h2>
+    <p class="muted">Wi-Fi and Bluetooth LE through an ESP32-C6 co-processor on every one; 32 MB PSRAM; speaker; microSD.</p>
+    <div class="boards">
+      <article class="board"><header><h3>JC1060P470C</h3><span class="badge ok">Production</span></header>
+        <p class="maker">Guition · 7" kiosk board</p>
+        <dl><dt>Screen</dt><dd>7" 1024 × 600, JD9165 on MIPI-DSI - horizontal or vertical</dd>
+          <dt>Touch</dt><dd>GT911</dd>
+          <dt>Network</dt><dd>Ethernet, Wi-Fi, Bluetooth LE</dd>
+          <dt>Also</dt><dd>RX8025T clock chip with battery, smart-card socket, OV02C10 camera, microphone, USB host and PC link</dd></dl>
+        <p class="note">The production board: the factory test, the self-test and the long runs are done on it.</p></article>
+
+      <article class="board"><header><h3>MaTouch ESP32-P4 7"</h3><span class="badge teal">Released</span></header>
+        <p class="maker">Makerfabs · development board</p>
+        <dl><dt>Screen</dt><dd>7" 1024 × 600, JD9165 on MIPI-DSI</dd>
+          <dt>Touch</dt><dd>GT911</dd>
+          <dt>Network</dt><dd>Ethernet, Wi-Fi, Bluetooth LE</dd>
+          <dt>Also</dt><dd>battery clock, SC2336 camera, microphone, USB host and PC link</dd></dl>
+        <p class="note">Where Reload OS began; the development board beside the production one.</p></article>
+
+      <article class="board"><header><h3>JC4880P443</h3><span class="badge teal">Released</span></header>
+        <p class="maker">Guition · 4.3" board</p>
+        <dl><dt>Screen</dt><dd>4.3" 480 × 800, ST7701 on MIPI-DSI - vertical (or horizontal 800 × 480)</dd>
+          <dt>Touch</dt><dd>GT911</dd>
+          <dt>Network</dt><dd>Wi-Fi, Bluetooth LE (no Ethernet)</dd>
+          <dt>Also</dt><dd>OV02C10 camera, microphone, USB</dd></dl>
+        <p class="note">No Ethernet, clock chip or card socket: the system leaves them out. The time comes from the network.</p></article>
+
+      <article class="board"><header><h3>JC8012P4A1</h3><span class="badge teal">Released</span></header>
+        <p class="maker">Guition · 10.1" board</p>
+        <dl><dt>Screen</dt><dd>10.1" 800 × 1280, JD9365 on MIPI-DSI - horizontal 1280 × 800 by default</dd>
+          <dt>Touch</dt><dd>GSL3680</dd>
+          <dt>Network</dt><dd>Wi-Fi, Bluetooth LE (no Ethernet)</dd>
+          <dt>Also</dt><dd>OV02C10 camera, microphone, USB</dd></dl>
+        <p class="note">Sold with two different panels: chosen in Settings › Display › Panel.</p></article>
+
+      <article class="board"><header><h3>ESP32-P4-WIFI6-Touch-LCD-10.1</h3><span class="badge accent">Next release</span></header>
+        <p class="maker">Waveshare · 10.1" board</p>
+        <dl><dt>Screen</dt><dd>10.1" 800 × 1280, JD9365 on MIPI-DSI - horizontal 1280 × 800</dd>
+          <dt>Touch</dt><dd>GT9271</dd>
+          <dt>Network</dt><dd>Wi-Fi, Bluetooth LE (no Ethernet)</dd>
+          <dt>Also</dt><dd>OV5647 camera, USB host</dd></dl>
+        <p class="note">No battery clock: the time comes from the network after each start.</p></article>
+
+      <article class="board"><header><h3>ESP32-P4-Function-EV-Board</h3><span class="badge accent">Next release</span></header>
+        <p class="maker">Espressif · the reference design</p>
+        <dl><dt>Screen</dt><dd>7" 1024 × 600 kit, EK79007 on MIPI-DSI</dd>
+          <dt>Touch</dt><dd>GT911</dd>
+          <dt>Network</dt><dd>Ethernet, Wi-Fi, Bluetooth LE</dd>
+          <dt>Also</dt><dd>SC2336 camera, microphone, USB host and PC link, a clock on a coin cell</dd></dl>
+        <p class="note">With an ESP32-P4 v3 chip - the first in Reload OS.
+          <span class="badge warn">In development</span> the same board with an LT8912B converter instead of the panel:
+          HDMI to a monitor at 1280 × 720, a USB mouse.</p></article>
+    </div>
+
+    <h2 style="margin-top:56px">ESP32-S3</h2>
+    <p class="muted">Wi-Fi and Bluetooth LE of the chip itself; 8 MB PSRAM; JPEG in software. Apps for them are built for
+      the S3 (Xtensa) - the same source.</p>
+    <div class="boards">
+      <article class="board"><header><h3>JC3248W535</h3><span class="badge accent">Next release</span></header>
+        <p class="maker">Guition · 3.5" board</p>
+        <dl><dt>Screen</dt><dd>3.5" 320 × 480, AXS15231B on QSPI - vertical (or horizontal 480 × 320)</dd>
+          <dt>Touch</dt><dd>in the AXS15231B</dd>
+          <dt>Network</dt><dd>Wi-Fi, Bluetooth LE</dd>
+          <dt>Also</dt><dd>microSD, speaker</dd></dl>
+        <p class="note">The board of the QR payment pad and the APGAR timer. No USB host, camera or microphone.</p></article>
+
+      <article class="board"><header><h3>JC4848S040</h3><span class="badge accent">Next release</span></header>
+        <p class="maker">Guition · 4" square board</p>
+        <dl><dt>Screen</dt><dd>4" 480 × 480, ST7701S on an RGB bus</dd>
+          <dt>Touch</dt><dd>GT911</dd>
+          <dt>Network</dt><dd>Wi-Fi, Bluetooth LE</dd>
+          <dt>Also</dt><dd>microSD, speaker</dd></dl>
+        <p class="note">No USB, camera, Ethernet or microphone.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="sec alt">
+  <div class="wrap split">
+    <div>
+      <h2>Another board?</h2>
+      <p class="lead">What differs between boards is one header of properties and the board support package; the shell,
+        Settings and apps follow the screen's size by themselves. Ask Reloader about yours.</p>
+      <div class="cta"><a class="btn primary" href="https://www.re-loader.com">Contact Reloader</a></div>
+    </div>
+    <figure class="device"><img src="../assets/shots/launcher_10.png" width="1280" height="800" loading="lazy"
+      alt="The home screen on a 10.1-inch board at 1280 by 800"></figure>
+  </div>
+</section>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html" aria-current="page">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a class="lang" href="../boards.html" hreflang="th" lang="th">ไทย</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>

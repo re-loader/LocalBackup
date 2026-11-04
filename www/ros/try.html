@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ลองใช้ · Reload OS</title>
+<meta name="description" content="ลองใช้ Reload OS ในเบราว์เซอร์: หน้าจอจริงของตู้คีออสก์ คอมไพล์เป็น WebAssembly - หน้าหลัก, Settings, APGAR และแพดรับชำระเงิน QR บนจอ 7 นิ้วทั้งแนวนอนและแนวตั้ง หรือจอ 3.5 นิ้ว">
+<link rel="canonical" href="https://server.re-loader.com/ros/try.html">
+<meta property="og:title" content="ลองใช้ · Reload OS">
+<meta property="og:description" content="ลองใช้ Reload OS ในเบราว์เซอร์: หน้าจอจริงของตู้คีออสก์ คอมไพล์เป็น WebAssembly - หน้าหลัก, Settings, APGAR และแพดรับชำระเงิน QR บนจอ 7 นิ้วทั้งแนวนอนและแนวตั้ง หรือจอ 3.5 นิ้ว">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="features.html">ฟีเจอร์</a>
+<a href="boards.html">บอร์ด</a>
+<a href="products.html">ผลิตภัณฑ์</a>
+<a href="try.html" aria-current="page">ลองใช้</a>
+<a href="studio/index.html">Studio</a>
+<a href="docs/index.html">นักพัฒนา</a>
+<a class="lang" href="en/try.html" hreflang="en" lang="en">EN</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">ลองใช้</p>
+    <h1>Reload OS ในเบราว์เซอร์</h1>
+    <p class="lead">หน้าจอจริง - โค้ดชุดเดียวกับที่รันบนตู้ คอมไพล์เป็น WebAssembly แตะหรือคลิกได้เหมือนบนจอจริง
+      กด <kbd>Esc</kbd> หรือปุ่มย้อนกลับเพื่อกลับ</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap">
+    <nav class="sim-pick" aria-label="จอ">
+      <a href="?screen=h" data-screen="h">7" แนวนอน</a>
+      <a href="?screen=v" data-screen="v">7" แนวตั้ง</a>
+      <a href="?screen=pad" data-screen="pad">แพดรับชำระเงิน QR · 3.5"</a>
+      <button type="button" class="sim-restart" id="sim-restart">เริ่มใหม่</button>
+    </nav>
+    <div class="sim-stage" id="sim-stage" data-base="sim/"
+         data-missing="เว็บชุดนี้ยังไม่มีตัวจำลอง (tools/sim/web.sh สร้างให้)"
+         data-isolation="ตัวจำลองต้องการหน้านี้แบบ cross-origin isolation (website/serve.py, website/apache)"
+         data-nowasm="เบราว์เซอร์นี้รัน WebAssembly ไม่ได้" data-crashed="ตัวจำลองหยุดทำงาน กดเริ่มใหม่">
+      <div class="device sim-device" id="sim-device">
+        <canvas id="canvas" tabindex="0" aria-label="หน้าจอ Reload OS" oncontextmenu="event.preventDefault()"></canvas>
+        <div class="sim-load" id="sim-load" role="status">กำลังโหลด Reload OS…</div>
+      </div>
+    </div>
+    <noscript><p class="callout">ตัวจำลองต้องใช้ JavaScript</p></noscript>
+    <div class="cards sim-notes">
+      <div class="card"><h3>ลองอะไรได้บ้าง</h3>
+        <ul>
+          <li>Settings: ทุกหน้า, ธีมสว่าง, คีย์บอร์ดบนจอ (Wi-Fi › เลือกเครือข่าย)</li>
+          <li>APGAR: กด BIRTH แล้วรอคะแนนนาทีที่ 1</li>
+          <li>PAD: เลือกจำนวนเงินแล้วรับ QR - แตะ QR เพื่อจ่าย (เดโม)</li>
+          <li>Files: เปิด readme.txt บนการ์ด SD</li>
+          <li>ลากไอคอนบนหน้าหลักเพื่อจัดลำดับ</li>
+        </ul></div>
+      <div class="card"><h3>สิ่งที่จำลองไว้</h3>
+        <ul>
+          <li>ไม่ได้เชื่อมต่ออะไรจริง: เครือข่าย Wi-Fi, ไดรฟ์, อุปกรณ์ USB และแบตเตอรี่นาฬิกาเป็นค่าสมมติ
+            และแอป Web ไม่มีเซิร์ฟเวอร์</li>
+          <li>การตั้งค่าอยู่จนกว่าจะโหลดหน้าใหม่ การ์ด SD ที่ Files แสดงก็เช่นกัน เพราะอยู่ในหน่วยความจำของหน้าเว็บ</li>
+          <li>จอ 7" รันผลิตภัณฑ์ dev ส่วนแพดรันของตัวเอง แอปที่ใช้ฮาร์ดแวร์ของเครื่อง (กล้อง, บัตรประชาชน) ไม่มีอะไรแสดง</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+<script src="assets/try.js"></script>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="index.html"><img src="assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a></p></div>
+    <div class="foot-links"><a href="features.html">ฟีเจอร์</a>
+<a href="boards.html">บอร์ด</a>
+<a href="products.html">ผลิตภัณฑ์</a>
+<a href="try.html" aria-current="page">ลองใช้</a>
+<a href="studio/index.html">Studio</a>
+<a href="docs/index.html">นักพัฒนา</a>
+<a class="lang" href="en/try.html" hreflang="en" lang="en">EN</a></div>
+  </div>
+</footer>
+<script src="assets/site.js"></script>
+</body>
+</html>

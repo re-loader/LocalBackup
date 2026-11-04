@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Features · Reload OS</title>
+<meta name="description" content="What Reload OS does: the touch shell, apps from a drive, Wi-Fi, Ethernet, Bluetooth, USB devices, printing, Thai ID cards, remote management, updates with rollback and a safety net for unattended kiosks.">
+<link rel="canonical" href="https://server.re-loader.com/ros/en/features.html">
+<meta property="og:title" content="Features · Reload OS">
+<meta property="og:description" content="What Reload OS does: the touch shell, apps from a drive, Wi-Fi, Ethernet, Bluetooth, USB devices, printing, Thai ID cards, remote management, updates with rollback and a safety net for unattended kiosks.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html" aria-current="page">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a class="lang" href="../features.html" hreflang="th" lang="th">ไทย</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Features</p>
+    <h1>What Reload OS does</h1>
+    <p class="lead">Everything here is the system itself: every product built on Reload OS has it, on every board that has
+      the hardware for it. Items marked <span class="badge accent next">Next release</span> are in the system now and come with the release after 1.4.0.</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:24px">
+  <div class="wrap cards">
+    <div class="card"><div class="ico"><i class="i-screen"></i></div><h3>Shell and screen</h3>
+      <ul>
+        <li>Status bar, a launcher ordered by drag and drop, quick settings</li>
+        <li>Dark and light themes; mounted horizontal or vertical, turned in Settings without a restart <span class="badge accent next">Next release</span></li>
+        <li>One on-screen keyboard for the whole system: big keys, a digit row, the pressed key enlarged; Thai (Kedmanee) beside English <span class="badge accent next">Next release</span></li>
+        <li>Thai fonts, brightness, screen timeout, a boot splash</li>
+        <li>An auto start app: the device opens its app by itself</li>
+      </ul></div>
+    <div class="card"><div class="ico"><i class="i-apps"></i></div><h3>Apps</h3>
+      <ul>
+        <li><b>Settings</b> - every setting of the device in one app</li>
+        <li><b>Files</b> - text, pictures, MJPEG / AVI video, MP3 / WAV sound and the system log; copy and move between drives</li>
+        <li><b>Web</b> - a web page rendered by Chrome on a server, shown and used on the kiosk <span class="badge accent next">Next release</span></li>
+        <li><b>Tools</b> in Settings - Camera, serial Monitor, sound Recorder, Thai ID Card</li>
+        <li>Apps from the flash drive and the SD card, loaded when they are opened - <a href="../docs/index.html">write your own</a></li>
+      </ul></div>
+    <div class="card"><div class="ico"><i class="i-globe"></i></div><h3>Networking</h3>
+      <ul>
+        <li>Wi-Fi and Bluetooth LE - through an ESP32-C6 co-processor on the ESP32-P4 boards, the chip's own on the ESP32-S3 boards</li>
+        <li>Ethernet with DHCP or a fixed IPv4 address</li>
+        <li>Hotspot: the device as an access point, sharing its Ethernet or Wi-Fi internet</li>
+        <li>The time from the network (NTP), kept through power-off by a battery clock where the board has one</li>
+      </ul></div>
+    <div class="card"><div class="ico"><i class="i-usb"></i></div><h3>USB and devices</h3>
+      <ul>
+        <li>USB host: flash drives, keyboards and barcode / QR scanners, mice, serial adapters (CH34x, CP210x, FTDI, CDC-ACM), UVC webcams, smart-card readers, printers</li>
+        <li>Printing: ESC/POS receipt printers - with Thai text and QR codes -, PCL, PostScript, ZPL and TSPL</li>
+        <li>The device as a USB drive for a PC: its SD card, its flash drive, a RAM disk, and a USB stick plugged into the device <span class="badge accent next">Next release</span></li>
+        <li>Camera, speaker (tones, WAV, MP3) and microphone recording</li>
+      </ul></div>
+    <div class="card"><div class="ico"><i class="i-idcard"></i></div><h3>Identity and data</h3>
+      <ul>
+        <li>Thai national ID card: the number, names, address and photo - through a USB card reader or a card socket on the board</li>
+        <li>A MySQL client: an app sends its data straight into a database</li>
+        <li>QR and barcode scanners that type like a USB keyboard: each scan handed to the app</li>
+      </ul></div>
+    <div class="card"><div class="ico"><i class="i-hotspot"></i></div><h3>Managed from a browser</h3>
+      <ul>
+        <li>Remote desktop: see and drive the screen from a browser, with a login</li>
+        <li>File manager: upload, download, copy, move and delete on every drive</li>
+        <li>The device's settings and each app's settings as web forms, light enough for a slow network <span class="badge accent next">Next release</span></li>
+        <li>Firmware update from the SD card or uploaded over the network; <b>Check online</b> for the newest firmware of the board <span class="badge accent next">Next release</span></li>
+        <li>The device's health over the network: restarts, crashes, the last crash</li>
+      </ul></div>
+    <div class="card"><div class="ico"><i class="i-shield"></i></div><h3>Built to run unattended</h3>
+      <ul>
+        <li>Firmware updates with rollback: an image that does not come up is replaced by the one before</li>
+        <li>Restart and crash counters and the last crash, in Settings › About and over the network</li>
+        <li>Safe mode: after three crashes in a row the auto start app is not opened</li>
+        <li>A screen that stops for 60 seconds restarts the device; a touch controller that stops answering is reset and found again</li>
+        <li>A firmware file made for another board is refused</li>
+        <li>Memory and every task's stack in the log every 10 minutes <span class="badge accent next">Next release</span></li>
+      </ul></div>
+    <div class="card"><div class="ico"><i class="i-factory"></i></div><h3>For the production line</h3>
+      <ul>
+        <li>Factory test in Settings › About: every part of the board checked, four tests with the operator, a report on the SD card named after the device's MAC</li>
+        <li>Release files with checksums: a factory image per board for a new device, an update file for a device in use</li>
+        <li>One version number for everything: the boot screen, Settings › About, the update dialog and the file names</li>
+      </ul></div>
+    <div class="card"><div class="ico"><i class="i-key"></i></div><h3>Free to try, activated per device</h3>
+      <ul>
+        <li>Until it is activated, the screen shows "Reload OS - Not activated"</li>
+        <li>Activate on the device: one payment per device by PromptPay QR, in Settings › About › License</li>
+        <li>Or a signed license file from Reloader on the SD card</li>
+      </ul></div>
+  </div>
+</section>
+
+<section class="sec alt">
+  <div class="wrap split">
+    <div>
+      <h2>Settings that fit the screen</h2>
+      <p class="lead">Connections, the device and the tools on one page; every page laid out for the board's screen,
+        both ways round.</p>
+      <ul class="ticks">
+        <li>Wi-Fi, Ethernet, Hotspot, Bluetooth, Remote desktop</li>
+        <li>Display, Sound, Storage, USB, Date &amp; time, About</li>
+        <li>Camera, Monitor, Recorder, ID Card, Web</li>
+      </ul>
+    </div>
+    <figure class="device"><img src="../assets/shots/set_display.png" width="1024" height="600" loading="lazy"
+      alt="Settings › Display: brightness, screen timeout, orientation and the light theme"></figure>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap split rev">
+    <div>
+      <h2>The screen in a browser</h2>
+      <p class="lead">Switch on the remote desktop, give it a login, and drive the kiosk from any browser on the network -
+        with a file manager for its drives beside it.</p>
+      <div class="cta"><a class="btn" href="boards.html">Which boards</a></div>
+    </div>
+    <figure class="device"><img src="../assets/shots/set_remote.png" width="1024" height="600" loading="lazy"
+      alt="Settings › Remote desktop: share this screen, and the login"></figure>
+  </div>
+</section>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a></p></div>
+    <div class="foot-links"><a href="../en/features.html" aria-current="page">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a class="lang" href="../features.html" hreflang="th" lang="th">ไทย</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>

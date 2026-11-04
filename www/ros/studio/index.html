@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio · Reload OS</title>
+<meta name="description" content="Reload OS Studio: design an app's screens in the browser on the real Reload OS interface, try them, and export C for the app kit.">
+<link rel="canonical" href="https://os.re-loader.com/studio/">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<meta name="build-api" content="https://reloados.re-loader.com/api/build">
+<link rel="stylesheet" href="studio.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="../docs/studio.html" title="About Studio"><img src="../assets/logo.svg" alt="" width="20" height="20"><b>Reload OS</b> Studio</a>
+  <nav class="menu" aria-label="File">
+    <button id="f-new" title="New app">New</button>
+    <button id="f-open" title="Open a .design file">Open</button>
+    <button id="f-save" title="Save the .design file (Ctrl+S)">Save</button>
+    <button id="f-export" class="strong" title="The app's project for the app kit, or its ELF" aria-haspopup="menu">Export ▾</button>
+    <div class="pop" id="export-pop" role="menu" hidden>
+      <button id="x-zip" role="menuitem">Project folder (zip) - for the app kit</button>
+      <button id="x-elf" role="menuitem">ELF for this board</button>
+      <p class="pop-note" id="x-note"></p>
+    </div>
+    <span class="sep"></span>
+    <button id="e-undo" class="icon" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 16 16"><path d="M6 3 2 7l4 4V8h4a2.5 2.5 0 0 1 0 5H8v2h2a4.5 4.5 0 0 0 0-9H6z"/></svg></button>
+    <button id="e-redo" class="icon" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"><svg viewBox="0 0 16 16"><path d="m10 3 4 4-4 4V8H6a2.5 2.5 0 0 0 0 5h2v2H6a4.5 4.5 0 0 1 0-9h4z"/></svg></button>
+  </nav>
+  <div class="title" id="app-title"></div>
+  <button id="run" class="run" title="Try the app on the screen (Ctrl+R)"><svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.500z"/></svg><span>Run</span></button>
+  <button id="theme" class="icon" title="Light or dark page" aria-label="Light or dark page"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+  <a class="help" href="../docs/studio.html">Help</a>
+</header>
+
+<main class="ide">
+  <section class="col" aria-label="Project and palette">
+    <div class="panel" id="p-project">
+      <h2>Project</h2>
+      <div class="scroll" id="project"></div>
+    </div>
+    <div class="panel grow" id="p-palette">
+      <h2>Palette</h2>
+      <input id="pal-search" type="search" placeholder="Search" aria-label="Search the palette">
+      <div class="scroll" id="palette"></div>
+    </div>
+  </section>
+
+  <section class="col" aria-label="Component tree">
+    <div class="panel grow">
+      <h2>Component tree</h2>
+      <div class="scroll" id="tree" role="tree"></div>
+    </div>
+  </section>
+
+  <section class="editor" aria-label="Editor">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="View">
+        <button data-mode="design" title="Design">Design</button>
+        <button data-mode="split" title="Design and code">Split</button>
+        <button data-mode="code" title="Code">Code</button>
+      </div>
+      <select id="device" aria-label="Board" title="Board"></select>
+      <button id="orient" class="icon" title="Turn the screen" aria-label="Turn the screen"><svg viewBox="0 0 16 16"><path d="M5 1h6a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm1 2v9h4V3z"/></svg></button>
+      <span class="size" id="size"></span>
+      <button id="light" class="icon" title="The device's light theme" aria-label="The device's light theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4M4.2 4.2l2.800 2.800M17 17l2.800 2.800M4.200 19.800 7 17M17 7l2.800-2.800" stroke="currentColor" stroke-width="2" fill="none"/></svg></button>
+      <button id="outlines" class="icon" title="Outlines of every widget" aria-label="Outlines of every widget"><svg viewBox="0 0 16 16"><path d="M2 2h12v12H2zm1.500 1.500v9h9v-9zM5 5h6v2H5zm0 3h3v3H5z"/></svg></button>
+      <span class="fill"></span>
+      <button id="zoom-out" class="icon" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 16 16"><path d="M3 7h10v2H3z"/></svg></button>
+      <button id="zoom-fit" class="zoom" title="Fit the screen">100%</button>
+      <button id="zoom-in" class="icon" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 16 16"><path d="M7 3h2v4h4v2H9v4H7V9H3V7h4z"/></svg></button>
+    </div>
+    <div class="panes" id="panes">
+      <div class="stage" id="stage">
+        <div class="frame" id="frame">
+          <canvas id="screen" aria-label="The screen as the device draws it"></canvas>
+          <div class="overlay" id="overlay"></div>
+        </div>
+        <div class="boot" id="boot" role="status">Starting Reload OS…</div>
+      </div>
+      <div class="codepane" id="codepane">
+        <div class="tabs" id="code-tabs" role="tablist"></div>
+        <div class="codeview" id="codeview"></div>
+      </div>
+    </div>
+    <div class="problems" id="problems" hidden>
+      <h2>Problems <button id="prob-close" class="icon" title="Close" aria-label="Close"><svg viewBox="0 0 16 16"><path d="m4 3 4 4 4-4 1 1-4 4 4 4-1 1-4-4-4 4-1-1 4-4-4-4z"/></svg></button></h2>
+      <div class="scroll" id="prob-list"></div>
+    </div>
+  </section>
+
+  <section class="col attrs" aria-label="Attributes">
+    <div class="panel grow">
+      <h2>Attributes</h2>
+      <div class="scroll" id="attrs"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="status">
+  <button id="prob-toggle"><span id="prob-count">No problems</span></button>
+  <span id="msg"></span>
+  <span class="fill"></span>
+  <span id="pos"></span>
+</footer>
+
+<div class="narrow">Studio is a desktop tool: open it on a wider screen.</div>
+<dialog id="dlg-new" class="dlg">
+  <form method="dialog">
+    <h2>New app</h2>
+    <div class="templates" id="templates"></div>
+    <div class="dlg-foot"><button value="cancel">Cancel</button></div>
+  </form>
+</dialog>
+<input type="file" id="open-file" accept=".design,application/json" hidden>
+<noscript><p class="nojs">Studio needs JavaScript.</p></noscript>
+<script src="studio.js"></script>
+</body>
+</html>

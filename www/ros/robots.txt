@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://server.re-loader.com/ros/sitemap.xml

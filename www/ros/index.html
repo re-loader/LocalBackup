@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เฟิร์มแวร์สำหรับตู้คีออสก์จอสัมผัส ESP32 · Reload OS</title>
+<meta name="description" content="Reload OS คือระบบปฏิบัติการสำหรับตู้คีออสก์จอสัมผัสบน ESP32-P4 และ ESP32-S3: หน้าจอสัมผัสที่พร้อมใช้, Settings, เครือข่าย, อุปกรณ์ USB, ดูแลผ่านเบราว์เซอร์ และแอปที่ติดตั้งจากไดรฟ์">
+<link rel="canonical" href="https://server.re-loader.com/ros/">
+<meta property="og:title" content="เฟิร์มแวร์สำหรับตู้คีออสก์จอสัมผัส ESP32 · Reload OS">
+<meta property="og:description" content="Reload OS คือระบบปฏิบัติการสำหรับตู้คีออสก์จอสัมผัสบน ESP32-P4 และ ESP32-S3: หน้าจอสัมผัสที่พร้อมใช้, Settings, เครือข่าย, อุปกรณ์ USB, ดูแลผ่านเบราว์เซอร์ และแอปที่ติดตั้งจากไดรฟ์">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="features.html">ฟีเจอร์</a>
+<a href="boards.html">บอร์ด</a>
+<a href="products.html">ผลิตภัณฑ์</a>
+<a href="try.html">ลองใช้</a>
+<a href="studio/index.html">Studio</a>
+<a href="docs/index.html">นักพัฒนา</a>
+<a class="lang" href="en/index.html" hreflang="en" lang="en">EN</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="hero">
+  <div class="wrap hero-in">
+    <div>
+      <p class="eyebrow">เฟิร์มแวร์สำหรับตู้คีออสก์จอสัมผัส</p>
+      <h1>Reload OS<br><span class="th-words">ระบบสำหรับ<wbr>ตู้คีออสก์<wbr>จอสัมผัส ESP32</span></h1>
+      <p class="lead">เฟิร์มแวร์เดียวสำหรับจอสัมผัสตั้งแต่ 3.5" ถึง 10.1" มีหน้าจอหลักที่พร้อมใช้, Settings, เครือข่าย,
+        อุปกรณ์ USB, การดูแลผ่านเบราว์เซอร์ และแอปที่ติดตั้งจากไดรฟ์ - ทำมาสำหรับเครื่องที่เปิดทั้งวันโดยไม่มีคนเฝ้า</p>
+      <div class="cta"><a class="btn primary" href="try.html">ลองใช้ในเบราว์เซอร์</a><a class="btn" href="features.html">ดูว่าทำอะไรได้บ้าง</a></div>
+    </div>
+    <figure class="device"><img src="assets/shots/launcher.png" width="1024" height="600"
+      alt="หน้าหลักของ Reload OS บนคีออสก์ 7 นิ้ว: การ์ดนาฬิกาทางซ้าย ไอคอนแอปทางขวา"></figure>
+  </div>
+  <div class="wrap"><div class="stats">
+    <div class="stat"><b>8 บอร์ด</b><span>จากซอร์สโค้ดชุดเดียว</span></div>
+    <div class="stat"><b>ESP32-P4 และ S3</b><span>ชิปสองตระกูล</span></div>
+    <div class="stat"><b>3.5" ถึง 10.1"</b><span>ติดตั้งแนวนอนหรือแนวตั้ง</span></div>
+    <div class="stat"><b>แอปบนไดรฟ์</b><span>แอปใหม่ไม่ต้องลงเฟิร์มแวร์ใหม่</span></div>
+  </div></div>
+</section>
+
+<section class="sec alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">มีอะไรบ้าง</p>
+      <h2>ทุกอย่างที่ตู้คีออสก์ต้องใช้ มีมาให้แล้ว</h2>
+      <p class="lead">Reload OS เขียนด้วยภาษา C บน ESP-IDF และ LVGL ผลิตภัณฑ์ที่สร้างบนระบบนี้ได้ทุกอย่างด้านล่างตั้งแต่เริ่ม
+        แล้วเพิ่มเฉพาะแอปของตัวเอง</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ico"><i class="i-screen"></i></div><h3>หน้าจอสัมผัสที่พร้อมใช้</h3>
+        <p>แถบสถานะ, หน้ารวมแอปที่ลากจัดลำดับได้, ตั้งค่าด่วน, ธีมมืดและสว่าง, คีย์บอร์ดบนจอปุ่มใหญ่พร้อมภาษาไทย,
+          ปิดจอเมื่อไม่ใช้ - และแอปที่เปิดเองเมื่อเครื่องเริ่มทำงาน</p></div>
+      <div class="card"><div class="ico"><i class="i-apps"></i></div><h3>แอปใหม่ ไม่ต้องลงเฟิร์มแวร์ใหม่</h3>
+        <p>แอปคือไฟล์หนึ่งไฟล์ในโฟลเดอร์ <code>apps/</code> บนแฟลชไดรฟ์ของเครื่องหรือการ์ด SD คัดลอก รีสตาร์ต
+          แล้วแตะไอคอน ลูกค้าเขียนแอปเองได้ด้วย app kit</p></div>
+      <div class="card"><div class="ico"><i class="i-globe"></i></div><h3>เชื่อมต่อได้ทุกทาง</h3>
+        <p>Wi-Fi และ Bluetooth LE, Ethernet แบบ DHCP หรือกำหนด IP เอง, ฮอตสปอตที่แชร์อินเทอร์เน็ตของเครื่อง
+          และเวลาจากเครือข่ายที่นาฬิกาแบตเตอรี่เก็บไว้</p></div>
+      <div class="card"><div class="ico"><i class="i-usb"></i></div><h3>อุปกรณ์ USB</h3>
+        <p>แฟลชไดรฟ์, คีย์บอร์ดและเครื่องสแกนบาร์โค้ด / QR, ตัวแปลงซีเรียล, เว็บแคม, เครื่องอ่านสมาร์ตการ์ด
+          และเครื่องพิมพ์ใบเสร็จ - และใช้ตัวเครื่องเป็นไดรฟ์ USB ให้คอมพิวเตอร์ได้</p></div>
+      <div class="card"><div class="ico"><i class="i-hotspot"></i></div><h3>ดูแลผ่านเบราว์เซอร์</h3>
+        <p>ดูและสั่งงานหน้าจอจากเบราว์เซอร์พร้อมรหัสผ่าน, จัดการไฟล์ในทุกไดรฟ์, เปลี่ยนการตั้งค่า
+          และอัปเดตเฟิร์มแวร์ผ่านเครือข่าย</p></div>
+      <div class="card"><div class="ico"><i class="i-shield"></i></div><h3>ทำงานได้โดยไม่มีคนเฝ้า</h3>
+        <p>อัปเดตที่ย้อนกลับเองได้, บันทึกทุกครั้งที่เครื่องขัดข้อง, safe mode เมื่อขัดข้องซ้ำ ๆ, watchdog เฝ้าหน้าจอ
+          และทัชสกรีนที่ถูกปลุกกลับมาเมื่อหยุดตอบสนอง</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">หน้าตาเดียวกันทุกจอ</p>
+      <h2>แนวนอน แนวตั้ง จอสี่เหลี่ยมจัตุรัส จอเล็ก</h2>
+      <p class="lead">หน้าจอหลักและแอปชุดเดียวกันจัดวางตัวเองให้พอดีกับจอของแต่ละบอร์ดและทิศทางที่ติดตั้ง
+        ภาพทั้งหมดคือ UI จริงที่เรนเดอร์ตามขนาดจอของแต่ละบอร์ด</p>
+    </div>
+    <div class="shots">
+      <figure><div class="device small"><img src="assets/shots/launcher_10.png" width="1280" height="800" loading="lazy"
+        alt="หน้าหลักขนาด 1280 x 800 บนบอร์ด 10.1 นิ้ว"></div><figcaption>10.1" · 1280 × 800</figcaption></figure>
+      <figure><div class="device small"><img src="assets/shots/settings.png" width="1024" height="600" loading="lazy"
+        alt="Settings: Wi-Fi, Ethernet, Hotspot, Bluetooth, Remote desktop, Display, Sound, Storage และ USB"></div>
+        <figcaption>Settings · 7" · 1024 × 600</figcaption></figure>
+    </div>
+    <div class="phones" style="margin-top:24px">
+      <figure><div class="device small"><img src="assets/shots/launcher_v.png" width="600" height="1024" loading="lazy"
+        alt="หน้าหลักบนคีออสก์ 7 นิ้วที่ติดตั้งแนวตั้ง"></div><figcaption>7" แนวตั้ง · 600 × 1024</figcaption></figure>
+      <figure><div class="device small"><img src="assets/shots/launcher_sq.png" width="480" height="480" loading="lazy"
+        alt="หน้าหลักบนจอสี่เหลี่ยมจัตุรัส 4 นิ้ว"></div><figcaption>4" · 480 × 480</figcaption></figure>
+      <figure><div class="device small"><img src="assets/shots/apgar_s.png" width="320" height="480" loading="lazy"
+        alt="ตัวจับเวลา APGAR กำลังนับถึงคะแนนแรกบนจอ 3.5 นิ้ว"></div><figcaption>3.5" · 320 × 480</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="sec alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">สร้างบน Reload OS</p>
+      <h2>ผลิตภัณฑ์</h2>
+      <p class="lead">ระบบเดียว หลายผลิตภัณฑ์: แต่ละผลิตภัณฑ์เลือกแอปและค่าเริ่มต้นของตัวเอง ส่วนไดรเวอร์, Settings,
+        การอัปเดต และระบบป้องกันใช้ร่วมกัน การแก้ไขในระบบจึงถึงทุกผลิตภัณฑ์</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ico"><i class="i-qr"></i></div><h3>แพดรับชำระเงิน QR <span class="badge warn">กำลังพัฒนา</span></h3>
+        <p>แพดจอสัมผัสขนาดเล็กสำหรับตู้หยอดเหรียญหรือเครื่องซักผ้า: ลูกค้าเลือกจำนวนเงิน จ่ายด้วย PromptPay QR
+          แล้วแพดส่งพัลส์เข้าช่องหยอดเหรียญของเครื่อง</p><p><a href="products.html#pad">เกี่ยวกับแพด →</a></p></div>
+      <div class="card"><div class="ico"><i class="i-stopwatch"></i></div><h3>ตัวจับเวลา APGAR</h3>
+        <p>ตัวจับเวลาคะแนน APGAR ของทารกแรกเกิดสำหรับห้องคลอด: นับเวลาตั้งแต่คลอด, คะแนนนาทีที่ 1, 5 และ 10
+          พร้อมเสียงเตือน, ตารางให้คะแนน และบันทึก - ภาษาไทยหรืออังกฤษ</p><p><a href="products.html#apgar">เกี่ยวกับ APGAR →</a></p></div>
+      <div class="card"><div class="ico"><i class="i-heartbeat"></i></div><h3>ตู้สุขภาพ</h3>
+        <p>ตู้วัดความดันโลหิตสำหรับโรงพยาบาลและคลินิก: ยืนยันตัวตนด้วยบัตรประชาชน วัดความดัน
+          แล้วส่งผลเข้าฐานข้อมูลของโรงพยาบาลโดยตรง</p><p><a href="products.html#health">เกี่ยวกับตู้สุขภาพ →</a></p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">สำหรับนักพัฒนา</p>
+      <h2>เขียนแอปของคุณเอง</h2>
+      <p class="lead">app kit สร้างแอปสำหรับเครื่อง Reload OS ได้โดยไม่ต้องมีซอร์สของเฟิร์มแวร์: ภาษา C, LVGL 9.2
+        กับ API ของ Reload OS, ESP-IDF 5.5.4 และคำสั่งเดียว</p>
+      <ul class="ticks">
+        <li>ใช้บริการของเฟิร์มแวร์ได้: หน้าจอ, เครือข่าย, ที่เก็บข้อมูล, เสียง, USB, เครื่องพิมพ์ และเครื่องอ่านบัตร</li>
+        <li>สร้างแยกตามบอร์ด และตรวจกับรายชื่อฟังก์ชันที่เฟิร์มแวร์เปิดให้ ก่อนถึงเครื่องจริง</li>
+        <li>ติดตั้งด้วยการคัดลอกไฟล์เดียว - จากเบราว์เซอร์, คอมพิวเตอร์ หรือการ์ด SD</li>
+      </ul>
+      <div class="cta"><a class="btn primary" href="docs/index.html">เอกสารนักพัฒนา</a><a class="btn" href="docs/api.html">API reference</a></div>
+      <p class="muted">เอกสารนักพัฒนาเป็นภาษาอังกฤษ ตรงกับคู่มือที่มากับ app kit</p>
+    </div>
+    <pre class="code"><code class="lang-c">#include "ros.h"
+
+static void create(lv_obj_t *body)   /* the app's screen */
+{
+    ros_ui_label(body, &amp;lv_font_montserrat_32, ROS_C_TEXT, "Hello");
+}
+
+/* the launcher's tile: name, glyph, colour */
+ROS_ELFAPP_META("Hello", LV_SYMBOL_SD_CARD, 0x6B4FBB);</code></pre>
+  </div>
+</section>
+
+<section class="sec alt">
+  <div class="wrap split">
+    <div>
+      <h2>ผลิตภัณฑ์ของคุณบน Reload OS</h2>
+      <p class="lead">Reloader Co.,Ltd. ผลิตตู้คีออสก์และผลิตภัณฑ์บนตู้: หน้าจอหลักของคุณ
+        ค่าเริ่มต้นของคุณ แอปของคุณ - บนบอร์ดในรายการหรือบอร์ดของคุณเอง</p>
+      <div class="cta"><a class="btn primary" href="https://www.re-loader.com">ติดต่อ Reloader</a><a class="btn" href="boards.html">บอร์ดที่รองรับ</a></div>
+    </div>
+    <figure class="device"><img src="assets/shots/launcher_light.png" width="1024" height="600" loading="lazy"
+      alt="หน้าหลักในธีมสว่าง"></figure>
+  </div>
+</section>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="index.html"><img src="assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a></p></div>
+    <div class="foot-links"><a href="features.html">ฟีเจอร์</a>
+<a href="boards.html">บอร์ด</a>
+<a href="products.html">ผลิตภัณฑ์</a>
+<a href="try.html">ลองใช้</a>
+<a href="studio/index.html">Studio</a>
+<a href="docs/index.html">นักพัฒนา</a>
+<a class="lang" href="en/index.html" hreflang="en" lang="en">EN</a></div>
+  </div>
+</footer>
+<script src="assets/site.js"></script>
+</body>
+</html>
