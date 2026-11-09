@@ -6,6 +6,7 @@ import { drawStar } from './textures.js';
 import { runTiming } from './minigame.js';
 import { ctx } from './ctx.js';
 import { SCRIPTS } from './levels.js';
+import { N } from './narration.js';
 
 // แกนของเกม: ลำดับขั้นตาม ADISAC, การให้คะแนน K-S-A, การบันทึกผล (telemetry)
 // แต่ละด่านทำงานใน Run ของตัวเอง — เริ่มด่านใหม่กลางทาง Run เดิมถูกยกเลิกทั้งหมด
@@ -82,6 +83,7 @@ export class Run {
     ctx.world.scenes.hub.board.redraw(key);
     this.log('stage', { key });
     ctx.audio.good();
+    ctx.audio.voice(N.stage(key), 'coach');           // "ขั้นที่ 2 DIVIDE แยกองค์ความรู้"
   }
   objective(text) { ctx.hud.set({ objective: text }); }
   checkItem(i, done = true) { ctx.hud.check(i, done); }
@@ -156,7 +158,7 @@ export class Run {
   }
 
   // ---------------------------------------------------------------- dialogs
-  dialog({ eyebrow = null, title = '', body = '', list = null, chips = null, accent = '#16306b', buttons = [{ id: 'ok', label: T.next }], w = 1.3, h = 0.78, at = null, bodySize = 34, titleSize = 46, draw = null, border = null, dist = 1.3 }) {
+  dialog({ eyebrow = null, title = '', body = '', list = null, chips = null, accent = '#16306b', buttons = [{ id: 'ok', label: T.next }], w = 1.3, h = 0.78, at = null, bodySize = 34, titleSize = 46, draw = null, border = null, dist = 1.3, say = null }) {
     this.check();
     return this.flow.wrap((resolve) => {
       const p = new Panel({ w, h, border: border || accent });
@@ -165,6 +167,7 @@ export class Run {
       this.place(p.group, at, dist);
       p.pop();
       ctx.audio.notify();
+      if (say) ctx.audio.voice(say === true ? body : say, 'coach');
       return () => p.dispose();
     });
   }
@@ -294,6 +297,7 @@ export class Run {
   // ---------------------------------------------------------------- ADISAC cards
   missionCard() {
     const L = this.L;
+    ctx.audio.voice(N.aims(L), 'coach');
     return this.dialog({
       eyebrow: `1.AIM · เป้าหมายการเรียนรู้ · ด่านที่ ${L.id} (${L.diff})`,
       title: L.name, accent: L.color, w: 1.5, h: 1.0, bodySize: 30,
@@ -305,6 +309,7 @@ export class Run {
 
   divideCard(extra = null) {
     const L = this.L;
+    ctx.audio.voice(N.divide(L), 'coach');
     return this.dialog({
       w: 1.6, h: 0.86,
       buttons: [{ id: 'ok', label: T.understood, style: 'primary' }],
@@ -335,6 +340,7 @@ export class Run {
   synthesis(results) {
     const L = this.L;
     results.forEach((ok, i) => this.checkItem(i, ok));
+    ctx.audio.voice(N.synthesis(results.filter(Boolean).length, L.checklist.length), 'coach');
     const sc = this.scores();
     return this.dialog({
       eyebrow: '4.SYNTHESIS · ประเมินความก้าวหน้าตามเป้าหมาย', title: 'เงื่อนไขผ่านด่าน', accent: STAGE.SYNTHESIS.color,
@@ -364,6 +370,7 @@ export class Run {
     this.game.recordResult(this.levelIndex, rec);
     this.log('criterion', { total, stars });
     ctx.audio.fanfare();
+    ctx.audio.voice(N.result(pass, stars), 'coach');
     const last = this.levelIndex === LEVELS.length - 1;
     const buttons = pass
       ? [{ id: 'next', label: last ? 'รับเหรียญมาสเตอร์ช่าง →' : T.nextMission, style: 'primary' }, { id: 'retry', label: T.retry, style: 'ghost' }]
@@ -482,6 +489,7 @@ export class Game {
     ctx.world.scenes.workshop.reset();
     try {
       await r.goTo('workshop', 'start');
+      ctx.audio.voice(N.title(), 'coach');
       const choice = await r.dialog({
         w: 1.7, h: 1.12, border: '#16306b', at: { pos: new THREE.Vector3(0, 1.55, 1.15), yaw: undefined },
         buttons: [
@@ -523,6 +531,7 @@ export class Game {
       ctx.world.scenes.hub.teacher.wave(3);
       r.say(ctx.world.scenes.hub.teacher, T.teacherName, master ? 'ยินดีด้วย! เธอคือมาสเตอร์ช่างผู้พิทักษ์โรงเรียนตัวจริง' : 'เก่งมากที่มาถึงตรงนี้ ลองฝึกด่านที่ยังไม่ผ่านอีกครั้งนะ');
       if (master) ctx.audio.fanfare();
+      ctx.audio.voice(N.final(master), 'coach');
       const choice = await r.dialog({
         w: 1.5, h: 1.15, border: '#ffc21a',
         buttons: [{ id: 'menu', label: T.menu, style: 'primary' }, { id: 'again', label: 'เล่นใหม่ตั้งแต่ด่าน 1', style: 'ghost' }],

@@ -1,3 +1,6 @@
+import { ctx as app } from './ctx.js';
+const ctxIsVR = () => !!app.vr;
+
 // เสียงทั้งหมดสังเคราะห์ด้วย Web Audio — ไม่มีไฟล์เสียง จึงเล่นออฟไลน์ได้
 // ความสมจริง: เสียงมีทิศทาง 3 มิติ (HRTF) ตามตำแหน่งต้นเสียง · เสียงก้องตามขนาดห้อง ·
 // เสียงบรรยากาศประจำห้อง (พัดลม ไฟฟลูออเรสเซนต์ นกนอกหน้าต่าง นาฬิกา) · เสียงฝีเท้า
@@ -27,6 +30,8 @@ export class Sound {
     this._buffers = new Map();
     this._playing = {};
     this._voiceToken = {};
+    this._endAt = {};               // role → AudioContext time its current line ends
+    this.missing = new Set();       // lines asked for with no VAJA recording (see tools/build-voice.mjs)
   }
 
   /** Must be called from a user gesture. Safe to call repeatedly. */
@@ -348,16 +353,23 @@ export class Sound {
     if (!map) return null;
     const t = text.trim();
     if (map[`${role}|${t}`]) return [map[`${role}|${t}`]];
+    // stitch from recorded sentences, longest first, backtracking if a choice leads nowhere;
+    // separators the screen uses (— · → : quotes) are not spoken and may sit between pieces
     const lines = this._byRole[role] || [];
-    const out = [];
-    let rest = t;
-    while (rest) {
-      const hit = lines.find((l) => rest.startsWith(l));
-      if (!hit) return null;
-      out.push(map[`${role}|${hit}`]);
-      rest = rest.slice(hit.length).trim();
-    }
-    return out.length ? out : null;
+    const SEP = /^[\s—·→:,()"'-]+/;
+    const solve = (rest, depth) => {
+      rest = rest.replace(SEP, '');
+      if (!rest) return [];
+      if (depth > 24) return null;
+      for (const l of lines) {
+        if (!rest.startsWith(l)) continue;
+        const tail = solve(rest.slice(l.length), depth + 1);
+        if (tail) return [map[`${role}|${l}`], ...tail];
+      }
+      return null;
+    };
+    const out = solve(t, 0);
+    return out && out.length ? out : null;
   }
 
   _buffer(file) {
@@ -379,15 +391,22 @@ export class Sound {
   async voice(text, role = 'coach', pos = null) {
     if (!this.voiceOn || !text) return 0;
     const files = this._clips(text, role);
-    if (!files || !this.ctx) { this.speak(text); return 0; }
+    if (!files || !this.ctx) {
+      if (this.voiceMap && !this.missing.has(`${role}|${text}`)) { this.missing.add(`${role}|${text}`); console.warn(`[voice] no VAJA recording for ${role}: ${text}`); }
+      if (!ctxIsVR()) this.speak(text);      // desktop last resort; the headset has no browser voice
+      return 0;
+    }
     const token = (this._voiceToken[role] = (this._voiceToken[role] || 0) + 1);
     for (const s of this._playing[role] || []) { try { s.stop(); } catch { /* ended */ } }
     this._playing[role] = [];
+    this._endAt[role] = 0;
     let bufs;
     try { bufs = await Promise.all(files.map((f) => this._buffer(f))); } catch { this.speak(text); return 0; }
     if (token !== this._voiceToken[role]) return 0;           // superseded while loading
     const out = pos ? this._out(pos, this.sfx, 40) : this.voiceBus;
+    // one person talks at a time: wait for anyone else still speaking (a role interrupts only itself)
     let t = this.t + 0.03;
+    for (const [r, end] of Object.entries(this._endAt)) if (r !== role && end > t) t = end + 0.25;
     const srcs = [];
     for (const b of bufs) {
       const s = this.ctx.createBufferSource();
@@ -396,6 +415,7 @@ export class Sound {
       t += b.duration + 0.06;
     }
     this._playing[role] = srcs;
+    this._endAt[role] = t;
     const dur = t - this.t;
     this.duck(true);
     clearTimeout(this._duckT);
@@ -403,6 +423,7 @@ export class Sound {
     return dur;
   }
   stopVoices() {
+    this._endAt = {};
     for (const r of Object.keys(this._playing)) {
       this._voiceToken[r] = (this._voiceToken[r] || 0) + 1;
       for (const s of this._playing[r]) { try { s.stop(); } catch { /* ended */ } }

@@ -3,6 +3,7 @@ import { T, LEVELS, GROUPS, ITEMS, ADVICE, FONT } from './strings.js';
 import { shuffle, rr } from './util.js';
 import { Panel } from './panel.js';
 import { makeItem } from './models.js';
+import { N } from './narration.js';
 import { ctx } from './ctx.js';
 
 // สคริปต์ของ 3 ด่าน — แต่ละด่านเดินตามแบบจำลอง ADISAC
@@ -82,7 +83,7 @@ async function level1(r) {
     await r.moveTo('bench');
     r.objective(`${job.title}: ${job.task}`);
     await r.dialog({
-      eyebrow: `3.INTEGRATE · ${job.title} จาก 3`, title: job.task, accent: '#37c2a8', h: 0.66,
+      eyebrow: `3.INTEGRATE · ${job.title} จาก 3`, title: job.task, accent: '#37c2a8', h: 0.66, say: N.job(job),
       body: 'เลือกเครื่องมือจากคลังแสงเครื่องมือ แล้วเลือกวัสดุจากชั้นวัสดุ — หยิบผิดจะเสียทรัพยากรนะ',
       buttons: [{ id: 'go', label: 'เริ่มใบงาน', style: 'primary' }],
     });
@@ -539,7 +540,7 @@ async function level3(r) {
     ctx.audio.notify();
     await r.dialog({
       eyebrow: `Spot the Hazard · พบแล้ว ${found.size + 1}/${L.hazards.length}`, title: 'จุดเสี่ยงที่ต้องแก้!', accent: '#e23b3b', h: 0.6, bodySize: 38,
-      body: `${hz.text} — ช่วยแก้ไขด้วยนะ!`, buttons: [{ id: 'fix', label: hz.fix, style: 'primary' }],
+      body: `${hz.text} — ช่วยแก้ไขด้วยนะ!`, buttons: [{ id: 'fix', label: hz.fix, style: 'primary' }], say: N.hazard(hz),
     });
     found.add(id);
     await fixHazard(hz);
@@ -552,7 +553,7 @@ async function level3(r) {
     const hs = missed.map((h) => r.hint(hazardObj[h.id], { offset: 0.1 }));
     await r.dialog({
       eyebrow: 'หมดเวลา', title: `ยังเหลือจุดเสี่ยง ${missed.length} จุด`, accent: '#e23b3b', h: 0.7, bodySize: 32,
-      body: missed.map((h) => `• ${h.text}`).join('\n'), buttons: [{ id: 'ok', label: 'แก้ไขให้เรียบร้อย', style: 'primary' }],
+      body: missed.map((h) => `• ${h.text}`).join('\n'), buttons: [{ id: 'ok', label: 'แก้ไขให้เรียบร้อย', style: 'primary' }], say: N.missed(missed),
     });
     for (const h of missed) await fixHazard(h);
     hs.forEach((h) => r.unhint(h));
@@ -601,7 +602,7 @@ async function level3(r) {
   }
   await r.dialog({
     eyebrow: '3.INTEGRATE · ขั้นที่ 5 ประเมินและทดสอบ', title: 'ทดสอบความแข็งแรง', accent: '#37c2a8', h: 0.56,
-    body: 'วางหนังสือบนชั้น เพื่อตรวจว่าชั้นรับน้ำหนักได้', buttons: [{ id: 'test', label: 'วางหนังสือ', style: 'primary' }],
+    body: 'วางหนังสือบนชั้น เพื่อตรวจว่าชั้นรับน้ำหนักได้', buttons: [{ id: 'test', label: 'วางหนังสือ', style: 'primary' }], say: true,
   });
   S.books.visible = true; ctx.audio.thump(wp(S.books)); ctx.audio.ping();
   ws.friend.wave();
