@@ -14,6 +14,15 @@ export async function loadActorManifest() {
     const r = await fetch('assets/actors/manifest.json', { cache: 'no-cache' });
     if (r.ok) manifest = await r.json();
   } catch { /* drawn characters */ }
+  // Only keep sprites that really load: a server that won't serve .webp (or a missing file) must
+  // fall back to the drawn 3D characters, not leave an invisible teacher.
+  const ok = await Promise.all(Object.entries(manifest).map(([name, m]) => new Promise((res) => {
+    const img = new Image();
+    img.onload = () => res([name, true]);
+    img.onerror = () => res([name, false]);
+    img.src = `assets/actors/${m.file}`;
+  })));
+  for (const [name, good] of ok) if (!good) { console.warn(`[actors] ${name} did not load — using the drawn character`); delete manifest[name]; }
   return Object.keys(manifest);
 }
 export const hasActor = (...names) => names.every((n) => manifest[n]);
