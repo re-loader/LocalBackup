@@ -23,6 +23,7 @@ export const T = {
   },
   coachName: 'ครูช่าง',
   friendName: 'ภูมิ',
+  girlName: 'น้องฝน',
   teacherName: 'ครูมาลี',
   timeLeft: 'เวลาเหลือ',
   overTime: 'หมดเวลาแนะนำแล้ว — ทำต่อให้เสร็จอย่างปลอดภัย',

@@ -7,6 +7,7 @@ import { runTiming } from './minigame.js';
 import { ctx } from './ctx.js';
 import { SCRIPTS } from './levels.js';
 import { N } from './narration.js';
+import { portrait, hasActor } from './actors.js';
 
 // แกนของเกม: ลำดับขั้นตาม ADISAC, การให้คะแนน K-S-A, การบันทึกผล (telemetry)
 // แต่ละด่านทำงานใน Run ของตัวเอง — เริ่มด่านใหม่กลางทาง Run เดิมถูกยกเลิกทั้งหมด
@@ -124,7 +125,7 @@ export class Run {
     b?.say(name, text, sec);
     npc.talk(Math.min(sec, 4));
     if (speak) {
-      const role = name === T.friendName ? 'friend' : 'teacher';
+      const role = name === T.friendName ? 'friend' : name === T.girlName ? 'girl' : 'teacher';
       const mouth = npc.head.getWorldPosition(new THREE.Vector3());
       // lips move for as long as the recording actually lasts
       ctx.audio.voice(text, role, mouth).then((d) => { if (d) { npc.talk(d); b?.say(name, text, Math.max(sec, d + 1)); } });
@@ -388,7 +389,11 @@ export class Run {
     try {
       return await this.dialog({
         w: 1.4, h: 1.2, border: '#ffc21a', buttons,
-        draw: (p) => { panelRef.p = p; drawResult(p, { L, sc, total, stars: 0, pass }); },
+        draw: (p) => {
+          panelRef.p = p; drawResult(p, { L, sc, total, stars: 0, pass });
+          const hero = portrait(this.game.heroSprite(pass ? 'thumbs' : 'title'), 1.0);   // board panel 6
+          if (hero) { hero.position.set(-p.w / 2 - 0.12, -p.h / 2, 0.02); p.group.add(hero); }
+        },
       });
     } finally { offStars(); }
   }
@@ -454,9 +459,18 @@ export class Game {
     // the teacher stands rotated 180°, so local +x is the viewer's left — away from the dialog cards
     hub.teacher.root.userData.bubble = new Bubble(hub.teacher.root, { x: 0.42, y: 1.98 });
     ws.friend.root.userData.bubble = new Bubble(ws.friend.root, { y: 1.9 });
+    const fon = ctx.world.scenes.classroom.fon;
+    if (fon) fon.root.userData.bubble = new Bubble(fon.root, { y: 1.78, w: 1.0 });
+    // the player's hero on the title / result art: boy or girl (remembered on this device)
+    try { this.heroKind = localStorage.getItem('workshopHero.hero') || 'boy'; } catch { this.heroKind = 'boy'; }
   }
 
   addTicker(fn) { this.tickers.add(fn); return () => this.tickers.delete(fn); }
+
+  /** Sprite name for the player's hero (boy / girl) in a pose: 'title' or 'thumbs'. */
+  heroSprite(pose) {
+    return this.heroKind === 'girl' && hasActor(`herogirl-${pose}`) ? `herogirl-${pose}` : `hero-${pose}`;
+  }
 
   recordResult(i, rec) {
     const prev = this.results[i];
@@ -497,7 +511,27 @@ export class Game {
           { id: 1, label: `ด่าน 2 · ${LEVELS[1].diff}`, style: 'ghost' },
           { id: 2, label: `ด่าน 3 · ${LEVELS[2].diff}`, style: 'ghost' },
         ],
-        draw: (p, done) => { drawTitle(p, this.results); p.addButton({ id: 'start', label: T.start, sub: T.startEn, style: 'primary', x: 0, y: -0.112, w: 0.7, h: 0.17, size: 54, onClick: () => done('start') }); },
+        draw: (p, done) => {
+          // board panel 1: the hero beside the logo — and a switch between the boy and the girl hero
+          let hero = null;
+          const showHero = () => {
+            if (hero) p.group.remove(hero);
+            hero = portrait(this.heroSprite('title'), 1.05);
+            if (hero) { hero.position.set(-p.w / 2 - 0.14, -p.h / 2 - 0.02, 0.02); p.group.add(hero); }
+          };
+          showHero();
+          if (hasActor('herogirl-title') && hasActor('hero-title')) {
+            const label = () => (this.heroKind === 'girl' ? 'เปลี่ยนเป็นฮีโร่ชาย' : 'เปลี่ยนเป็นฮีโร่หญิง');
+            p.addButton({
+              id: 'hero', label: label(), style: 'blue', size: 30, x: -p.w / 2 - 0.14, y: -p.h / 2 - 0.1, w: 0.5, h: 0.1,
+              onClick: (b) => {
+                this.heroKind = this.heroKind === 'girl' ? 'boy' : 'girl';
+                try { localStorage.setItem('workshopHero.hero', this.heroKind); } catch { /* ignore */ }
+                showHero(); b.setLabel(label()); ctx.audio.good();
+              },
+            });
+          }
+          drawTitle(p, this.results); p.addButton({ id: 'start', label: T.start, sub: T.startEn, style: 'primary', x: 0, y: -0.112, w: 0.7, h: 0.17, size: 54, onClick: () => done('start') }); },
       });
       this.start(choice === 'start' ? 0 : Number(choice));
     } catch (e) { if (!(e instanceof Cancelled)) console.error(e); }
@@ -535,7 +569,11 @@ export class Game {
       const choice = await r.dialog({
         w: 1.5, h: 1.15, border: '#ffc21a',
         buttons: [{ id: 'menu', label: T.menu, style: 'primary' }, { id: 'again', label: 'เล่นใหม่ตั้งแต่ด่าน 1', style: 'ghost' }],
-        draw: (p) => drawFinal(p, all, master),
+        draw: (p) => {
+          drawFinal(p, all, master);
+          const hero = portrait(this.heroSprite('thumbs'), 1.0);
+          if (hero) { hero.position.set(p.w / 2 + 0.12, -p.h / 2, 0.02); p.group.add(hero); }
+        },
       });
       if (choice === 'again') this.start(0); else this.title();
     } catch (e) { if (!(e instanceof Cancelled)) console.error(e); }
@@ -575,7 +613,7 @@ export class Game {
       }
     }
     for (const f of [...this.tickers]) f(dt);
-    for (const b of [ctx.world.scenes.hub.teacher, ctx.world.scenes.workshop.friend]) b.root.userData.bubble?.update();
+    for (const b of [ctx.world.scenes.hub.teacher, ctx.world.scenes.workshop.friend, ctx.world.scenes.classroom.fon]) b?.root.userData.bubble?.update();
     // controller menu button (B / Y)
     if (ctx.vr) {
       let pressed = false;

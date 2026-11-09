@@ -9,6 +9,7 @@ import { Game, loadRuns } from './game.js';
 import { LEVELS } from './strings.js';
 import { setupLook } from './look.js';
 import { loadPhotoManifest } from './textures.js';
+import { loadActorManifest } from './actors.js';
 
 // The Workshop Hero — WebXR · เปิดได้ทั้งแว่น VR (PICO / Quest) และคอมพิวเตอร์ / แท็บเล็ต
 
@@ -33,7 +34,7 @@ Object.assign(ctx, { renderer, scene, camera, rig });
 ctx.audio = new Sound();
 ctx.audio.loadVoices();
 // photographic materials (tools/gen-textures.py) must be known before the rooms are built
-await loadPhotoManifest();
+await Promise.all([loadPhotoManifest(), loadActorManifest()]);
 ctx.world = new World(scene);
 ctx.interaction = new Interaction(renderer, camera, scene, rig);
 ctx.loco = new Locomotion(rig, camera, ctx.interaction);

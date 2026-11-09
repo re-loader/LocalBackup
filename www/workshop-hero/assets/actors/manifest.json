@@ -1,0 +1,77 @@
+{
+ "teacher-idle": {
+  "file": "teacher-idle.webp",
+  "w": 233,
+  "h": 900
+ },
+ "teacher-talk": {
+  "file": "teacher-talk.webp",
+  "w": 337,
+  "h": 900
+ },
+ "teacher-worried": {
+  "file": "teacher-worried.webp",
+  "w": 214,
+  "h": 900
+ },
+ "teacher-happy": {
+  "file": "teacher-happy.webp",
+  "w": 327,
+  "h": 900
+ },
+ "friend-idle": {
+  "file": "friend-idle.webp",
+  "w": 289,
+  "h": 900
+ },
+ "friend-drill": {
+  "file": "friend-drill.webp",
+  "w": 326,
+  "h": 900
+ },
+ "friend-drill-safe": {
+  "file": "friend-drill-safe.webp",
+  "w": 354,
+  "h": 900
+ },
+ "friend-happy": {
+  "file": "friend-happy.webp",
+  "w": 296,
+  "h": 900
+ },
+ "girl-idle": {
+  "file": "girl-idle.webp",
+  "w": 228,
+  "h": 900
+ },
+ "girl-worried": {
+  "file": "girl-worried.webp",
+  "w": 293,
+  "h": 900
+ },
+ "girl-happy": {
+  "file": "girl-happy.webp",
+  "w": 254,
+  "h": 900
+ },
+ "herogirl-title": {
+  "file": "herogirl-title.webp",
+  "w": 484,
+  "h": 900
+ },
+ "herogirl-thumbs": {
+  "file": "herogirl-thumbs.webp",
+  "w": 536,
+  "h": 900
+ },
+ "hero-title": {
+  "file": "hero-title.webp",
+  "w": 436,
+  "h": 900
+ },
+ "hero-thumbs": {
+  "file": "hero-thumbs.webp",
+  "w": 493,
+  "h": 900
+ }
+}

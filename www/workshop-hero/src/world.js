@@ -10,6 +10,10 @@ import {
   mat, M, box, rbox, cyl, sph, makeItem, schoolDesk, schoolChair, teacherDesk, bookshelf, workbench, vise,
   toolChest, cabinet, plant, whiteboard, ladder, toolBag, lightSwitch, makeCharacter,
 } from './models.js';
+import { Actor, hasActor } from './actors.js';
+
+/** Poses that actually exist on disk (tools/gen-actors.py), keyed for an Actor. */
+const posesOf = (map) => Object.fromEntries(Object.entries(map).filter(([, n]) => hasActor(n)));
 
 // ฉากทั้ง 4: ห้องพักครู (hub) · ห้องช่าง · ห้องเรียน ม.2/1 · ห้องน้ำ
 // ส่วนที่ไม่ขยับถูกรวม geometry ตามวัสดุ เพื่อลด draw call บนแว่น
@@ -379,7 +383,10 @@ export class World {
     const board = adisacBoardMesh(1.5, 1.0);
     const bw = R.onWall('front', -1.7, 1.65, 0.02); dyn.add(bw);
     bw.add(board.mesh);
-    const teacher = makeCharacter({ skin: '#f3c9a5', hair: '#2b1a12', shirt: '#c9ab74', lower: '#8a7449', bun: true, clipboard: true, scale: 1.05 });
+    // the teacher from the design board when her sprites exist, else the drawn 3D character
+    const teacher = hasActor('teacher-idle')
+      ? new Actor({ height: 1.62, poses: posesOf({ idle: 'teacher-idle', talk: 'teacher-talk', worried: 'teacher-worried', wave: 'teacher-happy' }) })
+      : makeCharacter({ skin: '#f3c9a5', hair: '#2b1a12', shirt: '#c9ab74', lower: '#8a7449', bun: true, clipboard: true, scale: 1.05 });
     teacher.root.position.set(-0.45, 0, -1.85);
     teacher.root.rotation.y = Math.PI;
     dyn.add(teacher.root);
@@ -531,13 +538,21 @@ export class World {
     const door = doorAt(R, 'back', -2.9, 'ไปห้องเรียน ม.2/1', '#d99a0b');
     R.group.remove(door); dyn.add(door);
     // friend Phum (level 3), drill + goggles
-    const friend = makeCharacter({ shirt: '#ffffff', lower: '#1d3060', overalls: '#1d3060', hair: '#2a1a10', gloves: '#1c2533', scale: 0.98 });
+    const actorFriend = hasActor('friend-idle');
+    const friend = actorFriend
+      ? new Actor({ height: 1.5, poses: posesOf({ idle: 'friend-idle', talk: 'friend-happy', wave: 'friend-happy', drill: 'friend-drill', drillSafe: 'friend-drill-safe' }) })
+      : makeCharacter({ shirt: '#ffffff', lower: '#1d3060', overalls: '#1d3060', hair: '#2a1a10', gloves: '#1c2533', scale: 0.98 });
     friend.root.position.set(-2.4, 0, 2.25);
     dyn.add(friend.root);
-    const fd = makeItem('drill'); fd.scale.setScalar(1.1);
-    friend.arms[1].userData.hand.add(fd); fd.rotation.set(-1.4, 0, 0); fd.position.set(0, -0.02, -0.03);
-    const fg = makeItem('goggles'); fg.position.set(0, 0.08, -0.19); fg.visible = false; fg.scale.setScalar(1.15);
-    friend.head.add(fg);
+    // goggles: a real mesh on the drawn character; on the sprite Phum it only picks the pose
+    const fg = actorFriend ? new THREE.Object3D() : makeItem('goggles');
+    if (!actorFriend) {
+      const fd = makeItem('drill'); fd.scale.setScalar(1.1);
+      friend.arms[1].userData.hand.add(fd); fd.rotation.set(-1.4, 0, 0); fd.position.set(0, -0.02, -0.03);
+      fg.position.set(0, 0.08, -0.19); fg.scale.setScalar(1.15);
+      friend.head.add(fg);
+    }
+    fg.visible = true;
     // hazards: cord in puddle, saw on bench edge
     const hazards = {};
     const cord = new THREE.Group(); cord.position.set(0.6, 0, 2.0); dyn.add(cord);
@@ -595,7 +610,7 @@ export class World {
           if (it.parent !== dyn) dyn.add(it);
           it.position.copy(h.pos); it.rotation.copy(h.rot); it.scale.copy(h.scale); it.visible = true;
         }
-        fg.visible = false;
+        fg.visible = true;            // safe by default; mission 3 takes them off for Spot the Hazard
         cord.visible = true; puddle.visible = true; plug.position.set(-0.1, 0.03, 0);
         plank.visible = true; plank.scale.x = 1; plank.position.set(0, 0.013, 0);
         cutMark.visible = false; offcut.visible = false; sideL.visible = false; sideR.visible = false; books.visible = false;
@@ -605,10 +620,16 @@ export class World {
       },
       update(dt, cam) {
         this._t += dt;
-        friend.update(dt);
-        if (this.friendBusy) {
-          friend.arms[1].rotation.x = 1.2 + Math.sin(this._t * 30) * 0.03;
-        } else friend.lookAt(cam);
+        if (actorFriend) {
+          friend.mood = this.friendBusy ? (fg.visible ? 'drillSafe' : 'drill') : 'idle';
+          friend.holdMood = this.friendBusy;
+          friend.lookAt(cam);
+          friend.update(dt);
+        } else {
+          friend.update(dt);
+          if (this.friendBusy) friend.arms[1].rotation.x = 1.2 + Math.sin(this._t * 30) * 0.03;
+          else friend.lookAt(cam);
+        }
         puddle.material.opacity = 0.6 + Math.sin(this._t * 2) * 0.08;
         wsBeams.forEach((b) => b.userData.update(dt));
         wsFans.forEach((f, i) => { f.userData.rotor.rotation.y -= dt * (5.5 + i * 0.6); });
@@ -687,13 +708,18 @@ export class World {
     R.group.remove(door); dyn.add(door);
     // ladder
     const lad = ladder(); lad.position.set(3.4, 0, 0.2); lad.rotation.y = -Math.PI / 2; dyn.add(lad);
+    // classmate น้องฝน waits by the broken chair (sprite only — there is no drawn 3D version of her)
+    const fon = hasActor('girl-idle')
+      ? new Actor({ height: 1.45, poses: posesOf({ idle: 'girl-idle', talk: 'girl-worried', worried: 'girl-worried', wave: 'girl-happy', happy: 'girl-happy' }) })
+      : null;
+    if (fon) { fon.root.position.set(-1.55, 0, -1.7); fon.mood = 'worried'; dyn.add(fon.root); }
     lad.userData.home = { pos: lad.position.clone(), rot: lad.rotation.clone() };
 
     shadowify(dyn);
     crFans.forEach(noCast);
     const api = {
       fans: crFans,
-      group, R, chair: wob, lamp, socket, oldBulb, newBulb, switch: sw, switchHolder: swh, ladder: lad, lamps, door,
+      group, R, chair: wob, lamp, socket, oldBulb, newBulb, switch: sw, switchHolder: swh, ladder: lad, lamps, door, fon,
       bounds: { minX: -3.6, maxX: 3.6, minZ: -3.0, maxZ: 3.2 },
       stations: {
         start: { pos: new THREE.Vector3(0.3, 0, 2.9), yaw: 0.15, pitch: -0.05 },
@@ -724,9 +750,11 @@ export class World {
         this.wobble = true;
         this.setSwitch(true);
         this.setLit(false);
+        if (fon) { fon.mood = 'worried'; fon.holdMood = false; }
       },
-      update(dt) {
+      update(dt, cam) {
         this._t += dt;
+        if (fon) { if (cam) fon.lookAt(cam); fon.update(dt); }
         wob.group.rotation.z = this.wobble ? Math.sin(this._t * 7) * 0.035 : 0;
         wob.group.rotation.x = this.wobble ? Math.cos(this._t * 5) * 0.02 : 0;
         crBeams.forEach((b) => b.userData.update(dt));

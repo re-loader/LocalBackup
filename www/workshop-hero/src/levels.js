@@ -172,11 +172,13 @@ async function level2(r) {
   r.stage('AIM');
   r.objective('รับเคสด่วนจากครู');
   ctx.audio.notify();
+  hub.teacher.mood = 'worried'; hub.teacher.holdMood = true;
   r.say(hub.teacher, T.teacherName, L.teacherLine);
   await r.dialog({
     eyebrow: 'เคสด่วน! · ห้อง ม.2/1', title: 'แย่แล้ว!', body: L.alert, accent: '#e23b3b', border: '#e23b3b', h: 0.62, bodySize: 38,
     buttons: [{ id: 'ok', label: T.accept, style: 'primary' }],
   });
+  hub.teacher.mood = 'idle'; hub.teacher.holdMood = false;
   await r.missionCard();
 
   // ---- 2. DIVIDE : เครื่องมือช่าง 7 กลุ่ม ----
@@ -265,6 +267,7 @@ async function level2(r) {
   await r.goTo('classroom', 'start');
   r.stage('ADVICE');
   r.startTimer(L.timeLimit);
+  if (cr.fon) r.say(cr.fon, T.girlName, 'ช่างมาแล้ว! เก้าอี้ตัวนี้โยกจนนั่งไม่ได้ แถมไฟก็ดับ มืดมากเลย ช่วยหน่อยนะ');
   r.coach('ห้องมืดมาก! เริ่มจากจุดไหนก่อนก็ได้ — เก้าอี้ หรือไฟเพดาน', 'info');
   const st = { bolts: 0, chairDone: false, ladderPlaced: false, onLadder: false, oldOut: false, newIn: false, lightDone: false, shock: 0, powerOffFirst: null };
   const objectiveText = () => `ซ่อมเก้าอี้ (น็อต ${st.bolts}/4) · เปลี่ยนหลอดไฟ ${st.lightDone ? '✓' : st.newIn ? '(เปิดสวิตช์ทดสอบ)' : ''}`;
@@ -298,6 +301,7 @@ async function level2(r) {
         st.chairDone = true; cr.wobble = false;
         ctx.audio.ping();
         r.coach('ทดสอบนั่งแล้ว — เก้าอี้มั่นคง ไม่โยกเยกอีก!', 'good');
+        if (cr.fon) { cr.fon.wave(2.5); r.say(cr.fon, T.girlName, 'เย้! นั่งได้แล้ว ไม่โยกเลย ขอบใจนะ'); }
       }
     } else if (id === 'switch') {
       ctx.audio.switchClick(wp(cr.switchHolder));
@@ -312,6 +316,7 @@ async function level2(r) {
         cr.setLit(true); ctx.world.applyLighting();
         ctx.audio.ping(); ctx.audio.good();
         r.coach('ไฟสว่างแล้ว! ห้องเรียนกลับมาใช้งานได้', 'good');
+        if (cr.fon) { cr.fon.mood = 'happy'; cr.fon.holdMood = true; r.say(cr.fon, T.girlName, 'สว่างแล้ว! ห้องเรียนเรากลับมาแล้ว ขอบคุณมากเลยนะ'); }
       } else {
         r.coach('หลอดยังขาดอยู่ เปิดสวิตช์ไปก็ไม่ติด — ปิดไว้ก่อนแล้วเปลี่ยนหลอด', 'tip');
       }
@@ -519,6 +524,7 @@ async function level3(r) {
   await r.goTo('workshop', 'hazard');
   r.stage('ADVICE');
   ws.friendBusy = true;
+  ws.friendGoggles.visible = false;            // the hazard: drilling without eye protection
   let drillT = 0;
   const offDrill = r.game.addTicker((dt) => { if (ws.friendBusy && !ws.friendGoggles.visible) { drillT -= dt; if (drillT < 0) { drillT = 3; ctx.audio.drill(1.0, wp(ws.friend.head)); } } });
   r.objective('Spot the Hazard: หาจุดเสี่ยง 3 จุดในห้องช่าง');
