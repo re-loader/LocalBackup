@@ -85,7 +85,9 @@
     spacer: '<path d="M8 1 5 4h2v8H5l3 3 3-3H9V4h2z"/>',
     screen: '<path fill-rule="evenodd" d="M4 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm.5 2v10h7V3z"/>',
     file: '<path d="M4 1h5l4 4v10H4zm5 1.500V6h3.500z"/>',
-    app: '<path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/>'
+    app: '<path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/>',
+    lock: '<path fill-rule="evenodd" d="M5 7V5a3 3 0 0 1 6 0v2h1v7H4V7zm1.500 0h3V5a1.500 1.500 0 0 0-3 0z"/>',
+    unlock: '<path fill-rule="evenodd" d="M5 7V5a3 3 0 0 1 5.800-1.100l-1.400.500A1.500 1.500 0 0 0 6.500 5v2H12v7H4V7z"/>'
   };
   function icon(name) {
     const t = document.createElement('template');
@@ -166,11 +168,12 @@
     fit: ['Size', 'select', [['', 'As it is'], ['fit', 'All of it, scaled'], ['stretch', 'Stretched'], ['center', 'Centre, cut'], ['tile', 'Tiled']]]
   };
   const KEYS = { max2: 'max', kind2: 'kind', iconname: 'icon' };   /* one key in the design, two meanings on the panel */
+  /* (a label's colour, a button's, the text colour of a checkbox and a dropdown: on the Style panel, as their normal look) */
   const CONTENT = {
-    label: ['text', 'symbol', 'font', 'color', 'talign', 'long'], field: ['hint', 'text', 'font', 'oneline', 'password', 'max', 'accept', 'kb'],
-    button: ['text', 'symbol', 'color', 'font', 'toggle', 'checked'], icon: ['iconname', 'color'], check: ['text', 'symbol', 'font', 'checked', 'fg'],
+    label: ['text', 'symbol', 'font', 'talign', 'long'], field: ['hint', 'text', 'font', 'oneline', 'password', 'max', 'accept', 'kb'],
+    button: ['text', 'symbol', 'font', 'toggle', 'checked'], icon: ['iconname', 'color'], check: ['text', 'symbol', 'font', 'checked'],
     switch: ['checked', 'color'], slider: ['min', 'max2', 'value', 'color'], bar: ['min', 'max2', 'value', 'color'], arc: ['min', 'max2', 'value', 'color'],
-    spinner: ['color'], dropdown: ['options', 'selected', 'font', 'fg'], roller: ['options', 'selected', 'rows', 'font'], qr: ['text', 'size'],
+    spinner: ['color'], dropdown: ['options', 'selected', 'font'], roller: ['options', 'selected', 'rows', 'font'], qr: ['text', 'size'],
     list: ['items', 'font'], table: ['cells', 'colw', 'font'], chart: ['kind2', 'values', 'min', 'max2', 'color'], divider: ['color'],
     calendar: ['date', 'header', 'font'], meter: ['min', 'max2', 'value', 'ticks', 'major', 'labels', 'color', 'font'],
     spinbox: ['min', 'max2', 'value', 'step', 'digits', 'decimals', 'font'], led: ['color', 'lit'], keypad: ['keys', 'font'],
@@ -184,6 +187,7 @@
   let P = null;                      /* { app: { name, file, symbol, color }, screens: [{ name, root }], code: { 'app.c': text }, board, turned, light } */
   let cur = 0;                       /* the screen being edited */
   let sel = null;                    /* the widget selected, or 'app' */
+  let multi = [];                    /* two or more widgets of this screen picked with Shift or Cmd / Ctrl; sel is the last */
   let nextId = 1;
   let reserved = {};                 /* names given while a tree is being made */
   let M = null, cfg = null;          /* the renderer */
@@ -246,13 +250,14 @@
 
   const TEMPLATES = [
     { title: 'Starter', note: 'Two screens, a card and a button', make: function () {
+      const level = make('label', { text: 'Brightness 70%' });
       return [{ name: 'main', root: makeRoot({ cross: 'center', main: 'center', gap: '16' }, [
-        make('label', { text: 'Hello', font: '32' }),
-        make('label', { text: 'Made with Reload OS Studio', color: 'muted' }),
+        make('label', { text: 'Hello', font: '32', an: 'up' }),
+        make('label', { text: 'Made with Reload OS Studio', color: 'muted', an: 'fade', andl: '150' }),
         make('card', { w: '70%' }, [
-          make('row', { main: 'between' }, [make('label', { text: 'Brightness' }), make('switch', { checked: '1' })]),
-          make('slider', { value: '70' })]),
-        make('button', { text: 'More', symbol: 'RIGHT', on: 'screen', onv: 'details' })]) },
+          make('row', { main: 'between' }, [level, make('switch', { checked: '1' })]),
+          make('slider', { value: '70', ev1: 'change|text|' + level.name + '|Brightness {value}%' })]),
+        make('button', { text: 'More', symbol: 'RIGHT', on: 'screen', onv: 'details', 'sbg:p': 'accent2' })]) },
       { name: 'details', root: makeRoot({ gap: '14' }, [
         make('label', { text: 'Details', font: '24' }),
         make('bar', { value: '40' }),
@@ -437,9 +442,9 @@
     const old = a.name;
     walkAll(function (n) {
       if (n.type === 'image' && n.props.src === old) n.props.src = v;
-      if (n.props.on === 'sound' && n.props.onv === old) n.props.onv = v;
       if (n.type === 'root' && n.props.sound === old) n.props.sound = v;
     });
+    renameRefs('sound', old, v);
     fromEngine(old, a.kind);
     DATA[v] = DATA[old];
     delete DATA[old];
@@ -513,6 +518,7 @@
     last = s;
     cur = Math.min(cur, P.screens.length - 1);
     sel = byId(id) || root();
+    multi = [];
     renumber();
     keep();
     all();
@@ -556,6 +562,7 @@
     marks();
     codeSoon();
     lintSoon();
+    thumbSoon();
   }
   const refreshSoon = (function () {
     let on = false;
@@ -689,7 +696,11 @@
       const r = L.rects.get(hover.id);
       if (r) overlay.append(box(r, 'hover'));
     }
-    if (sel && sel !== 'app') {
+    if (multi.length > 1) multi.forEach(function (n) {
+      const r = L.rects.get(n.id);
+      if (r) overlay.append(box(r, 'sel multi'));
+    });
+    else if (sel && sel !== 'app') {
       const r = L.rects.get(sel.id);
       if (r) {
         const m = box(r, 'sel' + (r.y < 24 ? ' low' : ''));
@@ -704,6 +715,39 @@
       }
     }
     if (drag && drag.drop) dropMark(drag.drop);
+    if (drag && drag.guides) drag.guides.forEach(function (g) {
+      const m = el('div', { class: 'mark guide' });
+      m.style.cssText = g.x != null ? 'left:' + g.x * zoom + 'px;top:' + g.a * zoom + 'px;width:1px;height:' + (g.b - g.a) * zoom + 'px'
+        : 'top:' + g.y * zoom + 'px;left:' + g.a * zoom + 'px;height:1px;width:' + (g.b - g.a) * zoom + 'px';
+      overlay.append(m);
+    });
+  }
+  /* a widget moved in a free area lines up with the area's and its neighbours' edges and middles (Alt: not) */
+  function snap(d, dx, dy) {
+    const r0 = d.r0, par = d.par, pr = L.rects.get(par.id), t = 6 / zoom, ins = pad(par);
+    if (!r0 || !pr) return { dx: 0, dy: 0, guides: null };
+    const m = { x: r0.x + dx, y: r0.y + dy, w: r0.w, h: r0.h };
+    const others = [{ x: pr.x + ins, y: pr.y + ins, w: pr.w - ins * 2, h: pr.h - ins * 2 }];
+    par.kids.forEach(function (k) { const r = L.rects.get(k.id); if (k !== d.node && r && r.w) others.push(r); });
+    let bx = null, by = null;
+    others.forEach(function (o) {
+      [o.x, o.x + o.w / 2, o.x + o.w].forEach(function (tx) {
+        [m.x, m.x + m.w / 2, m.x + m.w].forEach(function (mx) {
+          const diff = tx - mx;
+          if (Math.abs(diff) <= t && (!bx || Math.abs(diff) < Math.abs(bx.d))) bx = { d: diff, x: tx, o: o };
+        });
+      });
+      [o.y, o.y + o.h / 2, o.y + o.h].forEach(function (ty) {
+        [m.y, m.y + m.h / 2, m.y + m.h].forEach(function (my) {
+          const diff = ty - my;
+          if (Math.abs(diff) <= t && (!by || Math.abs(diff) < Math.abs(by.d))) by = { d: diff, y: ty, o: o };
+        });
+      });
+    });
+    const sx = bx ? Math.round(bx.d) : 0, sy = by ? Math.round(by.d) : 0, guides = [];
+    if (bx) guides.push({ x: bx.x, a: Math.min(m.y + sy, bx.o.y), b: Math.max(m.y + sy + m.h, bx.o.y + bx.o.h) });
+    if (by) guides.push({ y: by.y, a: Math.min(m.x + sx, by.o.x), b: Math.max(m.x + sx + m.w, by.o.x + by.o.w) });
+    return { dx: sx, dy: sy, guides: guides.length ? guides : null };
   }
   function dropMark(d) {
     const r = L.rects.get(d.box.id);
@@ -716,9 +760,9 @@
     return { x: (e.clientX - r.left) / zoom, y: (e.clientY - r.top) / zoom };
   }
   const within = function (r, p) { return r && p.x >= r.x && p.y >= r.y && p.x < r.x + r.w && p.y < r.y + r.h; };
-  function hit(p) {
+  function hit(p) {                    /* the deepest widget under the pointer; a locked one is passed over */
     let f = null;
-    walk(root(), function (n) { const r = L.rects.get(n.id); if (r && r.w && within(r, p)) f = n; });
+    walk(root(), function (n) { const r = L.rects.get(n.id); if (r && r.w && within(r, p) && n.props.locked !== '1') f = n; });
     return f;
   }
   function pad(n) {
@@ -793,11 +837,25 @@
       return;
     }
     const n = hit(p) || root();
+    if (e.shiftKey || e.metaKey || e.ctrlKey) { togglePick(n); return; }
+    if (multi.length > 1 && multi.includes(n)) {          /* the ones picked go together (in free areas) */
+      drag = { kind: 'press', node: n, from: p, group: multi.map(function (m) { return { n: m, x: +(m.props.x || 0), y: +(m.props.y || 0), par: parentOf(m) }; }) };
+      overlay.setPointerCapture(e.pointerId);
+      return;
+    }
     select(n);
     if (n.type !== 'root') {
-      drag = { kind: 'press', node: n, from: p, x: +(n.props.x || 0), y: +(n.props.y || 0), par: parentOf(n) };
+      const r = L.rects.get(n.id);
+      drag = { kind: 'press', node: n, from: p, x: +(n.props.x || 0), y: +(n.props.y || 0), par: parentOf(n), r0: r ? Object.assign({}, r) : null };
       overlay.setPointerCapture(e.pointerId);
     }
+  });
+  overlay.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    if (run || !M) return;
+    const n = hit(toScreen(e)) || root();
+    if (!picked().includes(n)) select(n);
+    widgetMenu(e);
   });
   overlay.addEventListener('pointermove', function (e) {
     const p = toScreen(e);
@@ -814,15 +872,33 @@
     if (drag.kind === 'resize') return resize(drag, p, e);
     if (drag.kind === 'press' && Math.hypot(p.x - drag.from.x, p.y - drag.from.y) * zoom > 4) drag.kind = 'move';
     if (drag.kind !== 'move') return;
+    const g = function (v) { return e.altKey ? Math.round(v) : Math.round(v / 4) * 4; };
+    if (drag.group) {                                    /* several: each by as much, where its area is free */
+      drag.group.forEach(function (m) {
+        if (!(m.par && (m.par.props.layout === 'free' || !m.par.props.layout))) return;
+        m.n.props.x = String(m.x + g(p.x - drag.from.x));
+        m.n.props.y = String(m.y + g(p.y - drag.from.y));
+      });
+      refreshSoon();
+      return;
+    }
     const par = drag.par, free = par.props.layout === 'free' || !par.props.layout, d = dropAt(p, drag.node);
     if (free && d.box === par) {
-      /* within a free area: the widget itself follows, in 4 px steps */
-      const g = function (v) { return e.altKey ? Math.round(v) : Math.round(v / 4) * 4; };
-      drag.node.props.x = String(drag.x + g(p.x - drag.from.x));
-      drag.node.props.y = String(drag.y + g(p.y - drag.from.y));
+      /* within a free area: the widget itself follows, in 4 px steps, and lines up with what is near */
+      let dx = g(p.x - drag.from.x), dy = g(p.y - drag.from.y);
+      drag.guides = null;
+      if (!e.altKey) {
+        const s2 = snap(drag, dx, dy);
+        dx += s2.dx;
+        dy += s2.dy;
+        drag.guides = s2.guides;
+      }
+      drag.node.props.x = String(drag.x + dx);
+      drag.node.props.y = String(drag.y + dy);
       drag.drop = null;
       refreshSoon();
     } else {
+      drag.guides = null;
       drag.drop = d;
       marks();
     }
@@ -852,6 +928,7 @@
       return;
     }
     if (!d) return;
+    if (d.kind === 'press' && d.group) { select(d.node); return; }      /* a click in the picked ones: that one */
     if (d.kind === 'move' && d.drop) place(d.node, d.drop);
     if (d.kind === 'move' || d.kind === 'resize') {
       changed();
@@ -901,8 +978,9 @@
   /* ---------------------------------------------------------------- selecting */
 
   function select(n) {
-    if (n === sel && !assetSel) return;
+    if (n === sel && !assetSel && !multi.length) return;
     assetSel = null;
+    multi = [];
     sel = n;
     marks();
     tree();
@@ -920,6 +998,7 @@
   function setScreen(i) {
     cur = i;
     sel = root();
+    multi = [];
     hover = null;
     all();
   }
@@ -1002,8 +1081,21 @@
           if (n.props.hidden === '1') delete n.props.hidden; else n.props.hidden = '1';
           changed();
         } }, n.props.hidden === '1' ? '◌' : '●');
-      const r = el('div', { class: 'row' + (n === sel ? ' on' : ''), role: 'treeitem', draggable: n.type === 'root' ? null : 'true',
-        onclick: function () { select(n); },
+      const locked = n.props.locked === '1';
+      const lock = n.type === 'root' ? null : el('button', { class: 'act' + (locked ? ' keep' : ''), title: locked ? 'Locked: the screen does not pick it. Unlock it' :
+        'Lock it: the screen does not pick it or move it', 'aria-label': locked ? 'Unlock it' : 'Lock it', onclick: function (e) {
+          e.stopPropagation();
+          if (locked) delete n.props.locked; else n.props.locked = '1';
+          tree();
+          commit();
+        } }, icon(locked ? 'lock' : 'unlock'));
+      const r = el('div', { class: 'row' + (n === sel || multi.includes(n) ? ' on' : ''), role: 'treeitem', draggable: n.type === 'root' ? null : 'true',
+        onclick: function (e) { if (e.shiftKey || e.metaKey || e.ctrlKey) togglePick(n); else select(n); },
+        oncontextmenu: function (e) {
+          e.preventDefault();
+          if (!picked().includes(n)) select(n);
+          widgetMenu(e);
+        },
         ondragstart: function (e) { dragRow = n; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', n.name); },
         ondragend: function () { dragRow = null; },
         ondragover: function (e) {
@@ -1027,7 +1119,7 @@
           }
           dragRow = null;
           changed();
-        } }, icon(nodeIcon(n)), el('span', { class: 'name' }, n.type === 'root' ? screen().name : n.name), n.type === 'root' ? null : el('span', { class: 'kind' }, kindName(n)), eye);
+        } }, icon(nodeIcon(n)), el('span', { class: 'name' }, n.type === 'root' ? screen().name : n.name), n.type === 'root' ? null : el('span', { class: 'kind' }, kindName(n)), lock, eye);
       r.style.paddingLeft = 6 + depth * 14 + 'px';
       t.append(r);
       n.kids.forEach(function (k) { rowOf(k, depth + 1); });
@@ -1046,7 +1138,8 @@
     p.append(el('div', { class: 'row' + (sel === 'app' ? ' on' : ''), onclick: function () { select('app'); } }, icon('app'), el('span', { class: 'name' }, P.app.name)));
     p.append(el('div', { class: 'group' }, 'Screens', el('button', { title: 'New screen', 'aria-label': 'New screen', onclick: addScreen }, '+')));
     P.screens.forEach(function (s, i) {
-      p.append(el('div', { class: 'row' + (i === cur ? ' on' : ''), onclick: function () { setScreen(i); } }, icon('screen'), el('span', { class: 'name' }, s.name),
+      const pic = thumbs[s.name] ? el('img', { class: 'thumb', src: thumbs[s.name], alt: '', 'data-screen': s.name }) : icon('screen');
+      p.append(el('div', { class: 'row' + (i === cur ? ' on' : ''), title: thumbs[s.name] ? null : 'Its picture comes when it has been shown', onclick: function () { setScreen(i); } }, pic, el('span', { class: 'name' }, s.name),
         i === 0 ? el('span', { class: 'kind' }, 'first') : null,
         P.screens.length > 1 ? el('button', { class: 'act', title: 'Delete the screen', onclick: function (e) { e.stopPropagation(); delScreen(i); } }, '×') : null));
     });
@@ -1180,6 +1273,7 @@
   function attrs() {
     const a = $('#attrs');
     a.replaceChildren();
+    if (multi.length > 1) return multiAttrs(a);
     if (assetSel) return assetAttrs(a, (P.assets || []).find(function (x) { return x.name === assetSel; }));
     if (sel === 'app') return appAttrs(a);
     const n = sel, sec = function (t) { a.append(el('div', { class: 'asec' }, t)); };
@@ -1188,7 +1282,7 @@
     if (n.type === 'root') {
       const s = screen(), i = el('input', { type: 'text', spellcheck: 'false' });
       a.append(field('Name', i, bind(i, function () { return s.name; }, function (v) {
-        walkAll(function (x) { if (x.props.on === 'screen' && x.props.onv === s.name) x.props.onv = v; });
+        renameRefs('screen', s.name, v);
         s.name = v;
       })));
       a.append(selectField(n, 'anim', 'Comes in', [['', 'At once'], ['fade', 'Fading in'], ['left', 'Sliding in from the right'],
@@ -1196,7 +1290,7 @@
       a.append(assetField(n, 'sound', 'Plays', 'sound'));
     } else {
       const i = el('input', { type: 'text', spellcheck: 'false', title: 'The widget in the C: ui.' + n.name });
-      a.append(field('Id', i, bind(i, function () { return n.name; }, function (v) { n.name = v; })));
+      a.append(field('Id', i, bind(i, function () { return n.name; }, function (v) { renameRefs('widget', n.name, v); n.name = v; })));
     }
     const par = parentOf(n);
     if (n.type === 'box' || n.type === 'root') {
@@ -1212,10 +1306,6 @@
         a.append(field('Wrap', w, w.id));
         a.append(numField(n, 'gap', 'Gap', 0));
       }
-      a.append(numField(n, 'pad', 'Padding', pad(n)));
-      a.append(propFieldFor(n, 'bg', 'Background'));
-      a.append(numField(n, 'radius', 'Corners', n.props.kind === 'card' ? 16 : 0));
-      a.append(numField(n, 'border', 'Border', n.props.kind === 'card' ? 1 : 0));
       const sc = el('input', { type: 'checkbox', checked: n.props.scroll !== '0' });
       sc.id = 'a' + ++fieldId;
       sc.addEventListener('change', function () { if (sc.checked) delete n.props.scroll; else n.props.scroll = '0'; refreshSoon(); commit(); });
@@ -1248,6 +1338,7 @@
       sec('Content');
       list.forEach(function (k) { a.append(propField(n, k)); });
     }
+    styleAttrs(a, n, sec);
     if (n.type !== 'root') {
       sec('State');
       ['hidden', 'disabled'].forEach(function (k) {
@@ -1257,7 +1348,218 @@
         a.append(field(k === 'hidden' ? 'Hidden' : 'Disabled', c, c.id));
       });
     }
-    if (n.type !== 'root' && n.type !== 'divider' && n.type !== 'spinner') eventAttrs(a, n, sec);
+    if (n.type !== 'divider' && n.type !== 'spinner') eventsAttrs(a, n, sec);
+    if (n.type !== 'root') animAttrs(a, n, sec);
+  }
+
+  /* ---------------------------------------------------------------- the Style panel: a widget's look, in each state
+   * Keys "s<what>" for the normal look, "s<what>:p" pressed, ":c" checked, ":d" disabled (sim_design.c's style_apply).
+   * The normal look of a box is its own bg / radius / border / pad, a button's background its colour, a label's text its
+   * colour - the keys the design always had */
+  const STATES = [['', 'Normal'], ['p', 'Pressed'], ['c', 'Checked'], ['d', 'Disabled']];
+  const STYLE_KEYS = ['sbg', 'sbo', 'stc', 'sbw', 'sbc', 'srad', 'sshw', 'sshc', 'sshy', 'sopa', 'spad'];
+  let styleState = '';
+  function styleKey(n, what, st) {
+    if (!st) {
+      const box = { sbg: 'bg', srad: 'radius', sbw: 'border', sbc: 'borderc', spad: 'pad' };
+      if (isBox(n) && box[what]) return box[what];
+      if (n.type === 'button' && what === 'sbg') return 'color';
+      if (n.type === 'label' && what === 'stc') return 'color';
+      if ((n.type === 'check' || n.type === 'dropdown') && what === 'stc') return 'fg';
+    }
+    return st ? what + ':' + st : what;
+  }
+  function styled(n, st) {
+    return STYLE_KEYS.some(function (w) { const v = n.props[styleKey(n, w, st)]; return v != null && v !== ''; });
+  }
+  function numFieldFn(label, get, set, ph, rebuild) {
+    const i = el('input', { type: 'number', placeholder: ph == null ? '' : String(ph) });
+    return field(label, i, bind(i, get, set, rebuild));
+  }
+  function styleAttrs(a, n, sec) {
+    const root = n.type === 'root', checkable = n.type === 'check' || n.type === 'switch' || (n.type === 'button' && n.props.toggle === '1');
+    const states = root ? [STATES[0]] : STATES.filter(function (s) { return s[0] !== 'c' || checkable; });
+    if (!states.some(function (s) { return s[0] === styleState; })) styleState = '';
+    sec('Style');
+    if (states.length > 1) {
+      const tabs = el('div', { class: 'stabs', role: 'tablist', 'aria-label': 'The look in each state' });
+      states.forEach(function (s) {
+        tabs.append(el('button', { role: 'tab', 'aria-selected': s[0] === styleState ? 'true' : 'false', class: styled(n, s[0]) ? 'has' : null,
+          title: s[0] ? 'How it looks while ' + s[1].toLowerCase() : 'How it looks', onclick: function () { styleState = s[0]; attrs(); } }, s[1]));
+      });
+      a.append(tabs);
+    }
+    const st = styleState, key = function (w) { return styleKey(n, w, st); };
+    const get = function (w) { return function () { return n.props[key(w)] != null ? n.props[key(w)] : ''; }; };
+    const set = function (w) { return function (v) { if (v === '' || v == null) delete n.props[key(w)]; else n.props[key(w)] = v; }; };
+    const card = n.props.kind === 'card' && !st;
+    a.append(colorFieldOpt('Background', get('sbg'), set('sbg')));
+    if (!root) a.append(numFieldFn('Bg opacity %', get('sbo'), set('sbo'), n.props[key('sbg')] ? 100 : ''));
+    if (!root) a.append(colorFieldOpt('Text colour', get('stc'), set('stc')));
+    if (!root) {
+      a.append(numFieldFn('Border', get('sbw'), set('sbw'), card ? 1 : 0));
+      a.append(colorFieldOpt('Border colour', get('sbc'), set('sbc')));
+      a.append(numFieldFn('Corners', get('srad'), set('srad'), card ? 16 : n.type === 'button' && !st ? 12 : ''));
+      a.append(numFieldFn('Shadow', get('sshw'), set('sshw'), 0, true));
+      if (n.props[key('sshw')]) {
+        a.append(colorFieldOpt('Shadow colour', get('sshc'), set('sshc')));
+        a.append(numFieldFn('Shadow down', get('sshy'), set('sshy'), 0));
+      }
+      a.append(numFieldFn('Opacity %', get('sopa'), set('sopa'), 100));
+    }
+    a.append(numFieldFn('Padding', get('spad'), set('spad'), !st && isBox(n) ? pad(n) : ''));
+    if (styled(n, st)) a.append(el('div', { class: 'note' }, el('button', { class: 'btn', onclick: function () {
+      STYLE_KEYS.forEach(function (w) { delete n.props[key(w)]; });
+      refreshSoon();
+      commit();
+      attrs();
+    } }, st ? 'Clear the ' + STATES.find(function (s) { return s[0] === st; })[1].toLowerCase() + ' look' : 'Clear the look')));
+  }
+
+  /* ---------------------------------------------------------------- the Events panel: what a widget does
+   * "ev1" ... "ev9", each "trigger|action|target|text" (sim_design.c's events_of); the older "on" / "onv" is read as one */
+  const TRIGGERS = [['tap', 'It is tapped'], ['long', 'It is held'], ['change', 'Its value changes'], ['press', 'It is pressed'], ['release', 'It is let go']];
+  const ACTIONS = [['toast', 'Show a message'], ['screen', 'Open a screen'], ['back', 'Go back'], ['sound', 'Play a sound'],
+    ['call', 'Call a function (app.c)'], ['text', 'Set a text'], ['value', 'Set a value'], ['show', 'Show a widget'], ['hide', 'Hide a widget'],
+    ['vis', 'Show / hide a widget'], ['enable', 'Enable a widget'], ['disable', 'Disable a widget'], ['check', 'Check a widget'],
+    ['uncheck', 'Uncheck a widget'], ['checkt', 'Check / uncheck a widget'], ['anim', 'Play an animation']];
+  const TEXT_TYPES = ['label', 'button', 'field', 'check'], NUMBER_TYPES = ['slider', 'bar', 'arc', 'spinbox', 'roller', 'dropdown'];
+  const VALUE_SOURCES = ['slider', 'switch', 'check', 'roller', 'dropdown', 'field', 'keypad'], NUMBER_SOURCES = ['slider', 'switch', 'check', 'roller', 'dropdown'];
+  function hasValue(n, num) {
+    if (n.type === 'button') return n.props.toggle === '1';
+    return (num ? NUMBER_SOURCES : VALUE_SOURCES).includes(n.type);
+  }
+  function events(n) {
+    const list = [];
+    if (n.props.on) {
+      const on = n.props.on, v = n.props.onv || '', named = on === 'screen' || on === 'sound';
+      list.push({ trig: n.type === 'root' ? 'open' : VALUE_TYPES.includes(n.type) ? 'change' : 'tap', act: on, target: named ? v : '', arg: named ? '' : v });
+    }
+    for (let i = 1; i <= 9; i++) {
+      const v = n.props['ev' + i];
+      if (!v) continue;
+      const f = v.split('|');
+      list.push({ trig: f[0] || 'tap', act: f[1] || 'toast', target: f[2] || '', arg: f.slice(3).join('|') });
+    }
+    return list;
+  }
+  function setEvents(n, list) {
+    delete n.props.on;
+    delete n.props.onv;
+    for (let i = 1; i <= 9; i++) delete n.props['ev' + i];
+    list.slice(0, 9).forEach(function (e, i) { n.props['ev' + (i + 1)] = [e.trig, e.act, e.target || '', e.arg || ''].join('|'); });
+  }
+  /* a screen, a sound or a widget renamed: the events that name it follow (a widget's: on its own screen) */
+  function renameRefs(kind, old, v) {
+    const each = kind === 'widget' ? function (f) { walk(root(), f); } : walkAll;
+    each(function (n) {
+      const list = events(n);
+      let hit = false;
+      list.forEach(function (e) {
+        const named = e.act === 'screen' ? 'screen' : e.act === 'sound' ? 'sound' : ['toast', 'back', 'call'].includes(e.act) ? null : 'widget';
+        if (named === kind && e.target === old) { e.target = v; hit = true; }
+      });
+      if (hit) setEvents(n, list);
+    });
+  }
+  /* what an action can name: screens, sounds, or the widgets of this screen it can work on */
+  function targets(n, act) {
+    if (act === 'screen') return P.screens.map(function (s) { return [s.name, s.name]; });
+    if (act === 'sound') return (P.assets || []).filter(function (x) { return x.kind === 'sound'; }).map(function (x) { return [x.name, x.name]; });
+    if (['toast', 'back', 'call'].includes(act)) return null;
+    const o = [];
+    walk(root(), function (w) {
+      if (w.type === 'root') return;
+      const ok = act === 'text' ? TEXT_TYPES.includes(w.type) : act === 'value' ? NUMBER_TYPES.includes(w.type) :
+        act === 'anim' ? !!w.props.an : ['check', 'uncheck', 'checkt'].includes(act) ? ['check', 'switch'].includes(w.type) || (w.type === 'button' && w.props.toggle === '1') : true;
+      if (ok) o.push([w.name, w.name + (w === n ? ' (itself)' : '') + '  ·  ' + kindName(w)]);
+    });
+    return o;
+  }
+  function eventsAttrs(a, n, sec) {
+    const list = events(n), root = n.type === 'root';
+    sec(root ? 'When the screen opens' : 'Events');
+    list.forEach(function (ev, i) { a.append(eventCard(n, list, i)); });
+    if (list.length < 9) a.append(el('div', { class: 'note' }, el('button', { class: 'btn', onclick: function () {
+      const first = targets(n, 'toast');
+      list.push({ trig: root ? 'open' : VALUE_TYPES.includes(n.type) ? 'change' : 'tap', act: 'toast', target: first && first[0] ? first[0][0] : '', arg: 'Hello' });
+      setEvents(n, list);
+      refreshSoon();
+      commit();
+      attrs();
+    } }, '+ Add an event')));
+    if (!list.length) a.append(el('div', { class: 'note' }, root ? 'Do something each time this screen is shown: set a text, start an animation …'
+      : 'Make it do something when it is tapped, held or changed: open a screen, show a message, set another widget\'s text …'));
+  }
+  function eventCard(n, list, i) {
+    const ev = list[i], root = n.type === 'root';
+    const save = function (rebuild) { setEvents(n, list); refreshSoon(); commit(); if (rebuild) attrs(); };
+    const sel3 = function (opts, value, onchange, label) {
+      const s = el('select', { 'aria-label': label }, opts.map(function (o) { return el('option', { value: o[0] }, o[1]); }));
+      s.id = 'a' + ++fieldId;
+      s.value = value;
+      s.addEventListener('change', function () { onchange(s.value); });
+      return s;
+    };
+    const head = el('div', { class: 'evhead' }, el('span', {}, 'Event ' + (i + 1)),
+      i > 0 ? el('button', { class: 'act', title: 'Earlier', 'aria-label': 'Move it up', onclick: function () { list.splice(i - 1, 0, list.splice(i, 1)[0]); save(true); } }, '↑') : null,
+      i < list.length - 1 ? el('button', { class: 'act', title: 'Later', 'aria-label': 'Move it down', onclick: function () { list.splice(i + 1, 0, list.splice(i, 1)[0]); save(true); } }, '↓') : null,
+      el('button', { class: 'act', title: 'Remove this event', 'aria-label': 'Remove this event', onclick: function () { list.splice(i, 1); save(true); } }, '×'));
+    const card = el('div', { class: 'evcard' }, head);
+    const trigs = root ? [['open', 'The screen opens']] : TRIGGERS.filter(function (t) { return t[0] !== 'change' || VALUE_TYPES.includes(n.type) || n.type === 'button'; });
+    const t = sel3(trigs, ev.trig, function (v) { ev.trig = v; save(false); }, 'When');
+    card.append(field('When', t, t.id));
+    const acts = root ? ACTIONS.filter(function (x) { return x[0] !== 'back'; }) : ACTIONS;
+    const d = sel3(acts, ev.act, function (v) {
+      ev.act = v;
+      const opts = targets(n, v);
+      if (opts && !opts.some(function (o) { return o[0] === ev.target; })) ev.target = opts[0] ? opts[0][0] : '';
+      if (!opts) ev.target = '';
+      ev.arg = v === 'toast' ? (ev.arg || 'Hello') : v === 'call' ? 'on_' + n.name : v === 'text' ? (hasValue(n) ? '{value}' : 'Text') : v === 'value' ? (hasValue(n, true) ? '{value}' : '0') : '';
+      save(true);
+    }, 'Do');
+    card.append(field('Do', d, d.id));
+    const opts = targets(n, ev.act);
+    if (opts) {
+      if (!opts.length) card.append(el('div', { class: 'note warn-text' }, ev.act === 'sound' ? 'No sounds yet: add one under Assets.' : ev.act === 'anim' ?
+        'No widget on this screen has an animation yet.' : 'No widget on this screen can take this.'));
+      else {
+        const lab = ev.act === 'screen' ? 'Screen' : ev.act === 'sound' ? 'Sound' : 'Widget';
+        const s = sel3(opts, ev.target, function (v) { ev.target = v; save(false); }, lab);
+        if (!opts.some(function (o) { return o[0] === ev.target; })) { s.value = ''; }
+        card.append(field(lab, s, s.id));
+      }
+    }
+    if (['toast', 'call', 'text', 'value'].includes(ev.act)) {
+      const lab = { toast: 'Message', call: 'Function', text: 'Text', value: 'Value' }[ev.act];
+      const inp = el('input', { type: 'text', spellcheck: ev.act === 'call' ? 'false' : null });
+      inp.id = 'a' + ++fieldId;
+      inp.value = ev.arg || '';
+      inp.addEventListener('input', function () { ev.arg = inp.value; setEvents(n, list); refreshSoon(); });
+      inp.addEventListener('change', function () { commit(); tree(); });
+      card.append(field(lab, inp, inp.id));
+      const tip = ev.act === 'call' ? 'Write it in app.c: void ' + (ev.arg || 'name') + '(lv_event_t *e)' :
+        ev.act === 'text' && hasValue(n) ? '{value} is this widget\'s value' + (n.type === 'switch' || n.type === 'check' || n.type === 'button' ? ' (On / Off)' : '') + '.' :
+        ev.act === 'value' ? (hasValue(n, true) ? 'A number, or {value}: this widget\'s value.' : 'A number.') : '';
+      if (tip) card.append(el('div', { class: 'note' }, tip));
+    }
+    return card;
+  }
+
+  /* ---------------------------------------------------------------- the Animation panel */
+  const ANIMS = [['', 'None'], ['fade', 'Fade in'], ['left', 'Slide in from the left'], ['right', 'Slide in from the right'], ['up', 'Slide up from below'],
+    ['down', 'Slide down from above'], ['blink', 'Blink'], ['float', 'Float up and down'], ['shake', 'Shake']];
+  function animAttrs(a, n, sec) {
+    sec('Animation');
+    a.append(selectField(n, 'an', 'Plays', ANIMS, true));
+    if (!n.props.an) return;
+    a.append(numField(n, 'and', 'Time (ms)', 400));
+    a.append(numField(n, 'andl', 'Wait (ms)', 0));
+    a.append(selectField(n, 'anr', 'Repeats', [['', 'Once'], ['2', '2 times'], ['3', '3 times'], ['5', '5 times'], ['inf', 'For ever']]));
+    a.append(selectField(n, 'anw', 'Starts', [['', 'When the screen opens'], ['ev', 'When an event plays it']], true));
+    a.append(el('div', { class: 'note' }, el('button', { class: 'btn', title: 'Play it on the screen once (Run plays it as the app does)', onclick: function () {
+      if (M) M.ccall('sim_design_play', null, ['number'], [n.id]);
+    } }, '▶ Play'), n.props.anw === 'ev' ? el('span', { class: 'hint' }, '  An event\'s "Play an animation" starts it.') : null));
   }
   /* a picture or a sound of the assets, or one added from a file */
   function assetField(n, key, label, kind) {
@@ -1331,28 +1633,6 @@
     pick.addEventListener('change', commit);
     return field(label, el('div', { class: 'pair' }, pick, s), s.id);
   }
-  function eventAttrs(a, n, sec) {
-    const value = VALUE_TYPES.includes(n.type);
-    sec(n.type === 'keypad' ? 'When a key is tapped' : value ? 'When it changes' : 'When it is tapped');
-    a.append(selectField(n, 'on', 'Do', [['', 'Nothing'], ['toast', 'Show a message'], ['screen', 'Open a screen'], ['back', 'Go back'],
-      ['sound', 'Play a sound'], ['call', 'Call a function']], true));
-    const on = n.props.on;
-    if (on === 'sound') a.append(assetField(n, 'onv', 'Sound', 'sound'));
-    if (on === 'toast') {
-      const i = el('input', { type: 'text' });
-      a.append(field('Message', i, bind(i, function () { return n.props.onv || ''; }, function (v) { n.props.onv = v; })));
-    } else if (on === 'screen') {
-      const names = P.screens.map(function (s) { return [s.name, s.name]; });
-      if (!n.props.onv) n.props.onv = (P.screens.find(function (s) { return s !== screen(); }) || P.screens[0]).name;
-      a.append(selectField(n, 'onv', 'Screen', names));
-    } else if (on === 'call') {
-      if (!n.props.onv) n.props.onv = 'on_' + n.name;
-      const i = el('input', { type: 'text', spellcheck: 'false' });
-      a.append(field('Function', i, bind(i, function () { return n.props.onv; }, function (v) { n.props.onv = v; })));
-      a.append(el('div', { class: 'note' }, 'Write it in app.c: void ' + n.props.onv + '(lv_event_t *e)'));
-      refreshSoon();
-    }
-  }
   function appAttrs(a) {
     a.append(el('div', { class: 'asec' }, 'App'));
     const name = el('input', { type: 'text' }), file = el('input', { type: 'text', spellcheck: 'false' });
@@ -1376,7 +1656,7 @@
 
   function handlers() {
     const seen = {};
-    walkAll(function (n) { if (n.props.on === 'call' && n.props.onv) seen[n.props.onv] = 1; });
+    walkAll(function (n) { events(n).forEach(function (e) { if (e.act === 'call' && e.arg) seen[e.arg] = 1; }); });
     return Object.keys(seen);
   }
   const cstr = function (s) { return '"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'; };
@@ -1507,19 +1787,33 @@
       screens[s.name] = 1;
       if (s.root.props.sound && !(P.assets || []).some(function (x) { return x.name === s.root.props.sound && x.kind === 'sound' && DATA[x.name]; }))
         add('error', 'Screen "' + s.name + '" plays "' + s.root.props.sound + '", which is not in the assets', null, i);
+      const has = function (name, kind) { return (P.assets || []).some(function (x) { return x.name === name && x.kind === kind && DATA[name]; }); };
       walk(s.root, function (n, par) {
+        const nm = n.type === 'root' ? 'Screen "' + s.name + '"' : n.name;
+        events(n).forEach(function (e) {
+          if (e.act === 'call' && (!cid.test(e.arg || '') || C_WORDS.includes(e.arg))) add('error', nm + ': "' + (e.arg || '') + '" is not a function name', n, i);
+          if (e.act === 'sound' && !has(e.target, 'sound')) add('error', nm + ': the sound "' + (e.target || '') + '" is not in the assets', n, i);
+          if (e.act === 'screen' && !P.screens.some(function (x) { return x.name === e.target; })) add('error', nm + ' opens a screen that is not there: ' + (e.target || '(none)'), n, i);
+          if (['toast', 'back', 'call', 'screen', 'sound'].includes(e.act)) return;
+          let t = null;
+          walk(s.root, function (w) { if (w.name === e.target && w.type !== 'root') t = w; });
+          const what = (ACTIONS.find(function (x) { return x[0] === e.act; }) || [0, e.act])[1].toLowerCase();
+          if (!t) add('error', nm + ': "' + what + '" names ' + (e.target ? '"' + e.target + '", which is not on this screen' : 'no widget'), n, i);
+          else if (e.act === 'text' && !TEXT_TYPES.includes(t.type)) add('error', nm + ': ' + t.name + ' has no text to set', n, i);
+          else if (e.act === 'value' && !NUMBER_TYPES.includes(t.type)) add('error', nm + ': ' + t.name + ' has no value to set', n, i);
+          else if (e.act === 'anim' && !t.props.an) add('error', nm + ': ' + t.name + ' has no animation', n, i);
+          if ((e.act === 'text' || e.act === 'value') && /\{value\}/.test(e.arg || '') && !hasValue(n, e.act === 'value'))
+            add('warning', nm + ': {value} - ' + kindName(n).toLowerCase() + ' has no value to give, so it stays as it is', n, i);
+        });
         if (n.type === 'root') return;
         if (!cid.test(n.name) || C_WORDS.includes(n.name)) add('error', 'Id "' + n.name + '": not a name C can use', n, i);
         else if (names[n.name]) add('error', 'Two widgets have the id "' + n.name + '"', n, i);
         names[n.name] = 1;
-        if (n.props.on === 'call' && (!cid.test(n.props.onv || '') || C_WORDS.includes(n.props.onv))) add('error', n.name + ': "' + (n.props.onv || '') + '" is not a function name', n, i);
         const fills = (par.props.layout === 'column' && n.props.h === 'fill' && par.props.h === 'content') || (par.props.layout === 'row' && n.props.w === 'fill' && par.props.w === 'content');
         if (fills) add('warning', n.name + ': fills a parent that fits its content, so it has nothing to fill', n, i);
         if (n.type === 'keypad' && !(n.props.keys || '').trim()) add('warning', n.name + ': no keys', n, i);
-        const has = function (name, kind) { return (P.assets || []).some(function (x) { return x.name === name && x.kind === kind && DATA[name]; }); };
         if (n.type === 'image' && !n.props.src) add('warning', n.name + ': no picture chosen', n, i);
         if (n.type === 'image' && n.props.src && !has(n.props.src, 'picture')) add('error', n.name + ': the picture "' + n.props.src + '" is not in the assets', n, i);
-        if (n.props.on === 'sound' && !has(n.props.onv, 'sound')) add('error', n.name + ': the sound "' + (n.props.onv || '') + '" is not in the assets', n, i);
         if (n.type === 'image' && n.props.fit && !n.props.w && !n.props.h) add('info', n.name + ': a picture fitted to its size wants a width and a height', n, i);
         if (n.type === 'calendar' && n.props.date && !/^\d{4}-\d{1,2}-\d{1,2}$/.test(n.props.date)) add('error', n.name + ': the date is YYYY-MM-DD', n, i);
       }, null);
@@ -1529,9 +1823,6 @@
     const big = (P.assets || []).reduce(function (t, x) { return t + (x.bytes || 0); }, 0);
     if (big > 6 * 1024 * 1024) add('error', 'The assets come to ' + (big / 1048576).toFixed(1) + ' MB: the build server takes 6 MB, and the app is loaded into memory whole', 'app', 0);
     else if (big > 2 * 1024 * 1024) add('warning', 'The assets come to ' + (big / 1048576).toFixed(1) + ' MB: the app file gets big, and it is loaded into memory whole', 'app', 0);
-    walkAll(function (n) {
-      if (n.props.on === 'screen' && !screens[n.props.onv]) add('error', n.name + ' opens a screen that is not there: ' + n.props.onv, n, null);
-    });
     /* every board's screen, both ways round: what the rule says for each screen of the system too */
     if (M) allSizes().forEach(function (s) {
       const r = JSON.parse(M.ccall('sim_design_measure', 'string', ['number', 'number'], [s.w, s.h]));
@@ -1939,6 +2230,280 @@
   }
   $('#run').addEventListener('click', toggleRun);
 
+  /* ---------------------------------------------------------------- several picked, and what can be done to them */
+
+  function picked() { return multi.length > 1 ? multi : sel && sel !== 'app' && sel.type !== 'root' ? [sel] : []; }
+  /* Shift / Cmd / Ctrl and a click: one more, or one less (never a widget and one inside it) */
+  function togglePick(n) {
+    if (!n || n.type === 'root') return;
+    let list = picked().slice();
+    const i = list.indexOf(n);
+    if (i >= 0) list.splice(i, 1);
+    else {
+      list = list.filter(function (x) { return !inside(n, x) && !inside(x, n); });
+      list.push(n);
+    }
+    assetSel = null;
+    multi = list.length > 1 ? list : [];
+    sel = list.length ? list[list.length - 1] : root();
+    marks();
+    tree();
+    project();
+    attrs();
+    markCode();
+  }
+  function pickMany(list) {
+    multi = list.length > 1 ? list.slice() : [];
+    sel = list.length ? list[list.length - 1] : root();
+    assetSel = null;
+  }
+  const sameParent = function (list) { return list.length > 0 && list.every(function (n) { return parentOf(n) === parentOf(list[0]); }); };
+  const isFree = function (b) { return !!b && (b.props.layout === 'free' || !b.props.layout); };
+  function inOrder(list) {                /* as they are in the tree */
+    const o = [];
+    walk(root(), function (n) { if (list.includes(n)) o.push(n); });
+    return o;
+  }
+  function copyPicked() {
+    const list = inOrder(picked());
+    if (!list.length) return;
+    clip = list.map(function (n) { return JSON.parse(JSON.stringify(n)); });
+    msg('Copied ' + (list.length > 1 ? list.length + ' widgets' : list[0].name));
+  }
+  function removePicked() {
+    const list = picked();
+    if (!list.length) return;
+    const p = parentOf(list[0]), i = p.kids.indexOf(list[0]);
+    list.forEach(function (n) { const q = parentOf(n); if (q) q.kids.splice(q.kids.indexOf(n), 1); });
+    multi = [];
+    sel = list.length === 1 ? p.kids[Math.min(i, p.kids.length - 1)] || p : p;
+    hover = null;
+    all();
+    commit();
+  }
+  function paste(src) {                  /* into the box selected, or the selected widget's box */
+    reserved = {};
+    let b = sel && sel !== 'app' ? sel : root();
+    if (!isBox(b)) b = parentOf(b) || root();
+    const made = [].concat(src).map(function (n) { const c = clone(n); b.kids.push(c); return c; });
+    pickMany(made);
+    all();
+    commit();
+  }
+  function duplicatePicked() {           /* each beside itself; in a free area a little down and right */
+    const list = inOrder(picked());
+    if (!list.length) return;
+    reserved = {};
+    const made = list.map(function (n) {
+      const p = parentOf(n), c = clone(n);
+      p.kids.splice(p.kids.indexOf(n) + 1, 0, c);
+      if (isFree(p)) { c.props.x = String(+(c.props.x || 0) + 16); c.props.y = String(+(c.props.y || 0) + 16); }
+      return c;
+    });
+    pickMany(made);
+    all();
+    commit();
+  }
+  function moveIn(n, d) {
+    const p = parentOf(n), i = p.kids.indexOf(n), j = i + d;
+    if (j < 0 || j >= p.kids.length) return;
+    p.kids.splice(i, 1);
+    p.kids.splice(j, 0, n);
+    changed();
+  }
+  /* the widgets picked into a new column, row or card, where the first of them was */
+  function wrap(list, kind) {
+    list = inOrder(list);
+    if (!sameParent(list)) return;
+    const p = parentOf(list[0]), at = p.kids.indexOf(list[0]);
+    reserved = {};
+    const b = make(kind);
+    if (isFree(p)) {
+      const R = list.map(function (n) { return L.rects.get(n.id); }).filter(Boolean), pr = L.rects.get(p.id);
+      if (R.length && pr) {
+        b.props.align = 'tl';
+        b.props.x = String(Math.round(Math.min.apply(null, R.map(function (r) { return r.x; })) - pr.x - pad(p)));
+        b.props.y = String(Math.round(Math.min.apply(null, R.map(function (r) { return r.y; })) - pr.y - pad(p)));
+        b.props.w = 'content';
+      }
+    }
+    list.forEach(function (n) { p.kids.splice(p.kids.indexOf(n), 1); });
+    p.kids.splice(Math.min(at, p.kids.length), 0, b);
+    list.forEach(function (n) { place(n, { box: b, index: b.kids.length, x: null }); });
+    multi = [];
+    sel = b;
+    all();
+    commit();
+  }
+  function unwrap(b) {                   /* a box's widgets into its place, the box gone */
+    const p = parentOf(b);
+    if (!p || !b.kids.length) return;
+    const i = p.kids.indexOf(b), pr = L.rects.get(p.id), kids = b.kids.slice();
+    p.kids.splice(i, 1);
+    kids.forEach(function (k, j) {
+      const r = L.rects.get(k.id);
+      const at = isFree(p) && r && pr ? { x: Math.round(r.x - pr.x - pad(p)), y: Math.round(r.y - pr.y - pad(p)) } : { x: null, y: 0 };
+      b.kids.splice(b.kids.indexOf(k), 1);
+      p.kids.splice(i + j, 0, k);
+      if (at.x != null) { k.props.align = 'tl'; k.props.x = String(at.x); k.props.y = String(at.y); }
+      else { delete k.props.x; delete k.props.y; delete k.props.align; }
+    });
+    pickMany(kids);
+    all();
+    commit();
+  }
+  function flagPicked(key, on) {
+    picked().forEach(function (n) { if (on) n.props[key] = '1'; else delete n.props[key]; });
+    refreshSoon();
+    tree();
+    attrs();
+    commit();
+  }
+  /* in a free area: lined up by an edge or the middle, or spread out evenly */
+  function alignPicked(how) {
+    const list = picked(), p = parentOf(list[0]), pr = L.rects.get(p.id);
+    const R = list.map(function (n) { return L.rects.get(n.id); });
+    if (!pr || R.some(function (r) { return !r; })) return;
+    const ox = pr.x + pad(p), oy = pr.y + pad(p);
+    const x0 = Math.min.apply(null, R.map(function (r) { return r.x; })), x1 = Math.max.apply(null, R.map(function (r) { return r.x + r.w; }));
+    const y0 = Math.min.apply(null, R.map(function (r) { return r.y; })), y1 = Math.max.apply(null, R.map(function (r) { return r.y + r.h; }));
+    const at = R.map(function (r) { return { x: r.x, y: r.y }; });
+    if (how === 'left') R.forEach(function (r, i) { at[i].x = x0; });
+    if (how === 'hmid') R.forEach(function (r, i) { at[i].x = (x0 + x1) / 2 - r.w / 2; });
+    if (how === 'right') R.forEach(function (r, i) { at[i].x = x1 - r.w; });
+    if (how === 'top') R.forEach(function (r, i) { at[i].y = y0; });
+    if (how === 'vmid') R.forEach(function (r, i) { at[i].y = (y0 + y1) / 2 - r.h / 2; });
+    if (how === 'bottom') R.forEach(function (r, i) { at[i].y = y1 - r.h; });
+    if (how === 'hspread' || how === 'vspread') {
+      const h = how === 'hspread', idx = R.map(function (r, i) { return i; }).sort(function (a, b) { return h ? R[a].x - R[b].x : R[a].y - R[b].y; });
+      const used = R.reduce(function (t, r) { return t + (h ? r.w : r.h); }, 0), gap = ((h ? x1 - x0 : y1 - y0) - used) / (R.length - 1);
+      let pos = h ? x0 : y0;
+      idx.forEach(function (i) { if (h) at[i].x = pos; else at[i].y = pos; pos += (h ? R[i].w : R[i].h) + gap; });
+    }
+    const across = ['left', 'hmid', 'right', 'hspread'].includes(how);
+    list.forEach(function (n, i) {             /* only the way it moves, unless its anchor changes to the top left */
+      const anchored = (n.props.align || 'tl') !== 'tl';
+      n.props.align = 'tl';
+      if (across || anchored) n.props.x = String(Math.round(at[i].x - ox));
+      if (!across || anchored) n.props.y = String(Math.round(at[i].y - oy));
+    });
+    changed();
+  }
+  function multiAttrs(a) {
+    const list = multi, same = sameParent(list), free = same && isFree(parentOf(list[0]));
+    const sec = function (t) { a.append(el('div', { class: 'asec' }, t)); };
+    const btn = function (t, f, title, off) { return el('button', { class: 'btn', title: title || null, disabled: off ? true : null, onclick: f }, t); };
+    sec(list.length + ' widgets');
+    a.append(el('div', { class: 'note' }, inOrder(list).map(function (n) { return n.name; }).join(', ')));
+    sec('Line them up');
+    if (free) {
+      const row = function (items) { return el('div', { class: 'note btns' }, items.map(function (x) { return btn(x[0], function () { alignPicked(x[1]); }, x[2], x[3]); })); };
+      a.append(row([['⇤ Left', 'left', 'Their left edges in line'], ['Middle', 'hmid', 'Their middles in line, across'], ['Right ⇥', 'right', 'Their right edges in line']]));
+      a.append(row([['⤒ Top', 'top', 'Their tops in line'], ['Middle', 'vmid', 'Their middles in line, down'], ['Bottom ⤓', 'bottom', 'Their bottoms in line']]));
+      a.append(row([['↔ Spread', 'hspread', 'The same space between them, across', list.length < 3], ['↕ Spread', 'vspread', 'The same space between them, down', list.length < 3]]));
+    } else a.append(el('div', { class: 'note' }, same ? 'They are laid out by their column or row: lining up by hand works in a free area.' :
+      'They are in different boxes: lining up works for widgets of one free area.'));
+    sec('Do');
+    a.append(el('div', { class: 'note btns' }, btn('Duplicate', duplicatePicked), btn('Delete', removePicked)));
+    a.append(el('div', { class: 'note btns' }, ['column', 'row', 'card'].map(function (k) {
+      return btn('Into a ' + k, function () { wrap(list, k); }, same ? 'A new ' + k + ' holding them' : 'Only widgets of one box', !same);
+    })));
+    const hidden = list.every(function (n) { return n.props.hidden === '1'; });
+    a.append(el('div', { class: 'note btns' }, btn(hidden ? 'Show them' : 'Hide them', function () { flagPicked('hidden', !hidden); }),
+      btn('Lock them', function () { flagPicked('locked', true); })));
+  }
+
+  /* ---------------------------------------------------------------- the menu of a right click */
+  let menuEl = null;
+  function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
+  function openMenu(x, y, items) {
+    closeMenu();
+    menuEl = el('div', { class: 'ctx', role: 'menu' });
+    items.forEach(function (it) {
+      if (!it) { menuEl.append(el('div', { class: 'ctx-sep', role: 'separator' })); return; }
+      menuEl.append(el('button', { role: 'menuitem', disabled: it.off ? true : null, onclick: function () { closeMenu(); it.run(); } },
+        el('span', {}, it.t), it.k ? el('kbd', {}, it.k) : null));
+    });
+    document.body.append(menuEl);
+    const r = menuEl.getBoundingClientRect();
+    menuEl.style.left = Math.max(4, Math.min(x, innerWidth - r.width - 6)) + 'px';
+    menuEl.style.top = Math.max(4, Math.min(y, innerHeight - r.height - 6)) + 'px';
+    const first = menuEl.querySelector('button:not([disabled])');
+    if (first) first.focus();
+  }
+  addEventListener('pointerdown', function (e) { if (menuEl && !menuEl.contains(e.target)) closeMenu(); }, true);
+  addEventListener('keydown', function (e) {
+    if (!menuEl) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeMenu(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
+      const b = Array.from(menuEl.querySelectorAll('button:not([disabled])')), i = b.indexOf(document.activeElement);
+      b[(i + (e.key === 'ArrowDown' ? 1 : b.length - 1)) % b.length].focus();
+    }
+  }, true);
+  addEventListener('blur', closeMenu);
+  const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
+  function widgetMenu(e) {
+    const list = picked(), one = list.length === 1 ? list[0] : null;
+    if (!list.length) {
+      openMenu(e.clientX, e.clientY, [
+        { t: 'Paste', k: MOD + 'V', off: !clip, run: function () { paste(clip); } },
+        { t: 'Select everything on the screen', k: MOD + 'A', off: !root().kids.length, run: function () { pickMany(root().kids.slice()); all(); } }]);
+      return;
+    }
+    const p = one && parentOf(one), same = sameParent(list);
+    const hidden = list.every(function (n) { return n.props.hidden === '1'; }), locked = list.every(function (n) { return n.props.locked === '1'; });
+    openMenu(e.clientX, e.clientY, [
+      { t: 'Cut', k: MOD + 'X', run: function () { copyPicked(); removePicked(); } },
+      { t: 'Copy', k: MOD + 'C', run: copyPicked },
+      { t: 'Paste', k: MOD + 'V', off: !clip, run: function () { paste(clip); } },
+      { t: 'Duplicate', k: MOD + 'D', run: duplicatePicked },
+      { t: 'Delete', k: '⌫', run: removePicked },
+      null,
+      { t: 'Move up', off: !one || p.kids.indexOf(one) === 0, run: function () { moveIn(one, -1); } },
+      { t: 'Move down', off: !one || p.kids.indexOf(one) === p.kids.length - 1, run: function () { moveIn(one, 1); } },
+      null,
+      { t: 'Wrap in a column', off: !same, run: function () { wrap(list, 'column'); } },
+      { t: 'Wrap in a row', off: !same, run: function () { wrap(list, 'row'); } },
+      { t: 'Wrap in a card', off: !same, run: function () { wrap(list, 'card'); } },
+      { t: 'Unwrap', off: !one || one.type !== 'box' || !one.kids.length, run: function () { unwrap(one); } },
+      null,
+      { t: hidden ? 'Show' : 'Hide', run: function () { flagPicked('hidden', !hidden); } },
+      { t: locked ? 'Unlock' : 'Lock', run: function () { flagPicked('locked', !locked); } },
+      { t: 'Select the box it is in', k: 'Esc', off: !one, run: function () { select(p || root()); } }]);
+  }
+
+  /* ---------------------------------------------------------------- the screens' pictures in the Project panel */
+  const thumbs = {};
+  const thumbSoon = debounce(function () {
+    const c = $('#screen');
+    if (run || !M || !c.width || !c.height) return;
+    const t = document.createElement('canvas'), h = 26, w = Math.round(c.width * h / c.height);
+    t.width = w * 2;
+    t.height = h * 2;
+    t.getContext('2d').drawImage(c, 0, 0, t.width, t.height);
+    const name = screen().name, had = !!thumbs[name];
+    thumbs[name] = t.toDataURL('image/png');
+    if (!had) project();
+    else document.querySelectorAll('#project img.thumb').forEach(function (im) { if (im.dataset.screen === name) im.src = thumbs[name]; });
+  }, 800);
+
+  /* ---------------------------------------------------------------- the keys, on a card */
+  function keysDialog() {
+    const d = $('#dlg-keys'), t = $('#keys-list');
+    if (!t.childElementCount) [
+      ['Undo / redo', MOD + 'Z  /  ' + MOD + '⇧Z'], ['Save', MOD + 'S'], ['Run / stop', MOD + 'R'],
+      ['Copy, cut, paste', MOD + 'C, ' + MOD + 'X, ' + MOD + 'V'], ['Duplicate', MOD + 'D'], ['Delete', '⌫ / Del'],
+      ['Pick one more (or one less)', '⇧ or ' + MOD.replace('+', '') + ' + click'], ['Pick all in the same box', MOD + 'A'],
+      ['The box it is in', 'Esc'], ['Move by 4 px (free area)', '← → ↑ ↓'], ['… by 16 px, by 1 px', '⇧ + arrow, ⌥ + arrow'],
+      ['Drag without lining up, or by 1 px', '⌥ while dragging'], ['Edit a text on the screen', 'Double click'],
+      ['A menu of what can be done', 'Right click'], ['Zoom', MOD + 'scroll'], ['These keys', '?']
+    ].forEach(function (r) { t.append(el('tr', {}, el('td', {}, r[0]), el('td', {}, el('kbd', {}, r[1])))); });
+    d.showModal();
+  }
+  $('#keys').addEventListener('click', keysDialog);
+
   /* ---------------------------------------------------------------- the toolbar and the keys */
 
   function deviceUi() {
@@ -1975,25 +2540,6 @@
   });
 
   let clip = null;
-  function removeSel() {
-    if (!sel || sel === 'app' || sel.type === 'root') return;
-    const p = parentOf(sel), i = p.kids.indexOf(sel);
-    p.kids.splice(i, 1);
-    sel = p.kids[Math.min(i, p.kids.length - 1)] || p;
-    hover = null;
-    all();
-    commit();
-  }
-  function paste(n) {
-    reserved = {};
-    const c = clone(n);
-    let b = sel && sel !== 'app' ? sel : root();
-    if (!isBox(b)) b = parentOf(b) || root();
-    b.kids.push(c);
-    sel = c;
-    all();
-    commit();
-  }
   document.addEventListener('keydown', function (e) {
     const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase(), typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
     if (mod && k === 's') { e.preventDefault(); saveDesign(); return; }
@@ -2005,20 +2551,30 @@
     if (typing) return;
     if (mod && k === 'z') { e.preventDefault(); if (e.shiftKey) doRedo(); else doUndo(); return; }
     if (mod && k === 'y') { e.preventDefault(); doRedo(); return; }
-    const node = sel && sel !== 'app' ? sel : null;
-    if (mod && k === 'c' && node && node.type !== 'root') { clip = JSON.parse(JSON.stringify(node)); msg('Copied ' + node.name); return; }
-    if (mod && k === 'x' && node && node.type !== 'root') { clip = JSON.parse(JSON.stringify(node)); removeSel(); return; }
+    const node = sel && sel !== 'app' ? sel : null, list = picked();
+    if (e.key === '?') { e.preventDefault(); keysDialog(); return; }
+    if (mod && k === 'c' && list.length) { copyPicked(); return; }
+    if (mod && k === 'x' && list.length) { copyPicked(); removePicked(); return; }
     if (mod && k === 'v' && clip) { e.preventDefault(); paste(clip); return; }
-    if (mod && k === 'd' && node && node.type !== 'root') { e.preventDefault(); paste(node); return; }
-    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSel(); return; }
+    if (mod && k === 'd' && list.length) { e.preventDefault(); duplicatePicked(); return; }
+    if (mod && k === 'a') {                              /* every widget of the box the selected one is in */
+      e.preventDefault();
+      const b = node && node.type !== 'root' ? parentOf(node) : root();
+      if (b && b.kids.length) { pickMany(b.kids.slice()); all(); }
+      return;
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removePicked(); return; }
+    if (e.key === 'Escape' && multi.length) { select(sel); return; }
     if (e.key === 'Escape' && node) { select(parentOf(node) || root()); return; }
-    if (e.key.startsWith('Arrow') && node) {
-      const par = parentOf(node);
-      if (!par || !(par.props.layout === 'free' || !par.props.layout)) return;
+    if (e.key.startsWith('Arrow') && list.length) {
+      const movable = list.filter(function (n) { return isFree(parentOf(n)); });
+      if (!movable.length) return;
       e.preventDefault();
       const step = e.shiftKey ? 16 : e.altKey ? 1 : 4, a = e.key.slice(5);
-      if (a === 'Left' || a === 'Right') node.props.x = String(+(node.props.x || 0) + (a === 'Left' ? -step : step));
-      else node.props.y = String(+(node.props.y || 0) + (a === 'Up' ? -step : step));
+      movable.forEach(function (n) {
+        if (a === 'Left' || a === 'Right') n.props.x = String(+(n.props.x || 0) + (a === 'Left' ? -step : step));
+        else n.props.y = String(+(n.props.y || 0) + (a === 'Up' ? -step : step));
+      });
       refreshSoon();
       attrsSoon();
       commit();

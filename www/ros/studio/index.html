@@ -109,6 +109,7 @@
   <button id="prob-toggle"><span id="prob-count">No problems</span></button>
   <span id="msg"></span>
   <span class="fill"></span>
+  <button id="keys" title="Keyboard shortcuts (?)">Shortcuts</button>
   <span id="pos"></span>
 </footer>
 
@@ -143,6 +144,13 @@
     <p class="acct-note">On the server: open one from any computer. Save (Ctrl+S) keeps the open one there.</p>
     <div class="cloud-list" id="cloud-list"></div>
     <div class="dlg-foot"><button type="button" class="link" id="cloud-file">Open a .design file instead…</button><span class="fill"></span><button value="cancel">Close</button></div>
+  </form>
+</dialog>
+<dialog id="dlg-keys" class="dlg keys">
+  <form method="dialog">
+    <h2>Shortcuts</h2>
+    <table class="keys-table"><tbody id="keys-list"></tbody></table>
+    <div class="dlg-foot"><button value="cancel">Close</button></div>
   </form>
 </dialog>
 <input type="file" id="open-file" accept=".design,application/json" hidden>

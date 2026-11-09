@@ -45,14 +45,31 @@
     it; a Free area keeps each widget where you put it, anchored to a corner, an edge or the centre.</p></li>
   <li><p><b>Set them up</b> in Attributes. Sizes that fill or fit their content move with the screen; pixel sizes do not.
     Colours by name follow the light and dark theme on the device.</p></li>
-  <li><p><b>Say what happens</b> when a widget is tapped: a message, another screen, back, a sound, or a function of yours.
-    A screen can come in fading or sliding (Screen › Comes in), and play a sound as it does (Screen › Plays) - a voice
-    prompt; the way back is the way in, reversed.</p></li>
+  <li><p><b>Style them</b> (Attributes › Style): background and its opacity, text colour, border, corners, shadow,
+    opacity and padding - for the normal look and, on its own tab, while the widget is <b>pressed</b>, <b>checked</b> or
+    <b>disabled</b>. A dot on a tab says that look is set; <i>Clear the look</i> takes it back to the theme's.</p></li>
+  <li><p><b>Say what happens</b> (Attributes › Events): a widget can have several events, each <i>when</i> it is
+    tapped, held, pressed, let go or its value changes, and <i>do</i> one thing - show a message, open a screen, go back,
+    play a sound, call a function of yours, set another widget's text or value, show or hide it, enable or disable it,
+    check or uncheck it, or play its animation. In a text, <code>{value}</code> is the widget's own value: a slider's
+    number, a switch's On / Off, a dropdown's choice, what was typed - so <i>Brightness {value}%</i> on a label follows
+    a slider without a line of code. A screen's events run each time it is shown (select the screen, then Events). A
+    screen can come in fading or sliding (Screen › Comes in), and play a sound as it does (Screen › Plays); the way back
+    is the way in, reversed.</p></li>
+  <li><p><b>Animate</b> (Attributes › Animation): a widget fades in, slides in from a side, blinks, floats or shakes -
+    its time, a wait before it, once, a few times or for ever, when the screen opens or when an event plays it.
+    <i>Play</i> shows it on the screen.</p></li>
+  <li><p><b>Edit fast:</b> a right click on the screen or in the tree has cut, copy, paste, duplicate, delete, move up and
+    down, wrap in a column / row / card and unwrap, hide and lock. Shift or Cmd / Ctrl and a click picks several:
+    line them up by an edge or the middle, spread them evenly, move them together. In a Free area a widget being
+    dragged lines up with its neighbours and the area (pink guides; Alt to place it freely). A locked widget can't be
+    picked or moved on the screen - the tree still can. <b>?</b> lists the keys.</p></li>
   <li><p><b>Pictures and sounds of your own:</b> Assets › <b>+</b> takes picture files (PNG, JPEG, GIF, WebP) and sound
     files (WAV, MP3, OGG, M4A). A picture becomes a PNG no larger than the screen; a sound a 16 kHz mono WAV, the first
     60 s. A <b>Picture</b> widget shows one - as it is, or scaled to its size, stretched, cut or tiled; Run plays the
     sounds in the browser. They go inside the app's <code>.elf</code>: one file to copy, nothing else on the device.</p></li>
-  <li><p><b>Run</b> tries it on the screen, with the mouse as a finger and Esc as the back swipe.</p></li>
+  <li><p><b>Run</b> tries it on the screen, with the mouse as a finger and Esc as the back swipe: the events and the
+    animations run as they will on the device.</p></li>
   <li><p><b>Problems</b> at the bottom checks the screen on every board, both ways round: a widget that runs off the
     edge, a name C can't use.</p></li>
   <li><p><b>Sign in</b> (top right) to keep your designs on our server - Save (Ctrl+S) and Open, from any computer,
@@ -95,8 +112,12 @@ cd appkit
   <li>Run shows the design. It does not run your <code>app.c</code>: that needs a device.</li>
   <li>Keypad keys: a row a line, a comma between keys; a key named like an LVGL symbol (<code>OK</code>,
     <code>BACKSPACE</code>, <code>LEFT</code> ...) shows the symbol. A calendar with no date shows the device's month.</li>
-  <li>The calendar, meter, spinbox, LED, keypad, toggle buttons and the screen transitions came after firmware 1.4.0: a
-    device on 1.4.0 or older can't open an app that uses them (Settings › About › Check online).</li>
+  <li>The calendar, meter, spinbox, LED, keypad, toggle buttons, the screen transitions and the fade, slide and shake
+    animations came after firmware 1.4.0: a device on 1.4.0 or older can't open an app that uses them (Settings › About ›
+    Check online). Styles, events, blink and float work on 1.4.0.</li>
+  <li>In the C an event is a callback, <code>&lt;id&gt;_cb</code> (<code>&lt;id&gt;_long_cb</code> for a hold ...), with its
+    actions in order; an animation is <code>anim_&lt;id&gt;()</code>; a screen's events are the last lines of its
+    <code>build_&lt;screen&gt;()</code>. A function of yours called from a screen's events gets <code>NULL</code> for the event.</li>
   <li>The build server builds one app at a time; a board's first build of the day can take a few minutes. It accepts
     the three sources only, and an <code>#include</code> of a header by its name.</li>
 </ul>
