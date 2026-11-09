@@ -29,6 +29,10 @@ export class Interaction {
     this.keys = new Set();
     this.controllers = [];
     this.onAnyPress = null;
+    /** Test hook: { pos: Vector3, quat: Quaternion, trigger: bool } stands in for a tracked controller. */
+    this.fakePose = null;
+    this._nearT = 0;
+    this._box = new THREE.Box3();
     this._label = this._makeLabel();
     scene.add(this._label);
     this._setupMouse();
@@ -162,10 +166,10 @@ export class Interaction {
       const grip = xr.getControllerGrip(i);
       this.rig.add(c, grip);
       const lineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]);
-      const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: '#ffd23f', transparent: true, opacity: 0.85 }));
+      const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: '#ffd23f', transparent: true, opacity: 0.85, toneMapped: false }));
       line.visible = false;
       c.add(line);
-      const reticle = new THREE.Mesh(new THREE.RingGeometry(0.012, 0.02, 20), new THREE.MeshBasicMaterial({ color: '#ffd23f', depthTest: false, transparent: true }));
+      const reticle = new THREE.Mesh(new THREE.RingGeometry(0.012, 0.02, 20), new THREE.MeshBasicMaterial({ color: '#ffd23f', depthTest: false, transparent: true, toneMapped: false }));
       reticle.renderOrder = 998; reticle.visible = false;
       this.scene.add(reticle);
       const st = { index: i, controller: c, grip, line, reticle, hovered: null, source: null, handedness: null, axes: [0, 0, 0, 0], snapReady: true };
@@ -180,9 +184,16 @@ export class Interaction {
         ctx.hands?.detach(st);
       });
       c.addEventListener('selectstart', () => {
-        const hit = st.lastHit;
+        // a ray hit wins; otherwise a pull of the trigger with the hand on something grabs it
+        const hit = st.lastHit || this._nearest(st);
         this._press({ kind: 'vr', controller: st }, hit);
         ctx.hands?.pulse(st, 0.3, 40);
+      });
+      // reach out and squeeze the grip on a tool, a PPE item, a switch… — same as selecting it
+      c.addEventListener('squeezestart', () => {
+        if (this.capture) return;
+        const hit = this._nearest(st);
+        if (hit) { this._press({ kind: 'vr', controller: st, grab: true }, hit); ctx.hands?.pulse(st, 0.6, 60); }
       });
       this.controllers.push(st);
     }
@@ -192,11 +203,41 @@ export class Interaction {
     return this.controllers.find((c) => c.handedness === 'right' && c.source) || this.controllers.find((c) => c.source) || null;
   }
 
+  /** The hand doing the work: whichever trigger is held, else the right hand. */
+  activeController() {
+    const held = this.controllers.find((c) => c.source?.gamepad?.buttons?.[0]?.pressed);
+    return held || this.rightController;
+  }
+
+  /** World pose of the working hand + trigger state, for real-motion tasks. */
+  pose() {
+    if (this.fakePose) return this.fakePose;
+    const st = this.activeController();
+    if (!st || !st.source) return null;
+    const pos = new THREE.Vector3(), quat = new THREE.Quaternion();
+    st.grip.getWorldPosition(pos); st.grip.getWorldQuaternion(quat);
+    const b = st.source.gamepad?.buttons || [];
+    return { pos, quat, trigger: !!b[0]?.pressed, squeeze: !!b[1]?.pressed, st };
+  }
+
+  /** Closest interactable within reach of a hand (10 cm of its bounding box). */
+  _nearest(st, reach = 0.1) {
+    if (!st?.source) return null;
+    const p = new THREE.Vector3(); st.grip.getWorldPosition(p);
+    let best = null, bestD = reach;
+    for (const [o, h] of this.targets) {
+      if (o.userData.button || !visibleInTree(o) || !h.enabled()) continue;
+      const d = this._box.setFromObject(o).distanceToPoint(p);
+      if (d < bestD) { bestD = d; best = o; }
+    }
+    return best ? { root: best, point: p, distance: bestD } : null;
+  }
+
   // ---------------- hover label ----------------
   _makeLabel() {
     const c = document.createElement('canvas'); c.width = 512; c.height = 96;
     const tex = toTex(c, { aniso: 8 });
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true, toneMapped: false }));
     sp.scale.set(0.42, 0.079, 1);
     sp.renderOrder = 997;
     sp.visible = false;
@@ -228,6 +269,7 @@ export class Interaction {
   update(dt) {
     let labelShown = false;
     if (ctx.vr) {
+      if (this._nearT <= 0) this._nearT = 0.1;
       if (this.mouseHover) { this._setHighlight(this.mouseHover, false); this.mouseHover = null; }
       for (const st of this.controllers) {
         if (!st.source || !st.line.visible) { st.reticle.visible = false; continue; }
@@ -237,7 +279,12 @@ export class Interaction {
         const dir = new THREE.Vector3(0, 0, -1).applyMatrix4(tmpM).normalize();
         const hit = this.capture ? null : this._hit(origin, dir);
         st.lastHit = hit;
-        const root = hit?.root || null;
+        // hand-near-object highlight (checked at ~10 Hz: bounding boxes aren't free)
+        if (!hit && !this.capture) {
+          this._nearT -= dt / 2;
+          if (this._nearT <= 0) { st.near = this._nearest(st); }
+        } else st.near = null;
+        const root = hit?.root || st.near?.root || null;
         if (root !== st.hovered) {
           if (st.hovered && !this.controllers.some((o) => o !== st && o.hovered === st.hovered)) this._setHighlight(st.hovered, false);
           st.hovered = root;
@@ -274,6 +321,8 @@ export class Locomotion {
     this.rig = rig; this.camera = camera; this.ix = interaction;
     this.eye = 1.5;
     this.moving = 0;
+    this._stride = 0;
+    this._last = null;
   }
 
   /** Puts the player at a station; in VR, offsets for where the head is in the play space. */
@@ -307,6 +356,7 @@ export class Locomotion {
         }
       }
       if (turn) {
+        this.turnFlash = 0.3;
         // rotate around the head, not the rig origin
         const head = new THREE.Vector3(); camera.getWorldPosition(head);
         rig.position.sub(head).applyAxisAngle(UP, turn).add(head);
@@ -326,6 +376,7 @@ export class Locomotion {
       if (k.has('ArrowLeft')) rig.rotation.y += dt * 1.8;
       if (k.has('ArrowRight')) rig.rotation.y -= dt * 1.8;
     }
+    this.turnFlash = Math.max(0, (this.turnFlash || 0) - dt);
     const dead = 0.18;
     if (move.length() > dead) {
       const speed = (ix.keys.has('ShiftLeft') ? 2.6 : 1.5) * Math.min(1, move.length());
@@ -335,6 +386,16 @@ export class Locomotion {
       rig.position.addScaledVector(fwd, -n.y * speed * dt).addScaledVector(right, n.x * speed * dt);
       this.moving = 1;
     } else this.moving = 0;
+    // footsteps: one every ~0.65 m of real travel (stick, keys, or walking around the play space)
+    const head = new THREE.Vector3(); camera.getWorldPosition(head); head.y = 0;
+    if (this._last) {
+      const d = head.distanceTo(this._last);
+      if (d < 0.5) {                    // ignore teleports
+        this._stride += d;
+        if (this._stride > 0.65) { this._stride = 0; ctx.audio?.step(); }
+      }
+    }
+    this._last = head;
     const b = ctx.world?.current?.bounds;
     if (b) {
       const head = new THREE.Vector3(); camera.getWorldPosition(head);
@@ -358,14 +419,27 @@ export class Hands {
     this.models = new Map();
     this.anim = { spin: 0, shake: 0 };
   }
+  /** A hand: palm, four two-joint fingers and a thumb that curl with the grip and trigger. */
   _hand() {
     const g = new THREE.Group();
-    const palm = new THREE.Mesh(new THREE.SphereGeometry(0.045, 14, 10), this.gloveMat);
-    palm.scale.set(0.9, 0.6, 1.3); palm.position.z = 0.02; g.add(palm);
-    const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.014, 0.03, 4, 8), this.gloveMat);
-    thumb.position.set(-0.035, 0.0, -0.01); thumb.rotation.set(Math.PI / 2, 0, 0.6); g.add(thumb);
-    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.042, 0.04, 12), mat('#1d3060'));
-    cuff.rotation.x = Math.PI / 2; cuff.position.z = 0.08; g.add(cuff);
+    const palm = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.026, 0.085), this.gloveMat);
+    palm.position.set(0, 0, 0.015); g.add(palm);
+    const seg = (len, r) => { const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 3, 8), this.gloveMat); m.rotation.x = Math.PI / 2; m.position.z = -len / 2; return m; };
+    const fingers = [];
+    [[-0.027, 0.036], [-0.009, 0.042], [0.009, 0.04], [0.027, 0.033]].forEach(([x, len]) => {
+      const k1 = new THREE.Group(); k1.position.set(x, 0, -0.028); g.add(k1);
+      k1.add(seg(len * 0.55, 0.0085));
+      const k2 = new THREE.Group(); k2.position.z = -len * 0.6 - 0.006; k1.add(k2);
+      k2.add(seg(len * 0.45, 0.008));
+      fingers.push([k1, k2]);
+    });
+    const t1 = new THREE.Group(); t1.position.set(-0.04, -0.004, 0.012); t1.rotation.y = 0.7; g.add(t1);
+    t1.add(seg(0.03, 0.0095));
+    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.042, 0.045, 14), mat('#1d3060'));
+    cuff.rotation.x = Math.PI / 2; cuff.position.z = 0.085; g.add(cuff);
+    g.userData.fingers = fingers;
+    g.userData.thumb = t1;
+    g.userData.curl = 0;
     return g;
   }
   attach(st) {
@@ -411,6 +485,18 @@ export class Hands {
   spin() { this.anim.spin = 0.35; }
   shake() { this.anim.shake = 0.3; }
   update(dt) {
+    // finger curl follows the analog grip/trigger (index ← trigger, the rest ← grip)
+    for (const [st, h] of this.models) {
+      const b = st.source?.gamepad?.buttons || [];
+      const trig = b[0]?.value || 0, grip = b[1]?.value || 0;
+      const f = h.userData.fingers;
+      f.forEach(([k1, k2], i) => {
+        const target = (i === 0 ? trig : grip) * 1.25 + 0.12;
+        k1.rotation.x += (-target - k1.rotation.x) * Math.min(1, dt * 18);
+        k2.rotation.x = k1.rotation.x * 1.1;
+      });
+      h.userData.thumb.rotation.x = -Math.max(trig, grip) * 0.6;
+    }
     if (!this.held) return;
     if (this.anim.spin > 0) { this.anim.spin -= dt; this.held.rotation.z += dt * 18; }
     if (this.anim.shake > 0) { this.anim.shake -= dt; this.held.position.x = Math.sin(this.anim.shake * 80) * 0.01; } else this.held.position.x = 0;
@@ -424,8 +510,8 @@ export class Hints {
     this.items = [];
     this.t = 0;
     this.arrowGeo = new THREE.ConeGeometry(0.06, 0.14, 4);
-    this.arrowMat = new THREE.MeshBasicMaterial({ color: '#ffd23f' });
-    this.glowMat = new THREE.SpriteMaterial({ map: glowTex('#ffd84a'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    this.arrowMat = new THREE.MeshBasicMaterial({ color: '#ffd23f', toneMapped: false });
+    this.glowMat = new THREE.SpriteMaterial({ map: glowTex('#ffd84a'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
   }
   show(target, { offset = 0.25, glow = true } = {}) {
     const g = new THREE.Group();

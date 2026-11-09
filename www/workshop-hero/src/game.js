@@ -74,6 +74,7 @@ export class Run {
       scores: this.scores(), timer: null, resources: null, bag: null, ppe: null, objective: '',
     });
     this.log('start', { level: L?.id });
+    ctx.audio.setMusicLevel(0.02);   // let the room be heard while working
   }
   stage(key) {
     this.check();
@@ -467,6 +468,9 @@ export class Game {
   async title() {
     const r = this.newRun(-1);
     ctx.hud.set({ visible: false, stage: null });
+    ctx.audio.setMusicLevel(0.055);
+    document.body.classList.remove('goggles', 'helmet');
+    ctx.hands.setGloves(false);
     ctx.world.scenes.workshop.reset();
     try {
       await r.goTo('workshop', 'start');

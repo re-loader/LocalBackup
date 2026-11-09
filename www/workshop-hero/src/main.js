@@ -7,6 +7,7 @@ import { HUD } from './hud.js';
 import { Panel } from './panel.js';
 import { Game, loadRuns } from './game.js';
 import { LEVELS } from './strings.js';
+import { setupLook } from './look.js';
 
 // The Workshop Hero — WebXR · เปิดได้ทั้งแว่น VR (PICO / Quest) และคอมพิวเตอร์ / แท็บเล็ต
 
@@ -22,6 +23,7 @@ document.getElementById('app').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.03, 80);
 camera.position.set(0, 1.5, 0);
+setupLook(renderer, scene);
 const rig = new THREE.Group();
 rig.add(camera);
 scene.add(rig);
@@ -40,6 +42,18 @@ ctx.game = new Game();
 const place = ctx.loco.place.bind(ctx.loco);
 ctx.loco.place = (st) => { ctx.loco.lastStation = st; place(st); };
 
+ctx.world.scenes.hub.onTick = () => ctx.audio.clockTick(ctx.world.scenes.hub.clockPos());
+ctx.world.onShow = (name) => {
+  if (name === 'restroom') {
+    // fixed geometry; drips/sprays are tiny — a single capture is enough
+    const s = ctx.world.scenes.restroom;
+    const xr = renderer.xr.enabled; renderer.xr.enabled = false;   // cube capture must not render as XR
+    s.captureMirror(renderer, scene);
+    renderer.xr.enabled = xr;
+  }
+  ctx.audio?.setRoom?.(name);
+};
+
 // show something behind the overlay
 ctx.world.show('workshop');
 ctx.loco.place(ctx.world.scenes.workshop.stations.start);
@@ -48,10 +62,12 @@ ctx.loco.place(ctx.world.scenes.workshop.stations.start);
 const clock = new THREE.Clock();
 const camWorld = new THREE.Vector3();
 let replaceIn = 0;
+let shadowT = 0;
 function frame(dt) {
   if (replaceIn > 0 && --replaceIn === 0 && ctx.loco.lastStation) ctx.loco.place(ctx.loco.lastStation);
   ctx.loco.update(dt);
   camera.getWorldPosition(camWorld);
+  ctx.audio.listen(camera.matrixWorld);
   ctx.interaction.update(dt);
   ctx.world.update(dt, camWorld);
   ctx.hands.update(dt);
@@ -59,6 +75,10 @@ function frame(dt) {
   ctx.game.update(dt);
   Panel.updateAll(dt, camWorld);
   ctx.hud.update(dt);
+  // the window-sun shadow map refreshes at ~15 Hz (and at once after a room change): plenty for idle NPCs,
+  // and it halves the shadow cost on a standalone headset
+  shadowT += dt;
+  if (shadowT > 0.066 || ctx.world.shadowDirty) { renderer.shadowMap.needsUpdate = true; shadowT = 0; ctx.world.shadowDirty = false; }
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(() => frame(Math.min(0.05, clock.getDelta())));

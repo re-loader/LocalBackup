@@ -41,7 +41,7 @@ export class Button {
     this.canvas.width = Math.round(w * PX); this.canvas.height = Math.round(h * PX);
     this.g = this.canvas.getContext('2d');
     this.tex = toTex(this.canvas, { aniso: 16 });
-    this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: !panel.overlay, depthWrite: !panel.overlay }));
+    this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: !panel.overlay, depthWrite: !panel.overlay, toneMapped: false }));
     this.mesh.position.set(x, y, 0.006);
     this.mesh.userData.button = this;
     this.mesh.renderOrder = (panel.mesh.renderOrder || 0) + 1;
@@ -108,7 +108,7 @@ export class Panel {
     this.tex = toTex(this.canvas, { aniso: 16 });
     // UI cards draw over the world (like any VR menu) so props never hide them
     this.overlay = overlay;
-    this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: !overlay, depthWrite: !overlay }));
+    this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: !overlay, depthWrite: !overlay, toneMapped: false }));
     if (overlay) this.mesh.renderOrder = 900;
     this.group.add(this.mesh);
     this.buttons = [];

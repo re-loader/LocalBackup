@@ -150,6 +150,12 @@ button { font-family: var(--font); cursor: pointer; }
   border-radius: 40px;
 }
 body.goggles #gogglesFx { display: block; }
+#helmetFx {
+  position: fixed; left: 0; right: 0; top: 0; height: 46px; pointer-events: none; z-index: 11; display: none;
+  background: linear-gradient(180deg, rgba(242,183,5,0.92), rgba(199,143,0,0.55) 55%, rgba(199,143,0,0));
+  border-radius: 0 0 50% 50% / 0 0 26px 26px;
+}
+body.helmet #helmetFx { display: block; }
 
 @media (max-width: 720px) {
   .adisac { grid-template-columns: repeat(3, 1fr); }

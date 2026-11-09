@@ -102,7 +102,7 @@ export class HUD {
     const mk = (w, h, pw, ph, y) => {
       const c = document.createElement('canvas'); c.width = w; c.height = h;
       const tex = toTex(c, { aniso: 16 });
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, toneMapped: false }));
       m.position.set(0, y, -0.9);
       m.renderOrder = 999;
       m.visible = false;
@@ -112,11 +112,44 @@ export class HUD {
     this.vr = mk(1024, 300, 0.5, 0.1465, -0.29);
     this.vrToast = mk(1024, 170, 0.5, 0.083, -0.15);
     // fade sphere for scene changes
-    this.fader = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 12), new THREE.MeshBasicMaterial({ color: '#000', side: THREE.BackSide, transparent: true, opacity: 0, depthTest: false, depthWrite: false }));
+    this.fader = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 12), new THREE.MeshBasicMaterial({ color: '#000', side: THREE.BackSide, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false }));
     this.fader.renderOrder = 10000;
     this.fader.visible = false;
     camera.add(this.fader);
     this._fade = null;
+
+    // ---- what the wearer sees of their own PPE, and the comfort vignette (VR) ----
+    const overlay = (w, h, draw, z, y = 0, order = 990) => {
+      const c = document.createElement('canvas'); c.width = 512; c.height = Math.round(512 * h / w);
+      draw(c.getContext('2d'), c.width, c.height);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: toTex(c), transparent: true, depthTest: false, depthWrite: false, toneMapped: false }));
+      m.position.set(0, y, z); m.renderOrder = order; m.visible = false;
+      camera.add(m);
+      return m;
+    };
+    // safety goggles: dark rubber rim at the edge of vision, a faint blue lens tint, a seam at the nose
+    this.gogglesFx = overlay(0.56, 0.44, (g, W, H) => {
+      g.fillStyle = 'rgba(150,205,255,0.07)'; g.fillRect(0, 0, W, H);
+      const rim = g.createRadialGradient(W / 2, H / 2, H * 0.36, W / 2, H / 2, H * 0.72);
+      rim.addColorStop(0, 'rgba(20,28,40,0)'); rim.addColorStop(0.55, 'rgba(20,28,40,0.55)'); rim.addColorStop(1, 'rgba(20,28,40,0.97)');
+      g.fillStyle = rim; g.fillRect(0, 0, W, H);
+      const nose = g.createLinearGradient(0, H * 0.62, 0, H);
+      nose.addColorStop(0, 'rgba(20,28,40,0)'); nose.addColorStop(1, 'rgba(20,28,40,0.8)');
+      g.fillStyle = nose; g.beginPath(); g.moveTo(W * 0.44, H); g.quadraticCurveTo(W / 2, H * 0.66, W * 0.56, H); g.fill();
+    }, -0.2);
+    // hard-hat brim along the top of the view
+    this.helmetFx = overlay(0.62, 0.1, (g, W, H) => {
+      const gr = g.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, 'rgba(242,183,5,0.95)'); gr.addColorStop(0.55, 'rgba(199,143,0,0.75)'); gr.addColorStop(1, 'rgba(199,143,0,0)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.lineTo(W, 0); g.lineTo(W, H * 0.7); g.quadraticCurveTo(W / 2, H * 1.05, 0, H * 0.7); g.fill();
+    }, -0.2, 0.2);
+    // comfort vignette while moving with the stick or snap-turning
+    this.vignette = overlay(0.6, 0.6, (g, W, H) => {
+      const gr = g.createRadialGradient(W / 2, H / 2, W * 0.18, W / 2, H / 2, W * 0.5);
+      gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.7, 'rgba(0,0,0,0.7)'); gr.addColorStop(1, 'rgba(0,0,0,1)');
+      g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    }, -0.16, 0, 995);
+    this.vignette.material.opacity = 0;
   }
 
   _renderVR() {
@@ -233,6 +266,15 @@ export class HUD {
   }
 
   update(dt) {
+    // PPE seen from the inside (VR; the desktop uses the CSS frame) and the comfort vignette
+    const body = document.body.classList;
+    this.gogglesFx.visible = ctx.vr && body.contains('goggles');
+    this.helmetFx.visible = ctx.vr && body.contains('helmet');
+    const L = ctx.loco;
+    const want = ctx.vr && L && (L.moving || L.turnFlash > 0) ? 0.85 : 0;
+    const v = this.vignette.material;
+    v.opacity += (want - v.opacity) * Math.min(1, dt * (want ? 10 : 4));
+    this.vignette.visible = v.opacity > 0.01;
     if (this._fade) {
       const f = this._fade;
       f.t += dt;
@@ -249,8 +291,10 @@ export class HUD {
     if (this._dirty) {
       this._dirty = false;
       this._renderDom();
-      this.vr.m.visible = ctx.vr && this.s.visible;
       if (ctx.vr) this._renderVR();
     }
+    // in the headset the view-locked card sits low in the view — exactly where the hands work — so it
+    // steps aside while a hands-on task (its own panel) is running
+    this.vr.m.visible = ctx.vr && this.s.visible && !ctx.interaction?.capture;
   }
 }

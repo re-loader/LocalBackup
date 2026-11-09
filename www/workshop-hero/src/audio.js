@@ -1,14 +1,27 @@
 // เสียงทั้งหมดสังเคราะห์ด้วย Web Audio — ไม่มีไฟล์เสียง จึงเล่นออฟไลน์ได้
-// รวมถึงเสียงพูดภาษาไทยผ่าน speechSynthesis ถ้าเครื่องมีเสียงภาษาไทย
+// ความสมจริง: เสียงมีทิศทาง 3 มิติ (HRTF) ตามตำแหน่งต้นเสียง · เสียงก้องตามขนาดห้อง ·
+// เสียงบรรยากาศประจำห้อง (พัดลม ไฟฟลูออเรสเซนต์ นกนอกหน้าต่าง นาฬิกา) · เสียงฝีเท้า
+// และเสียงพูดภาษาไทยผ่าน speechSynthesis ถ้าเครื่องมีเสียงภาษาไทย
+
+const ROOMS = {
+  hub: { decay: 0.7, wet: 0.16, window: [-3.4, 1.8, 1.4], floor: 'wood' },
+  workshop: { decay: 1.35, wet: 0.24, window: [-4.9, 1.9, 0.5], floor: 'concrete' },
+  classroom: { decay: 0.95, wet: 0.2, window: [-3.9, 1.8, 0.0], floor: 'tile' },
+  restroom: { decay: 1.9, wet: 0.34, window: [-2.4, 2.1, -0.2], floor: 'tile' },
+};
 
 export class Sound {
   constructor() {
     this.ctx = null;
     this.musicOn = true;
     this.voiceOn = true;
+    this.musicLevel = 0.055;
     this._musicTimer = null;
     this._noise = null;
     this._thVoice = null;
+    this._bed = null;
+    this.room = null;
+    this._pendingRoom = null;
   }
 
   /** Must be called from a user gesture. Safe to call repeatedly. */
@@ -16,20 +29,78 @@ export class Sound {
     if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    this.ctx = new AC();
-    this.master = this.ctx.createGain(); this.master.gain.value = 0.9; this.master.connect(this.ctx.destination);
-    this.sfx = this.ctx.createGain(); this.sfx.gain.value = 0.8; this.sfx.connect(this.master);
-    this.mus = this.ctx.createGain(); this.mus.gain.value = 0.0; this.mus.connect(this.master);
-    const len = this.ctx.sampleRate;
-    this._noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const c = this.ctx = new AC();
+    this.master = c.createGain(); this.master.gain.value = 0.9; this.master.connect(c.destination);
+    // sfx → dry + reverb send; ambience has its own (wetter) send
+    this.sfx = c.createGain(); this.sfx.gain.value = 0.8; this.sfx.connect(this.master);
+    this.amb = c.createGain(); this.amb.gain.value = 1; this.amb.connect(this.master);
+    this.verb = c.createConvolver();
+    this.verbOut = c.createGain(); this.verbOut.gain.value = 1;
+    this.verb.connect(this.verbOut); this.verbOut.connect(this.master);
+    this.verbSend = c.createGain(); this.verbSend.gain.value = 0.2;
+    this.sfx.connect(this.verbSend); this.verbSend.connect(this.verb);
+    this.ambSend = c.createGain(); this.ambSend.gain.value = 0.3;
+    this.amb.connect(this.ambSend); this.ambSend.connect(this.verb);
+    this.mus = c.createGain(); this.mus.gain.value = 0.0; this.mus.connect(this.master);
+    const len = c.sampleRate * 2;
+    this._noise = c.createBuffer(1, len, c.sampleRate);
     const d = this._noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    this.verb.buffer = this._ir(1.0);
     this._pickVoice();
     if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => this._pickVoice();
     if (this.musicOn) this.startMusic();
+    if (this._pendingRoom) this.setRoom(this._pendingRoom);
   }
 
   get t() { return this.ctx ? this.ctx.currentTime : 0; }
+
+  // ------------------------------------------------------------ space
+  /** Keeps the Web Audio listener on the player's head (call every frame). */
+  listen(m) {
+    if (!this.ctx) return;
+    const L = this.ctx.listener, e = m.elements;
+    const fx = -e[8], fy = -e[9], fz = -e[10], ux = e[4], uy = e[5], uz = e[6];
+    if (L.positionX) {
+      const t = this.t;
+      L.positionX.setTargetAtTime(e[12], t, 0.02); L.positionY.setTargetAtTime(e[13], t, 0.02); L.positionZ.setTargetAtTime(e[14], t, 0.02);
+      L.forwardX.setTargetAtTime(fx, t, 0.02); L.forwardY.setTargetAtTime(fy, t, 0.02); L.forwardZ.setTargetAtTime(fz, t, 0.02);
+      L.upX.setTargetAtTime(ux, t, 0.02); L.upY.setTargetAtTime(uy, t, 0.02); L.upZ.setTargetAtTime(uz, t, 0.02);
+    } else {
+      L.setPosition(e[12], e[13], e[14]);
+      L.setOrientation(fx, fy, fz, ux, uy, uz);
+    }
+  }
+
+  /** Output node for a sound: a 3D panner at `pos` (THREE.Vector3 / [x,y,z]) or the plain bus. */
+  _out(pos, bus = this.sfx, life = 4) {
+    if (!pos || !this.ctx) return bus;
+    const p = this.ctx.createPanner();
+    p.panningModel = 'HRTF'; p.distanceModel = 'inverse';
+    p.refDistance = 0.7; p.maxDistance = 25; p.rolloffFactor = 1.1;
+    const [x, y, z] = Array.isArray(pos) ? pos : [pos.x, pos.y, pos.z];
+    if (p.positionX) { p.positionX.value = x; p.positionY.value = y; p.positionZ.value = z; } else p.setPosition(x, y, z);
+    p.connect(bus);
+    if (life) setTimeout(() => { try { p.disconnect(); } catch { /* gone */ } }, life * 1000);
+    return p;
+  }
+
+  /** Room impulse response: decaying stereo noise, darker as it tails off. */
+  _ir(decay) {
+    const c = this.ctx, sr = c.sampleRate, len = Math.max(1, Math.floor(sr * decay));
+    const b = c.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = b.getChannelData(ch);
+      let lp = 0;
+      for (let i = 0; i < len; i++) {
+        const k = i / len;
+        const a = 0.35 + 0.6 * k;           // one-pole low-pass that closes over time
+        lp = lp * a + (Math.random() * 2 - 1) * (1 - a);
+        d[i] = lp * Math.pow(1 - k, 2.2) * (i < sr * 0.004 ? 0 : 1);
+      }
+    }
+    return b;
+  }
 
   _tone(freq, dur, { type = 'sine', gain = 0.3, at = 0, slide = null, attack = 0.005, out = null } = {}) {
     if (!this.ctx) return;
@@ -46,7 +117,7 @@ export class Sound {
     o.start(t0); o.stop(t0 + dur + 0.05);
   }
 
-  _noiseBurst(dur, { at = 0, gain = 0.3, filter = 'bandpass', freq = 2000, q = 1, slideTo = null } = {}) {
+  _noiseBurst(dur, { at = 0, gain = 0.3, filter = 'bandpass', freq = 2000, q = 1, slideTo = null, out = null, attack = 0.01 } = {}) {
     if (!this.ctx) return;
     const t0 = this.t + at;
     const s = this.ctx.createBufferSource();
@@ -57,12 +128,13 @@ export class Sound {
     if (slideTo) f.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(gain, t0 + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    s.connect(f); f.connect(g); g.connect(this.sfx);
-    s.start(t0, Math.random() * 0.5); s.stop(t0 + dur + 0.05);
+    s.connect(f); f.connect(g); g.connect(out || this.sfx);
+    s.start(t0, Math.random() * 1.5); s.stop(t0 + dur + 0.05);
   }
 
+  // ------------------------------------------------------------ UI
   click() { this._tone(1400, 0.05, { type: 'square', gain: 0.08, slide: 900 }); }
   hover() { this._tone(2200, 0.03, { type: 'sine', gain: 0.03 }); }
   error() {
@@ -84,12 +156,26 @@ export class Sound {
     this._tone(988, 0.25, { gain: 0.2 });
     this._tone(1319, 0.5, { gain: 0.2, at: 0.14 });
   }
-  /** "แก๊กๆ" — ratchet clicks while tightening. */
-  ratchet(n = 5) {
-    for (let i = 0; i < n; i++) this._noiseBurst(0.035, { at: i * 0.06, gain: 0.35, freq: 3200, q: 6 });
+  whoosh() { this._noiseBurst(0.35, { gain: 0.1, filter: 'bandpass', freq: 400, q: 0.8, slideTo: 2400 }); }
+  star(i) { this._tone(880 * Math.pow(1.26, i), 0.35, { type: 'triangle', gain: 0.2 }); }
+  fanfare() {
+    const n = [523, 659, 784, 1047];
+    n.forEach((f, i) => this._tone(f, 0.22, { type: 'square', gain: 0.07, at: i * 0.12 }));
+    n.forEach((f) => this._tone(f, 1.1, { type: 'triangle', gain: 0.1, at: 0.5 }));
+    this._tone(1568, 1.0, { gain: 0.08, at: 0.5 });
   }
-  drill(dur = 0.6) {
+
+  // ------------------------------------------------------------ work sounds (positional)
+  /** "แก๊กๆ" — ratchet clicks while tightening. */
+  ratchet(n = 5, pos = null) {
+    const out = this._out(pos);
+    for (let i = 0; i < n; i++) this._noiseBurst(0.035, { at: i * 0.06, gain: 0.35, freq: 3200, q: 6, out });
+  }
+  /** A single ratchet tick (VR twisting: one per ~25° of wrist roll). */
+  tick(pos = null, gain = 0.3) { this._noiseBurst(0.03, { gain, freq: 3400, q: 7, out: this._out(pos) }); }
+  drill(dur = 0.6, pos = null) {
     if (!this.ctx) return;
+    const out = this._out(pos, this.sfx, dur + 1);
     const t0 = this.t;
     const o = this.ctx.createOscillator(), g = this.ctx.createGain(), lfo = this.ctx.createOscillator(), lg = this.ctx.createGain();
     o.type = 'sawtooth'; o.frequency.setValueAtTime(90, t0); o.frequency.exponentialRampToValueAtTime(210, t0 + 0.15);
@@ -97,30 +183,113 @@ export class Sound {
     g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.08, t0 + 0.05);
     g.gain.setValueAtTime(0.08, t0 + dur - 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400;
-    o.connect(f); f.connect(g); g.connect(this.sfx);
+    o.connect(f); f.connect(g); g.connect(out);
     o.start(t0); lfo.start(t0); o.stop(t0 + dur + 0.05); lfo.stop(t0 + dur + 0.05);
   }
-  saw() {
-    this._noiseBurst(0.22, { gain: 0.25, freq: 1800, q: 2, slideTo: 3600 });
-    this._noiseBurst(0.22, { at: 0.25, gain: 0.25, freq: 3600, q: 2, slideTo: 1800 });
+  saw(pos = null) {
+    const out = this._out(pos);
+    this._noiseBurst(0.22, { gain: 0.25, freq: 1800, q: 2, slideTo: 3600, out });
+    this._noiseBurst(0.22, { at: 0.25, gain: 0.25, freq: 3600, q: 2, slideTo: 1800, out });
   }
-  spray() { this._noiseBurst(1.4, { gain: 0.3, filter: 'lowpass', freq: 5000, slideTo: 1200 }); }
-  drip() { this._tone(1300, 0.09, { gain: 0.12, slide: 500 }); }
-  whoosh() { this._noiseBurst(0.35, { gain: 0.12, filter: 'bandpass', freq: 400, q: 0.8, slideTo: 2400 }); }
-  switchClick() { this._noiseBurst(0.03, { gain: 0.4, freq: 2500, q: 3 }); }
-  thump() { this._tone(120, 0.18, { type: 'sine', gain: 0.35, slide: 60 }); }
-  star(i) { this._tone(880 * Math.pow(1.26, i), 0.35, { type: 'triangle', gain: 0.2 }); }
-  fanfare() {
-    const n = [523, 659, 784, 1047];
-    n.forEach((f, i) => this._tone(f, 0.22, { type: 'square', gain: 0.07, at: i * 0.12 }));
-    [523, 659, 784, 1047].forEach((f) => this._tone(f, 1.1, { type: 'triangle', gain: 0.1, at: 0.5 }));
-    this._tone(1568, 1.0, { gain: 0.08, at: 0.5 });
+  /** One saw stroke (VR): direction sets the pitch sweep. */
+  sawStroke(pos = null, push = true) {
+    this._noiseBurst(0.2, { gain: 0.24, freq: push ? 1800 : 3400, q: 2, slideTo: push ? 3400 : 1800, out: this._out(pos) });
+  }
+  spray(pos = null) { this._noiseBurst(1.4, { gain: 0.3, filter: 'lowpass', freq: 5000, slideTo: 1200, out: this._out(pos) }); }
+  drip(pos = null) {
+    const out = this._out(pos);
+    this._tone(1300, 0.09, { gain: 0.14, slide: 500, out });
+    this._tone(2600, 0.05, { gain: 0.04, slide: 1400, out, at: 0.01 });
+  }
+  switchClick(pos = null) { this._noiseBurst(0.03, { gain: 0.4, freq: 2500, q: 3, out: this._out(pos) }); }
+  thump(pos = null, gain = 0.35) {
+    const out = this._out(pos);
+    this._tone(120, 0.18, { type: 'sine', gain, slide: 60, out });
+    this._noiseBurst(0.06, { gain: gain * 0.5, freq: 900, q: 1, out });
+  }
+  /** Footstep on the current room's floor. */
+  step() {
+    const fl = ROOMS[this.room]?.floor || 'concrete';
+    const v = 0.7 + Math.random() * 0.3;
+    if (fl === 'wood') { this._tone(95, 0.09, { gain: 0.09 * v, slide: 70 }); this._noiseBurst(0.05, { gain: 0.05 * v, freq: 700, q: 1 }); }
+    else if (fl === 'tile') { this._noiseBurst(0.04, { gain: 0.07 * v, freq: 2600, q: 2 }); this._tone(160, 0.05, { gain: 0.05 * v }); }
+    else this._noiseBurst(0.07, { gain: 0.08 * v, freq: 1600, q: 0.7 });
+  }
+  clockTick(pos) { this._noiseBurst(0.012, { gain: 0.08, freq: 4200, q: 8, out: this._out(pos, this.amb, 1) }); }
+
+  // ------------------------------------------------------------ rooms & ambience
+  /** Switches the room acoustics and its ambience bed (cross-fades). */
+  setRoom(name) {
+    if (!this.ctx) { this._pendingRoom = name; return; }
+    if (this.room === name && this._bed) return;
+    this.room = name;
+    const R = ROOMS[name] || ROOMS.workshop;
+    this.verb.buffer = this._ir(R.decay);
+    this.verbSend.gain.setTargetAtTime(R.wet, this.t, 0.2);
+    this._startBed(name, R);
   }
 
-  // ---- เพลงประกอบเบาๆ แบบสนุกสนาน (ลูปสั้น สร้างด้วยโค้ด) ----
+  _startBed(name, R) {
+    const c = this.ctx, t = this.t;
+    if (this._bed) {
+      const old = this._bed;
+      old.gain.gain.setTargetAtTime(0, t, 0.4);
+      clearTimeout(old.birdTimer);
+      setTimeout(() => old.nodes.forEach((n) => { try { n.stop?.(); n.disconnect(); } catch { /* done */ } }), 2500);
+    }
+    const bed = { gain: c.createGain(), nodes: [], birdTimer: null };
+    bed.gain.gain.value = 0; bed.gain.connect(this.amb);
+    bed.gain.gain.setTargetAtTime(1, t, 0.6);
+    const noise = (type, freq, q, gain, lfoRate = 0, lfoDepth = 0) => {
+      const s = c.createBufferSource(); s.buffer = this._noise; s.loop = true;
+      const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+      const g = c.createGain(); g.gain.value = gain;
+      s.connect(f); f.connect(g); g.connect(bed.gain);
+      if (lfoRate) {
+        const l = c.createOscillator(), lg = c.createGain();
+        l.frequency.value = lfoRate; lg.gain.value = gain * lfoDepth;
+        l.connect(lg); lg.connect(g.gain); l.start(); bed.nodes.push(l, lg);
+      }
+      s.start(0, Math.random()); bed.nodes.push(s, f, g);
+    };
+    const hum = (freq, gain) => {
+      const o = c.createOscillator(); o.frequency.value = freq;
+      const g = c.createGain(); g.gain.value = gain;
+      o.connect(g); g.connect(bed.gain); o.start(); bed.nodes.push(o, g);
+    };
+    if (name === 'workshop') {
+      hum(100, 0.006); hum(200, 0.003);                 // fluorescent ballast
+      noise('lowpass', 380, 0.7, 0.045);                // ventilation / room tone
+      noise('bandpass', 320, 0.8, 0.03, 2.6, 0.35);     // ceiling fans
+      noise('bandpass', 650, 1.4, 0.008, 0.13, 0.8);    // distant school, rising and falling
+    } else if (name === 'classroom') {
+      noise('lowpass', 300, 0.7, 0.03);
+      noise('bandpass', 300, 0.8, 0.045, 3.1, 0.4);     // two fans overhead
+      noise('bandpass', 700, 1.2, 0.012, 0.09, 0.9);    // kids outside
+    } else if (name === 'restroom') {
+      noise('lowpass', 220, 0.6, 0.03);
+      noise('highpass', 4200, 0.7, 0.004);              // pipe hiss
+    } else {
+      hum(60, 0.004);
+      noise('lowpass', 240, 0.6, 0.035);                // air conditioner
+    }
+    // birds outside the window, placed in 3D
+    const chirp = () => {
+      if (this._bed !== bed) return;
+      const out = this._out(R.window, bed.gain, 2);
+      const base = 2400 + Math.random() * 1800;
+      const n = 2 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < n; i++) this._tone(base * (0.9 + Math.random() * 0.25), 0.07, { gain: 0.03, at: i * 0.11, slide: base * 1.35, out });
+      bed.birdTimer = setTimeout(chirp, 2500 + Math.random() * 6000);
+    };
+    if (name !== 'restroom') bed.birdTimer = setTimeout(chirp, 1500);
+    this._bed = bed;
+  }
+
+  // ------------------------------------------------------------ music (title loop, low under play)
   startMusic() {
     if (!this.ctx || this._musicTimer) return;
-    this.mus.gain.setTargetAtTime(0.055, this.t, 0.6);
+    this.mus.gain.setTargetAtTime(this.musicLevel, this.t, 0.6);
     const bpm = 112, beat = 60 / bpm;
     const chords = [[262, 330, 392], [220, 262, 330], [175, 220, 262], [196, 247, 294]];
     const melody = [784, 0, 659, 784, 880, 784, 659, 0, 587, 659, 523, 0, 587, 0, 659, 0,
@@ -148,9 +317,11 @@ export class Sound {
     if (this.mus) this.mus.gain.setTargetAtTime(0, this.t, 0.2);
   }
   setMusic(on) { this.musicOn = on; if (on) this.startMusic(); else this.stopMusic(); }
-  duck(on) { if (this.mus && this._musicTimer) this.mus.gain.setTargetAtTime(on ? 0.02 : 0.055, this.t, 0.25); }
+  /** Title screen: full; during play: quiet, so the room can be heard. */
+  setMusicLevel(v) { this.musicLevel = v; if (this.mus && this._musicTimer) this.mus.gain.setTargetAtTime(v, this.t, 0.8); }
+  duck(on) { if (this.mus && this._musicTimer) this.mus.gain.setTargetAtTime(on ? this.musicLevel * 0.35 : this.musicLevel, this.t, 0.25); }
 
-  // ---- เสียงพูดภาษาไทย ----
+  // ------------------------------------------------------------ Thai voice
   _pickVoice() {
     const ss = window.speechSynthesis;
     if (!ss) return;

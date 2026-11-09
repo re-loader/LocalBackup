@@ -1,21 +1,23 @@
 import * as THREE from 'three';
 import { woodTex } from './textures.js';
+import { blobShadow } from './look.js';
 
 // โมเดลทั้งหมดสร้างจากรูปทรงพื้นฐาน — เครื่องมือ วัสดุ PPE เฟอร์นิเจอร์ และตัวละคร
 // เครื่องมือทุกชิ้นวางด้ามที่จุดกำเนิด และชี้ไปทาง -Z (ไปข้างหน้าจากมือ)
 
 const mats = new Map();
-export function mat(color, { rough = 0.7, metal = 0, emissive = null, ei = 1, map = null, transparent = false, opacity = 1, side = THREE.FrontSide } = {}) {
-  const key = [color, rough, metal, emissive, ei, map?.uuid, transparent, opacity, side].join('|');
+export function mat(color, { rough = 0.7, metal = 0, emissive = null, ei = 1, map = null, transparent = false, opacity = 1, side = THREE.FrontSide, bump = null, bs = 1 } = {}) {
+  const key = [color, rough, metal, emissive, ei, map?.uuid, transparent, opacity, side, bump?.uuid, bs].join('|');
   if (!mats.has(key)) {
     const m = new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal, map, transparent, opacity, side });
+    if (bump) { m.bumpMap = bump; m.bumpScale = bs; }
     if (emissive) { m.emissive = new THREE.Color(emissive); m.emissiveIntensity = ei; }
     mats.set(key, m);
   }
   return mats.get(key);
 }
 export const M = {
-  steel: () => mat('#b9c2cc', { rough: 0.35, metal: 0.8 }),
+  steel: () => mat('#c8d0d8', { rough: 0.26, metal: 0.92 }),
   dark: () => mat('#2b3138', { rough: 0.6, metal: 0.3 }),
   black: () => mat('#16191d', { rough: 0.8 }),
   white: () => mat('#f4f4f2', { rough: 0.6 }),
@@ -444,6 +446,7 @@ export function makeCharacter({
   const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.007, 6, 12, Math.PI), mat('#8a3a2a'));
   mouth.position.set(0, -0.04, -0.185); mouth.rotation.z = Math.PI; head.add(mouth);
 
+  root.add(blobShadow(0.3, 0.32));
   root.scale.setScalar(scale);
   const state = { t: Math.random() * 10, talk: 0, wave: 0, lookYaw: 0, blink: 2 + Math.random() * 3, point: 0 };
   const api = {

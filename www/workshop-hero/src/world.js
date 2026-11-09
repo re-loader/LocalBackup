@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { FONT, ADISAC, GROUPS, ITEMS } from './strings.js';
 import { rr, drawWrapped } from './util.js';
+import { unlit, addCornerAO, sunbeam, shadowify, aimSun } from './look.js';
 import {
   woodTex, concreteTex, tileTex, checkerTex, wallTex, pegboardTex, windowViewTex, signTex, posterTex, toTex,
 } from './textures.js';
@@ -38,7 +39,13 @@ function bakeStatic(root) {
   while (root.children.length) root.remove(root.children[0]);
   for (const { mat: m, geos } of byMat.values()) {
     const merged = mergeGeometries(geos, false);
-    if (merged) root.add(new THREE.Mesh(merged, m));
+    if (merged) {
+      const mesh = new THREE.Mesh(merged, m);
+      const lit = m.isMeshStandardMaterial;
+      mesh.castShadow = lit && !m.transparent && !m.userData.noCast;
+      mesh.receiveShadow = lit;
+      root.add(mesh);
+    }
     geos.forEach((g) => g.dispose());
   }
 }
@@ -46,8 +53,80 @@ function bakeStatic(root) {
 function signMesh(text, w, h, opts = {}) {
   const px = 512;
   const tex = signTex(text, { w: px, h: Math.round(px * h / w), ...opts });
-  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), unlit(new THREE.MeshBasicMaterial({ map: tex, transparent: true })));
 }
+
+/** World-space corners of a window (for its sunbeam), read before the static meshes are merged. */
+function windowCorners(o) {
+  o.updateWorldMatrix(true, false);
+  const [w, h] = o.userData.size;
+  return [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map(([x, y]) => o.localToWorld(new THREE.Vector3(x, y, 0.03)).toArray());
+}
+
+/** Wall clock showing the real time (repainted once a second while its room is visible). */
+function wallClock(r = 0.17) {
+  const g = new THREE.Group();
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const x = c.getContext('2d');
+  const tex = toTex(c, { aniso: 8 });
+  const face = new THREE.Mesh(new THREE.CircleGeometry(r, 40), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4 }));
+  face.position.z = 0.013; g.add(face);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(r, 0.014, 8, 40), mat('#1d2733', { rough: 0.4, metal: 0.3 }));
+  rim.position.z = 0.013; g.add(rim);
+  cyl(r, r, 0.024, mat('#e9e4da'), 0, 0, 0, g, 32).rotation.x = Math.PI / 2;
+  let last = -1;
+  g.userData.update = () => {
+    const now = new Date();
+    const s = now.getSeconds();
+    if (s === last) return false;
+    last = s;
+    const m = now.getMinutes() + s / 60, h = (now.getHours() % 12) + m / 60;
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    x.fillStyle = '#fbfaf6'; x.fillRect(0, 0, 256, 256);
+    x.translate(128, 128);
+    for (let i = 0; i < 60; i++) {
+      x.save(); x.rotate((i / 60) * Math.PI * 2);
+      x.fillStyle = '#1d2733'; x.fillRect(-1.5, -118, 3, i % 5 ? 8 : 18); x.restore();
+    }
+    x.fillStyle = '#1d2733'; x.font = `700 30px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    [[12, 0, -84], [3, 86, 0], [6, 0, 86], [9, -86, 0]].forEach(([n, px, py]) => x.fillText(String(n), px, py));
+    const hand = (ang, len, wdt, col) => { x.save(); x.rotate(ang); x.fillStyle = col; x.fillRect(-wdt / 2, -len, wdt, len + 14); x.restore(); };
+    hand((h / 12) * Math.PI * 2, 58, 9, '#1d2733');
+    hand((m / 60) * Math.PI * 2, 88, 6, '#1d2733');
+    hand((s / 60) * Math.PI * 2, 96, 2.5, '#d33a3a');
+    x.beginPath(); x.arc(0, 0, 7, 0, Math.PI * 2); x.fillStyle = '#d33a3a'; x.fill();
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    tex.needsUpdate = true;
+    return true;
+  };
+  g.userData.update();
+  return g;
+}
+
+/** Ceiling fan (every Thai classroom has one). Spins; casts no shadow (it would flicker at 15 Hz). */
+function ceilingFan(parent, x, z, h) {
+  const g = new THREE.Group(); g.position.set(x, h, z); parent.add(g);
+  const cream = mat('#efeae0', { rough: 0.45 });
+  cyl(0.015, 0.015, 0.35, cream, 0, -0.175, 0, g, 8);
+  cyl(0.11, 0.13, 0.1, cream, 0, -0.38, 0, g, 20);
+  const rot = new THREE.Group(); rot.position.y = -0.42; g.add(rot);
+  cyl(0.06, 0.06, 0.04, mat('#c9c2b4', { rough: 0.4 }), 0, 0, 0, rot, 14);
+  for (let i = 0; i < 3; i++) {
+    const a = (i * Math.PI * 2) / 3;
+    const b = box(0.6, 0.012, 0.13, cream, Math.cos(a) * 0.38, 0, Math.sin(a) * 0.38, rot);
+    b.rotation.order = 'YXZ'; b.rotation.y = -a; b.rotation.x = 0.14;
+  }
+  g.userData.rotor = rot;
+  return g;
+}
+function noCast(root) { root.traverse((o) => { if (o.isMesh) o.castShadow = false; }); }
+
+const SUNS = {
+  hub: { dir: [0.75, -0.62, -0.08], half: 4.6 },
+  workshop: { dir: [0.72, -0.6, -0.18], half: 6.6 },
+  classroom: { dir: [0.78, -0.55, 0.06], half: 5.6 },
+  restroom: { dir: [0.62, -0.7, 0.2], half: 3.6 },
+};
 
 /** Builds floor, ceiling, walls, baseboards. Returns helpers to mount things on walls. */
 function room(parent, { w, d, h, floor, wall, ceil = '#f7f7f4', base = '#6b4a2b' }) {
@@ -55,7 +134,12 @@ function room(parent, { w, d, h, floor, wall, ceil = '#f7f7f4', base = '#6b4a2b'
   parent.add(g);
   const fl = new THREE.Mesh(new THREE.PlaneGeometry(w, d), floor);
   fl.rotation.x = -Math.PI / 2; g.add(fl);
-  const ce = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(ceil, { rough: 0.95 }));
+  // walls and ceiling don't block the window sun (the windows aren't real holes) — only furniture casts
+  wall.userData.noCast = true;
+  // a ceiling under lit fluorescent panels is never this dark in real life: a little bounce light
+  const ceilMat = mat(ceil, { rough: 0.95, emissive: '#efe9dc', ei: 0.32 });
+  ceilMat.userData.noCast = true;
+  const ce = new THREE.Mesh(new THREE.PlaneGeometry(w, d), ceilMat);
   ce.rotation.x = Math.PI / 2; ce.position.y = h; g.add(ce);
   const walls = {
     front: { pos: [0, 0, -d / 2], rot: 0, len: w },
@@ -71,6 +155,7 @@ function room(parent, { w, d, h, floor, wall, ceil = '#f7f7f4', base = '#6b4a2b'
     const holder = new THREE.Group();
     holder.position.set(...W.pos); holder.rotation.y = W.rot; holder.add(b); g.add(holder);
   }
+  addCornerAO(g, w, d);
   /** Group mounted on a wall: local x along the wall, y up, +z into the room. */
   const onWall = (k, along, y, off = 0) => {
     const W = walls[k];
@@ -85,8 +170,9 @@ function room(parent, { w, d, h, floor, wall, ceil = '#f7f7f4', base = '#6b4a2b'
 
 function windowAt(R, wallKey, along, y, ww = 1.6, wh = 1.3, curtain = null) {
   const o = R.onWall(wallKey, along, y, 0.004);
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: windowViewTex() }));
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(ww, wh), unlit(new THREE.MeshBasicMaterial({ map: windowViewTex() })));
   o.add(glass);
+  o.userData.size = [ww, wh];
   const fm = mat('#e9eef2', { rough: 0.5, metal: 0.2 });
   box(ww + 0.1, 0.06, 0.08, fm, 0, wh / 2, 0.03, o);
   box(ww + 0.1, 0.06, 0.14, fm, 0, -wh / 2, 0.05, o);
@@ -103,7 +189,8 @@ function windowAt(R, wallKey, along, y, ww = 1.6, wh = 1.3, curtain = null) {
   return o;
 }
 
-const litPanel = mat('#ffffff', { emissive: '#fffbe8', ei: 1.2, rough: 0.5 });
+const litPanel = mat('#ffffff', { emissive: '#fffbe8', ei: 1.6, rough: 0.5 });
+litPanel.userData.noCast = true;
 function ceilingPanel(parent, x, z, h, m = litPanel) {
   const p = box(1.2, 0.04, 0.3, m, x, h - 0.03, z, parent);
   box(1.26, 0.03, 0.36, mat('#d8dde2'), x, h - 0.012, z, parent);
@@ -155,7 +242,7 @@ function adisacBoardMesh(w = 1.5, h = 1.0) {
   c.width = 1200; c.height = 800;
   const g = c.getContext('2d');
   const tex = toTex(c, { aniso: 16 });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), unlit(new THREE.MeshBasicMaterial({ map: tex, transparent: true })));
   let last = undefined;
   const redraw = (key) => {
     if (key === last) return;
@@ -193,10 +280,15 @@ function groupsPosterTex() {
 export class World {
   constructor(scene) {
     this.scene = scene;
-    this.hemi = new THREE.HemisphereLight('#eef6ff', '#c9bba6', 2.2);
-    this.sun = new THREE.DirectionalLight('#fff4e0', 2.0);
+    this.hemi = new THREE.HemisphereLight('#eef6ff', '#c9bba6', 1.0);
+    this.sun = new THREE.DirectionalLight('#ffeccc', 2.6);
     this.sun.position.set(-4, 6, 3);
-    scene.add(this.hemi, this.sun);
+    this.sun.castShadow = true;
+    this.sun.shadow.mapSize.set(1024, 1024);
+    this.sun.shadow.bias = -0.0004;
+    this.sun.shadow.normalBias = 0.025;
+    scene.add(this.hemi, this.sun, this.sun.target);
+    this.shadowDirty = true;
     scene.background = new THREE.Color('#bfe3ff');
     this.scenes = {
       hub: this._hub(),
@@ -212,11 +304,14 @@ export class World {
     for (const [k, s] of Object.entries(this.scenes)) s.group.visible = k === name;
     this.current = this.scenes[name];
     this.currentName = name;
+    aimSun(this.sun, SUNS[name]);
     this.applyLighting();
+    this.shadowDirty = true;
+    this.onShow?.(name);
   }
 
   applyLighting() {
-    const L = this.current?.lighting || { hemi: 2.2, sun: 2.0 };
+    const L = this.current?.lighting || { hemi: 1.0, sun: 2.6 };
     this.hemi.intensity = L.hemi;
     this.sun.intensity = L.sun;
   }
@@ -231,10 +326,10 @@ export class World {
     const st = new THREE.Group(); group.add(st);
     const R = room(st, {
       w: 7, d: 6, h: 3,
-      floor: mat('#ffffff', { map: woodTex('#b98352', 8, [3, 3]), rough: 0.7 }),
-      wall: mat('#ffffff', { map: wallTex('#f3e6cc', [3, 1]), rough: 0.95 }),
+      floor: mat('#ffffff', { map: woodTex('#b98352', 8, [3, 3]), rough: 0.5, bump: woodTex('#b98352', 8, [3, 3]), bs: 1.2 }),
+      wall: mat('#ffffff', { map: wallTex('#f3e6cc', [3, 1]), rough: 0.92, bump: wallTex('#f3e6cc', [3, 1]), bs: 0.6 }),
     });
-    windowAt(R, 'left', -1.4, 1.6, 2.0, 1.3, '#a8c66c');
+    const hubWin = [windowAt(R, 'left', -1.4, 1.6, 2.0, 1.3, '#a8c66c')].map(windowCorners);
     const sg = signMesh('ห้องพักครู', 1.1, 0.3, { bg: '#ffffff', fg: '#1d2733', border: '#8a5a33', size: 64 });
     R.onWall('front', 0, 2.55, 0.02).add(sg);
     const td = teacherDesk(); td.position.set(0, 0, -1.2); st.add(td);
@@ -252,6 +347,10 @@ export class World {
     bakeStatic(st);
 
     const dyn = new THREE.Group(); group.add(dyn);
+    const hubBeams = hubWin.map((c) => sunbeam(c, SUNS.hub.dir, 3.4));
+    hubBeams.forEach((b) => dyn.add(b));
+    const hubClock = wallClock(0.17);
+    const ch = R.onWall('front', 0.95, 2.45, 0.0); dyn.add(ch); ch.add(hubClock);
     // ADISAC board on the back-left wall (dynamic: repainted per stage)
     const board = adisacBoardMesh(1.5, 1.0);
     const bw = R.onWall('front', -1.7, 1.65, 0.02); dyn.add(bw);
@@ -262,13 +361,20 @@ export class World {
     dyn.add(teacher.root);
     const exit = doorAt(R, 'right', 1.6, 'ไปห้องช่าง', '#2e9b4a');
     R.group.remove(exit); dyn.add(exit);
+    shadowify(dyn);
     return {
       group, R, teacher, board, exit,
       bounds: { minX: -3.2, maxX: 3.2, minZ: -0.6, maxZ: 2.7 },
       stations: { start: { pos: new THREE.Vector3(0, 0, 1.2), yaw: 0, pitch: -0.06 } },
       dialogAt: { pos: new THREE.Vector3(0.6, 1.42, -0.75) },
-      lighting: { hemi: 2.2, sun: 2.0 },
-      update(dt, cam) { teacher.lookAt(cam); teacher.update(dt); },
+      lighting: { hemi: 0.95, sun: 2.7 },
+      clock: hubClock,
+      clockPos: () => ch.getWorldPosition(new THREE.Vector3()),
+      update(dt, cam) {
+        teacher.lookAt(cam); teacher.update(dt);
+        hubBeams.forEach((b) => b.userData.update(dt));
+        if (hubClock.userData.update()) this.onTick?.();
+      },
     };
   }
 
@@ -278,20 +384,19 @@ export class World {
     const st = new THREE.Group(); group.add(st);
     const R = room(st, {
       w: 10, d: 8, h: 3.4,
-      floor: mat('#ffffff', { map: concreteTex([5, 4]), rough: 0.9 }),
-      wall: mat('#ffffff', { map: wallTex('#dfe8ee', [4, 1]), rough: 0.95 }),
+      floor: mat('#ffffff', { map: concreteTex([5, 4]), rough: 0.78, bump: concreteTex([5, 4]), bs: 1.5 }),
+      wall: mat('#ffffff', { map: wallTex('#dfe8ee', [4, 1]), rough: 0.92, bump: wallTex('#dfe8ee', [4, 1]), bs: 0.6 }),
       base: '#3b4a5a',
     });
     // safety walkway lines
     for (const x of [-3.7, 3.7]) box(0.08, 0.004, 6.6, mat('#ffc21a'), x, 0.002, 0.3, st);
-    windowAt(R, 'left', -2.0, 1.8, 1.8, 1.2);
-    windowAt(R, 'left', 1.0, 1.8, 1.8, 1.2);
+    const wsWin = [windowAt(R, 'left', -2.0, 1.8, 1.8, 1.2), windowAt(R, 'left', 1.0, 1.8, 1.8, 1.2)].map(windowCorners);
     windowAt(R, 'back', -0.4, 1.8, 1.8, 1.2);
     const s1 = signMesh('ห้องช่าง โรงเรียน', 1.6, 0.34, { bg: '#16306b', fg: '#ffd23f', size: 60, sub: 'School Workshop', subSize: 28 });
     R.onWall('back', 0.6, 2.75, 0.02).add(s1);
     // tool wall
     const tw = R.onWall('front', -2.2, 1.6, 0.02);
-    box(3.3, 1.35, 0.03, mat('#ffffff', { map: pegboardTex([2, 1]), rough: 0.9 }), 0, 0, 0, tw);
+    box(3.3, 1.35, 0.03, mat('#ffffff', { map: pegboardTex([2, 1]), rough: 0.9, bump: pegboardTex([2, 1]), bs: 2 }), 0, 0, 0, tw);
     box(3.4, 0.06, 0.06, mat('#8a5a33'), 0, 0.7, 0.02, tw);
     box(3.4, 0.06, 0.06, mat('#8a5a33'), 0, -0.7, 0.02, tw);
     const ts = signMesh('คลังแสงเครื่องมือ', 1.3, 0.28, { bg: '#d99a0b', fg: '#ffffff', size: 60 });
@@ -299,7 +404,7 @@ export class World {
     const wb1 = workbench(3.2, 0.7); wb1.position.set(-2.2, 0, -3.6); st.add(wb1);
     const vs = vise(); vs.position.set(-0.85, 0.895, -3.6); st.add(vs);
     // 7-groups poster
-    const gp = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), new THREE.MeshBasicMaterial({ map: groupsPosterTex() }));
+    const gp = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), unlit(new THREE.MeshBasicMaterial({ map: groupsPosterTex() })));
     R.onWall('left', 3.15, 1.75, 0.02).add(gp);
     // whiteboard (quiz)
     const wbd = whiteboard(2.4, 1.2);
@@ -335,6 +440,10 @@ export class World {
     const cab = cabinet(0.9, 1.9, 0.45, '#c9d3dc'); cab.position.set(-4.7, 0, 3.0); cab.rotation.y = Math.PI / 2; st.add(cab);
     for (const x of [-2.5, 0, 2.5]) for (const z of [-2, 1]) ceilingPanel(st, x, z, 3.4);
     bakeStatic(st);
+    const wsBeams = wsWin.map((c) => sunbeam(c, SUNS.workshop.dir, 3.8));
+    const wsFans = [ceilingFan(group, -1.3, -0.4, 3.4), ceilingFan(group, 1.6, 1.6, 3.4)];
+    const wsClock = wallClock(0.16);
+    { const h = R.onWall('front', 0.2, 2.25, 0.0); R.group.remove(h); group.add(h); h.add(wsClock); }
 
     // ---------- dynamic ----------
     const dyn = new THREE.Group(); group.add(dyn);
@@ -434,8 +543,11 @@ export class World {
       o.visible = false; return o;
     });
 
+    wsBeams.forEach((b) => dyn.add(b));
+    shadowify(dyn);
+    wsFans.forEach(noCast);
     const api = {
-      group, R, toolWall, materials, ppe, bag, door, friend, friendGoggles: fg, hazards,
+      group, R, toolWall, fans: wsFans, materials, ppe, bag, door, friend, friendGoggles: fg, hazards,
       shelf: { root: shelf, plank, cutMark, offcut, sideL, sideR, books, screwPts },
       bounds: { minX: -4.5, maxX: 4.2, minZ: -3.0, maxZ: 3.6 },
       stations: {
@@ -449,7 +561,7 @@ export class World {
         hazard: { pos: new THREE.Vector3(-0.3, 0, 0.05), yaw: Math.PI - 0.12, pitch: -0.25 },
         shelf: { pos: new THREE.Vector3(-0.35, 0, 0.35), yaw: 0, pitch: -0.45 },
       },
-      lighting: { hemi: 2.3, sun: 2.0 },
+      lighting: { hemi: 1.05, sun: 2.6 },
       friendBusy: false,
       _t: 0,
       reset() {
@@ -473,6 +585,9 @@ export class World {
           friend.arms[1].rotation.x = 1.2 + Math.sin(this._t * 30) * 0.03;
         } else friend.lookAt(cam);
         puddle.material.opacity = 0.6 + Math.sin(this._t * 2) * 0.08;
+        wsBeams.forEach((b) => b.userData.update(dt));
+        wsFans.forEach((f, i) => { f.userData.rotor.rotation.y -= dt * (5.5 + i * 0.6); });
+        wsClock.userData.update();
       },
     };
     return api;
@@ -487,8 +602,7 @@ export class World {
       floor: mat('#ffffff', { map: checkerTex('#e8dcc4', '#d9c9aa', [8, 7]), rough: 0.8 }),
       wall: mat('#ffffff', { map: wallTex('#fdf2d8', [4, 1]), rough: 0.95 }),
     });
-    windowAt(R, 'left', -1.4, 1.7, 1.8, 1.3, '#f2a6b4');
-    windowAt(R, 'left', 1.6, 1.7, 1.8, 1.3, '#f2a6b4');
+    const crWin = [windowAt(R, 'left', -1.4, 1.7, 1.8, 1.3, '#f2a6b4'), windowAt(R, 'left', 1.6, 1.7, 1.8, 1.3, '#f2a6b4')].map(windowCorners);
     const wbTex = (() => {
       const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
       const g = c.getContext('2d');
@@ -514,6 +628,11 @@ export class World {
     bakeStatic(st);
 
     const dyn = new THREE.Group(); group.add(dyn);
+    const crBeams = crWin.map((c) => sunbeam(c, SUNS.classroom.dir, 3.6, { strength: 0.2 }));
+    crBeams.forEach((b) => dyn.add(b));
+    const crFans = [ceilingFan(dyn, -0.4, 0.2, 3), ceilingFan(dyn, 0.2, 2.3, 3)];
+    const crClock = wallClock(0.17);
+    { const h = R.onWall('front', 0, 2.62, 0.0); R.group.remove(h); dyn.add(h); h.add(crClock); }
     // dynamic ceiling panels (re-created so their emissive can change)
     // the room's lights share one circuit with the broken pendant: dark until the repair
     const lampMat = new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#fffbe8', emissiveIntensity: 0, roughness: 0.5 });
@@ -545,7 +664,10 @@ export class World {
     const lad = ladder(); lad.position.set(3.4, 0, 0.2); lad.rotation.y = -Math.PI / 2; dyn.add(lad);
     lad.userData.home = { pos: lad.position.clone(), rot: lad.rotation.clone() };
 
+    shadowify(dyn);
+    crFans.forEach(noCast);
     const api = {
+      fans: crFans,
       group, R, chair: wob, lamp, socket, oldBulb, newBulb, switch: sw, switchHolder: swh, ladder: lad, lamps, door,
       bounds: { minX: -3.6, maxX: 3.6, minZ: -3.0, maxZ: 3.2 },
       stations: {
@@ -556,13 +678,13 @@ export class World {
         ladder: { pos: new THREE.Vector3(1.2, 0.62, -1.25), yaw: 0, pitch: 0.75 },
       },
       lit: false, wobble: true, switchOn: true,
-      lighting: { hemi: 0.55, sun: 0.35 },
+      lighting: { hemi: 0.3, sun: 1.1 },
       _t: 0,
       setLit(on) {
         this.lit = on;
         lampMat.emissiveIntensity = on ? 1.3 : 0.0;
         newBulb.userData.glass.emissiveIntensity = on && newBulb.visible ? 2.4 : 0.05;
-        this.lighting = on ? { hemi: 2.3, sun: 1.9 } : { hemi: 0.55, sun: 0.35 };
+        this.lighting = on ? { hemi: 1.05, sun: 2.6 } : { hemi: 0.3, sun: 1.1 };
       },
       setSwitch(on) {
         this.switchOn = on;
@@ -582,6 +704,9 @@ export class World {
         this._t += dt;
         wob.group.rotation.z = this.wobble ? Math.sin(this._t * 7) * 0.035 : 0;
         wob.group.rotation.x = this.wobble ? Math.cos(this._t * 5) * 0.02 : 0;
+        crBeams.forEach((b) => b.userData.update(dt));
+        crFans.forEach((f, i) => { f.userData.rotor.rotation.y -= dt * (6 + i * 0.7); });
+        crClock.userData.update();
       },
     };
     api.setSwitch(true);
@@ -594,19 +719,19 @@ export class World {
     const st = new THREE.Group(); group.add(st);
     const R = room(st, {
       w: 5, d: 4.6, h: 3,
-      floor: mat('#ffffff', { map: tileTex('#9cc7e6', '#7aa6c8', 4, [5, 5]), rough: 0.4 }),
-      wall: mat('#ffffff', { map: tileTex('#f6f7f8', '#d3d8dc', 4, [5, 3]), rough: 0.35 }),
+      floor: mat('#ffffff', { map: tileTex('#9cc7e6', '#7aa6c8', 4, [5, 5]), rough: 0.22, bump: tileTex('#9cc7e6', '#7aa6c8', 4, [5, 5]), bs: 2.5 }),
+      wall: mat('#ffffff', { map: tileTex('#f6f7f8', '#d3d8dc', 4, [5, 3]), rough: 0.16, bump: tileTex('#f6f7f8', '#d3d8dc', 4, [5, 3]), bs: 2.5 }),
       base: '#7aa6c8',
     });
-    windowAt(R, 'left', 0.2, 2.1, 1.0, 0.6);
+    const rrWin = [windowAt(R, 'left', 0.2, 2.1, 1.0, 0.6)].map(windowCorners);
     const sg = signMesh('ห้องน้ำ / อ่างล้างมือ', 1.2, 0.26, { bg: '#2f9fd0', size: 56 });
     R.onWall('back', 0, 2.5, 0.02).add(sg);
     // counter + basins
     const counter = new THREE.Group(); counter.position.set(0, 0, -2.05); st.add(counter);
     box(3.6, 0.06, 0.5, mat('#e9eef2', { rough: 0.3 }), 0, 0.85, 0, counter);
     for (const x of [-1.75, 1.75]) box(0.06, 0.82, 0.46, mat('#cfd8de'), x, 0.41, 0, counter);
-    const mirror = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.9), new THREE.MeshStandardMaterial({ color: '#d7edf7', roughness: 0.15, metalness: 0.05, emissive: '#9cc7dd', emissiveIntensity: 0.25 }));
-    mirror.position.set(0, 1.65, -2.29); st.add(mirror);
+    const mirror = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.9), new THREE.MeshStandardMaterial({ color: '#eef3f6', roughness: 0.04, metalness: 1.0 }));   // real mirror: reflects the environment map
+    mirror.position.set(0, 1.65, -2.29);
     box(3.3, 1.0, 0.02, mat('#b0bcc4', { metal: 0.6, rough: 0.3 }), 0, 1.65, -2.3, st);
     // drain pipes under the basins
     for (const x of [-1.2, 0, 1.2]) cyl(0.025, 0.025, 0.4, mat('#e9eef2'), x, 0.62, -2.1, st, 10);
@@ -617,6 +742,9 @@ export class World {
     bakeStatic(st);
 
     const dyn = new THREE.Group(); group.add(dyn);
+    dyn.add(mirror);   // kept out of the merge: it gets its own reflection of this room (captureMirror)
+    const rrBeams = rrWin.map((c) => sunbeam(c, SUNS.restroom.dir, 2.6, { motes: 50, strength: 0.13 }));
+    rrBeams.forEach((b) => dyn.add(b));
     const basins = [];
     const faucets = [];
     for (const x of [-1.2, 0, 1.2]) {
@@ -654,6 +782,7 @@ export class World {
     const oldWasher = makeItem('washer'); oldWasher.visible = false; dyn.add(oldWasher);
 
     const nozzleWorld = new THREE.Vector3();
+    shadowify(dyn);
     const api = {
       group, R, faucet: leaky, faucets, valve, valveHandle: vHandle, oldWasher, puddle,
       bounds: { minX: -2.2, maxX: 2.2, minZ: -1.3, maxZ: 2.0 },
@@ -662,7 +791,7 @@ export class World {
         sink: { pos: new THREE.Vector3(0.05, 0, -1.1), yaw: 0, pitch: -0.5 },
         valve: { pos: new THREE.Vector3(0.25, 0, -0.75), yaw: 0, pitch: -0.62 },
       },
-      lighting: { hemi: 2.3, sun: 1.8 },
+      lighting: { hemi: 1.05, sun: 2.2 },
       leaking: true, valveOpen: true, flowing: false, _t: 0, _sprayT: 0, _dripSnd: 0,
       onDrip: null,
       reset() {
@@ -674,18 +803,37 @@ export class World {
         oldWasher.visible = false; puddle.visible = true;
         sprays.forEach((s) => { s.m.visible = false; s.life = 0; });
       },
+      /** One-time snapshot of this room into the mirror (a cube camera at the glass) — a real reflection, no per-frame cost. */
+      captureMirror(renderer, scene) {
+        if (this._mirrorDone) return;
+        this._mirrorDone = true;
+        const rt = new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType });
+        const cam = new THREE.CubeCamera(0.05, 20, rt);
+        cam.position.set(0, 1.55, -2.1);
+        mirror.visible = false;
+        rrBeams.forEach((b) => { b.visible = false; });   // additive motes would freeze into the glass as specks
+        scene.add(cam);
+        cam.update(renderer, scene);
+        scene.remove(cam);
+        mirror.visible = true;
+        rrBeams.forEach((b) => { b.visible = true; });
+        mirror.material.envMap = rt.texture;
+        mirror.material.envMapIntensity = 1.0;
+        mirror.material.needsUpdate = true;
+      },
       setValve(open) { this.valveOpen = open; vHandle.rotation.z = open ? 0 : Math.PI / 2; },
       spray(sec = 1.5) {
         this._sprayT = sec;
       },
       update(dt) {
         this._t += dt;
+        rrBeams.forEach((b) => b.userData.update(dt));
         leaky.userData.nozzle.getWorldPosition(nozzleWorld);
         const dripping = this.leaking && this.valveOpen && leaky.userData.head.visible;
         for (const d of drops) {
           d.t += dt;
           const cycle = this.flowing ? 0.25 : 1.35;
-          if (d.t > cycle) { d.t = 0; if (dripping && !this.flowing && this.onDrip) this.onDrip(); }
+          if (d.t > cycle) { d.t = 0; if (dripping && !this.flowing && this.onDrip) this.onDrip(nozzleWorld); }
           const fall = d.t / 0.35;
           d.m.visible = (dripping || this.flowing) && fall <= 1;
           d.m.position.set(nozzleWorld.x, nozzleWorld.y - 0.02 - Math.min(1, fall) * 0.12, nozzleWorld.z);

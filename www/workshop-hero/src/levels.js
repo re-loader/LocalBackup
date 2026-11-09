@@ -18,7 +18,7 @@ function markDone(obj) {
   const g = c.getContext('2d');
   g.fillStyle = '#22b14c'; g.beginPath(); g.arc(32, 32, 30, 0, Math.PI * 2); g.fill();
   g.strokeStyle = '#fff'; g.lineWidth = 8; g.beginPath(); g.moveTo(16, 33); g.lineTo(28, 45); g.lineTo(48, 20); g.stroke();
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, toneMapped: false }));
   sp.scale.setScalar(0.05);
   sp.position.set(0, 0.05, 0);
   sp.renderOrder = 990;
@@ -33,7 +33,7 @@ function clearMarks(root) {
 
 function resetPlayerGear() {
   ctx.hands.setGloves(false);
-  document.body.classList.remove('goggles');
+  document.body.classList.remove('goggles', 'helmet');
 }
 
 // =====================================================================
@@ -253,6 +253,7 @@ async function level2(r) {
     ctx.audio.good();
     if (id === 'gloves') ctx.hands.setGloves(true);
     if (id === 'goggles') document.body.classList.add('goggles');
+    if (id === 'helmet') document.body.classList.add('helmet');
     r.coach(`สวม${ITEMS[id].th}แล้ว`, 'good');
     if (Object.values(ppe).every(Boolean)) { r.coach('PPE ครบ 3 ชิ้น พร้อมทำงานอย่างปลอดภัย!', 'good'); await r.moveTo('door'); }
   }
@@ -298,7 +299,7 @@ async function level2(r) {
         r.coach('ทดสอบนั่งแล้ว — เก้าอี้มั่นคง ไม่โยกเยกอีก!', 'good');
       }
     } else if (id === 'switch') {
-      ctx.audio.switchClick();
+      ctx.audio.switchClick(wp(cr.switchHolder));
       cr.setSwitch(!cr.switchOn);
       if (!cr.switchOn) {
         if (st.powerOffFirst === null) st.powerOffFirst = true;
@@ -315,7 +316,7 @@ async function level2(r) {
       }
     } else if (id === 'ladder') {
       if (!st.ladderPlaced) {
-        ctx.audio.thump();
+        ctx.audio.thump(wp(cr.ladder));
         await r.fly(cr.ladder, new THREE.Vector3(1.2, 0, -1.6), { sec: 0.8, arc: 0.3 });
         cr.ladder.rotation.set(0, 0, 0);
         st.ladderPlaced = true;
@@ -397,7 +398,7 @@ async function level3(r) {
   const L = LEVELS[2];
   const hub = ctx.world.scenes.hub, ws = ctx.world.scenes.workshop, rest = ctx.world.scenes.restroom;
   ws.reset(); rest.reset(); clearMarks(ws.shelf.root); resetPlayerGear();
-  ctx.hands.setGloves(true); document.body.classList.add('goggles');   // experienced now: geared up from the start
+  ctx.hands.setGloves(true); document.body.classList.add('goggles', 'helmet');   // experienced now: geared up from the start
 
   // ---- 1. AIM ----
   await r.goTo('hub');
@@ -417,7 +418,7 @@ async function level3(r) {
   // ---- 3. INTEGRATE : ซ่อมก๊อกน้ำตาม 5 ขั้นตอน ----
   await r.goTo('restroom', 'start');
   r.stage('INTEGRATE');
-  rest.onDrip = () => ctx.audio.drip();
+  rest.onDrip = (p) => ctx.audio.drip(p);
   r.objective('ขั้นที่ 1 ตรวจสอบความชำรุด: หาจุดที่น้ำรั่ว');
   await r.pick([{ obj: rest.faucet, id: 'f', label: 'ก๊อกน้ำ' }], { idle: { sec: 12, objs: [rest.faucet], text: 'ฟังเสียงน้ำหยด แล้วมองหาก๊อกที่รั่ว' } });
   await r.moveTo('sink');
@@ -442,10 +443,10 @@ async function level3(r) {
     const id = await r.pick(targets);
     if (id === 'valve') {
       await r.moveTo('valve');
-      ctx.audio.switchClick();
+      ctx.audio.switchClick(wp(rest.valve));
       rest.setValve(!rest.valveOpen);
       if (!rest.valveOpen) r.coach('ปิดวาล์วน้ำแล้ว ถอดก๊อกได้อย่างปลอดภัย', 'good');
-      else if (st.headOff) { rest.spray(1.2); ctx.audio.spray(); r.a(10, 'valve-reopened', 'อย่าเพิ่งเปิดวาล์วตอนก๊อกยังถอดอยู่!'); }
+      else if (st.headOff) { rest.spray(1.2); ctx.audio.spray(wp(rest.faucet)); r.a(10, 'valve-reopened', 'อย่าเพิ่งเปิดวาล์วตอนก๊อกยังถอดอยู่!'); }
       else r.coach('เปิดวาล์วอยู่ — ถ้าจะถอดก๊อกต้องปิดก่อนนะ', 'tip');
       await r.moveTo('sink');
     } else if (id === 'washer') {
@@ -455,7 +456,7 @@ async function level3(r) {
     } else if (!st.headOff) {
       if (rest.valveOpen) {
         st.sprayed++;
-        rest.spray(1.6); ctx.audio.spray();
+        rest.spray(1.6); ctx.audio.spray(wp(rest.faucet));
         r.a(15, 'valve-open', ADVICE.valveOpen);
         continue;
       }
@@ -495,7 +496,7 @@ async function level3(r) {
     const h = r.hint(rest.valve, { offset: 0.08 });
     while (!rest.valveOpen) {
       await r.pick([{ obj: rest.valve, id: 'valve', label: 'วาล์วน้ำ' }]);
-      ctx.audio.switchClick();
+      ctx.audio.switchClick(wp(rest.valve));
       rest.setValve(true);
     }
     r.unhint(h);
@@ -504,7 +505,7 @@ async function level3(r) {
   r.objective('ขั้นที่ 5 ประเมินผลและทดสอบ: เปิด-ปิดก๊อกน้ำ');
   await r.moveTo('sink');
   await r.pick([{ obj: rest.faucet, id: 'test', label: 'เปิด-ปิดทดสอบ' }]);
-  rest.flowing = true; ctx.audio.spray();
+  rest.flowing = true; ctx.audio.spray(wp(rest.faucet));
   await r.wait(1.6);
   rest.flowing = false; rest.puddle.visible = false;
   await r.wait(1.2);
@@ -518,14 +519,14 @@ async function level3(r) {
   r.stage('ADVICE');
   ws.friendBusy = true;
   let drillT = 0;
-  const offDrill = r.game.addTicker((dt) => { if (ws.friendBusy && !ws.friendGoggles.visible) { drillT -= dt; if (drillT < 0) { drillT = 3; ctx.audio.drill(1.0); } } });
+  const offDrill = r.game.addTicker((dt) => { if (ws.friendBusy && !ws.friendGoggles.visible) { drillT -= dt; if (drillT < 0) { drillT = 3; ctx.audio.drill(1.0, wp(ws.friend.head)); } } });
   r.objective('Spot the Hazard: หาจุดเสี่ยง 3 จุดในห้องช่าง');
   r.coach(ADVICE.hazardHint, 'info');
   r.startTimer(L.hazardTime);
   const found = new Set();
   const fixHazard = async (hz) => {
     if (hz.id === 'goggles') { ws.friendGoggles.visible = true; ws.friendBusy = false; r.say(ws.friend, T.friendName, 'ขอบใจนะ! ลืมสวมแว่นไปเลย'); }
-    if (hz.id === 'cord') { ws.hazards.cord.userData.plug.position.set(0.7, 0.03, 0.4); ws.hazards.cord.userData.puddle.visible = false; ctx.audio.switchClick(); }
+    if (hz.id === 'cord') { ws.hazards.cord.userData.plug.position.set(0.7, 0.03, 0.4); ws.hazards.cord.userData.puddle.visible = false; ctx.audio.switchClick(wp(ws.hazards.cord)); }
     if (hz.id === 'saw') { await r.fly(ws.hazards.saw, new THREE.Vector3(-2.6, 0.93, 1.75), { sec: 0.5 }); ws.hazards.saw.rotation.set(0, 0, Math.PI / 2); }
   };
   const hazardObj = { goggles: ws.friend.root, cord: ws.hazards.cord, saw: ws.hazards.saw };
@@ -578,14 +579,14 @@ async function level3(r) {
   S.plank.scale.x = 0.667; S.plank.position.x = -0.15;
   S.offcut.visible = true;
   await r.fly(S.offcut, at(new THREE.Vector3(0.9, -0.85, 0.3)), { sec: 0.6, arc: 0.1, hide: true });
-  ctx.audio.thump();
+  ctx.audio.thump(at(new THREE.Vector3(0.9, -0.85, 0.3)));
 
   r.objective('งานไม้ 3/4: ส่งเครื่องมือให้เพื่อน (Teamwork)');
   r.say(ws.friend, T.friendName, 'ส่งเครื่องมือสำหรับเจาะรูนำให้หน่อย จะได้เจาะก่อนขันสกรู ไม้จะไม่แตก');
   await r.chooseTool({ title: 'ภูมิขอเครื่องมือเจาะรูนำ', eyebrow: 'Teamwork · ส่งให้ถูกชิ้น', options: ALL_TOOLS, correct: ['drill'], why: { default: ADVICE.teamAsk }, tag: 'team' });
   const teamOk = r.lastFirstTry;
   if (!teamOk) r.a(5, 'team-wrong-tool');
-  ws.friendBusy = true; ctx.audio.drill(1.4);
+  ws.friendBusy = true; ctx.audio.drill(1.4, wp(ws.friend.head));
   await r.wait(1.5);
   ws.friendBusy = false;
   S.sideL.visible = true; S.sideR.visible = true;
@@ -602,7 +603,7 @@ async function level3(r) {
     eyebrow: '3.INTEGRATE · ขั้นที่ 5 ประเมินและทดสอบ', title: 'ทดสอบความแข็งแรง', accent: '#37c2a8', h: 0.56,
     body: 'วางหนังสือบนชั้น เพื่อตรวจว่าชั้นรับน้ำหนักได้', buttons: [{ id: 'test', label: 'วางหนังสือ', style: 'primary' }],
   });
-  S.books.visible = true; ctx.audio.thump(); ctx.audio.ping();
+  S.books.visible = true; ctx.audio.thump(wp(S.books)); ctx.audio.ping();
   ws.friend.wave();
   r.say(ws.friend, T.friendName, 'แข็งแรงมาก! ทำงานเป็นทีมกับเธอสนุกจริงๆ');
   await r.wait(1.5);
