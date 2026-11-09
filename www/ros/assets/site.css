@@ -145,7 +145,7 @@ figcaption { color: var(--muted); font-size: .9rem; margin-top: 10px; text-align
 .next { font-size: .72rem; }
 
 /* boards */
-.boards { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
+.boards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(330px, 100%), 1fr)); gap: 16px; }
 .board { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; display: flex; flex-direction: column; }
 .board header { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; margin-bottom: 4px; }
 .board h3 { margin: 0; }
@@ -178,7 +178,7 @@ pre.code code { font-size: .86rem; white-space: pre; }
 }
 
 /* steps */
-.steps { counter-reset: s; display: grid; gap: 14px; padding: 0; margin: 0 0 1.5em; list-style: none; }
+.steps { counter-reset: s; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 0; margin: 0 0 1.5em; list-style: none; }
 .steps > li { counter-increment: s; position: relative; padding: 16px 18px 16px 62px; background: var(--surface);
   border: 1px solid var(--border); border-radius: var(--radius); }
 .steps > li::before { content: counter(s); position: absolute; left: 18px; top: 15px; width: 30px; height: 30px; border-radius: 50%;
@@ -205,7 +205,7 @@ pre.code code { font-size: .86rem; white-space: pre; }
 .docs-side .docs-nav a[aria-current] { background: var(--surface2); color: var(--accent); }
 .docs-side li.l3 a { padding-left: 24px; font-size: .88rem; }
 .toc-title { font-size: .75rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 6px 10px; }
-.docs-main { min-width: 0; }
+.docs-main { min-width: 0; overflow-wrap: break-word; }
 .docs-main h1 { font-size: 2.2rem; }
 .docs-main h2 { font-size: 1.5rem; margin-top: 1.8em; padding-top: .4em; }
 .docs-main h3 { margin-top: 1.5em; }
