@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>The Workshop Hero</title>
-<meta name="description" content="เกมจำลองสถานการณ์ WebXR ฝึกทักษะการซ่อมบำรุงและความปลอดภัย ออกแบบตามแบบจำลอง ADISAC" />
+<meta name="description" content="เกมแอปพลิเคชันเพื่อการศึกษาในรูปแบบสถานการณ์จำลอง (WebXR) ส่งเสริมความรู้เรื่องเครื่องมือช่างพื้นฐาน สำหรับนักเรียนมัธยมศึกษาตอนต้น ออกแบบตามแบบจำลอง ADISAC" />
 <link rel="stylesheet" href="./styles.css" />
 <!-- three.js เก็บไว้ในเครื่อง เล่นได้แม้ไม่มีอินเทอร์เน็ต -->
 <script type="importmap">
@@ -36,7 +36,8 @@
       <div class="brand">
         <h1>The <span>Workshop</span> Hero</h1>
         <p class="tag">ซ่อมได้ เรียนรู้ได้ เป็นฮีโร่ได้จริง!</p>
-        <p class="lead">เกมจำลองสถานการณ์ ฝึกทักษะการซ่อมบำรุงและความปลอดภัย สำหรับนักเรียนระดับมัธยมศึกษาตอนต้น</p>
+        <p class="lead">เกมจำลองสถานการณ์ ส่งเสริมความรู้เรื่องเครื่องมือช่างพื้นฐาน สำหรับนักเรียนระดับมัธยมศึกษาตอนต้น</p>
+        <p class="study"><b>งานวิจัย</b> <span id="studyTitle"></span></p>
       </div>
 
       <div class="adisac">
@@ -84,11 +85,14 @@
 
       <details class="res">
         <summary>ผลการเล่นบนเครื่องนี้ (สำหรับครู)</summary>
+        <h3 class="restitle">สรุปผลตามงานวิจัย · ประสิทธิภาพ E1/E2 · ดัชนีประสิทธิผล · ความพึงพอใจ</h3>
+        <div id="research"></div>
         <h3 class="restitle">ผลภารกิจ (K-S-A)</h3>
         <div id="results"></div>
         <h3 class="restitle">แบบทดสอบก่อน-หลังเรียน · normalized gain (Hake)</h3>
         <div id="testResults"></div>
         <div class="resbtns">
+          <button id="csvResearchBtn" type="button">CSV งานวิจัย (1 แถว/นักเรียน)</button>
           <button id="csvBtn" type="button">CSV ผลภารกิจ</button>
           <button id="csvTestBtn" type="button">CSV แบบทดสอบ (รายข้อ)</button>
           <button id="clearBtn" type="button" class="ghost">ลบผลทั้งหมด</button>

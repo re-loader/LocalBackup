@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { T, FONT, LEVELS, STAGE, ADISAC, ITEMS, TEST, ADVICE, normalizedGain } from './strings.js';
+import { T, FONT, LEVELS, STAGE, ADISAC, ITEMS, TEST, SURVEY, ADVICE, normalizedGain } from './strings.js';
 import { Flow, Cancelled, rr, drawWrapped, clamp, easeInOut, shuffle } from './util.js';
 import { Panel, Bubble, PX } from './panel.js';
 import { drawStar } from './textures.js';
@@ -20,6 +20,14 @@ export function loadTests() {
 }
 function saveTest(rec) {
   try { const all = loadTests(); all.push(rec); localStorage.setItem(TESTS, JSON.stringify(all.slice(-600))); } catch { /* shown in-game anyway */ }
+}
+
+const SURVEYS = 'workshopHero.surveys';
+export function loadSurveys() {
+  try { return JSON.parse(localStorage.getItem(SURVEYS) || '[]'); } catch { return []; }
+}
+function saveSurvey(rec) {
+  try { const all = loadSurveys(); all.push(rec); localStorage.setItem(SURVEYS, JSON.stringify(all.slice(-600))); } catch { /* ignore */ }
 }
 
 export function loadRuns() {
@@ -198,6 +206,24 @@ export class Run {
         x: 0, y: h / 2 - 0.5 - i * 0.15, w: 1.36, h: 0.12,
         onClick: (b) => { if (picked) return; picked = true; b.setState('selected'); setTimeout(() => resolve(i), 380); },
       }));
+      this.place(p.group);
+      p.pop();
+      return () => p.dispose();
+    });
+  }
+
+  /** One satisfaction item, rated 5 (มากที่สุด) … 1 (น้อยที่สุด) like the paper form. Resolves with the rating. */
+  surveyItem({ a, text }, { n, of }) {
+    this.check();
+    return this.flow.wrap((resolve) => {
+      const h = 0.84;
+      const p = new Panel({ w: 1.5, h, border: '#e0902f' });
+      p.setContent({ eyebrow: `${SURVEY.title} · ${SURVEY.aspects[a]}`, title: `ข้อ ${n} / ${of}`, body: text, accent: '#c06f12', bodySize: 38 });
+      let picked = false;
+      p.buttonRow([5, 4, 3, 2, 1].map((k) => ({
+        id: k, label: String(k), sub: SURVEY.scale[k - 1], style: 'option', size: 46,
+        onClick: (b) => { if (picked) return; picked = true; b.setState('selected'); setTimeout(() => resolve(k), 320); },
+      })), { h: 0.17, gap: 0.03 });
       this.place(p.group);
       p.pop();
       return () => p.dispose();
@@ -396,7 +422,7 @@ export class Run {
     const pass = pct >= 0.65;
     const rec = {
       player: this.game.player || '', level: L.id, K: Math.round(sc.K), S: Math.round(sc.S), A: Math.round(sc.A), total, stars, pass,
-      seconds: Math.round(this.elapsed), mode: ctx.vr ? 'vr' : 'desktop', date: new Date().toISOString(), events: this.events,
+      seconds: Math.round(this.elapsed), mode: ctx.vr ? 'vr' : 'desktop', date: new Date().toISOString(), courseId: this.game.courseId || null, events: this.events,
     };
     saveRun(rec);
     this.game.recordResult(this.levelIndex, rec);
@@ -562,7 +588,8 @@ export class Game {
           drawTitle(p, this.results); p.addButton({ id: 'start', label: T.start, sub: T.startEn, style: 'primary', x: 0, y: -0.112, w: 0.7, h: 0.17, size: 54, onClick: () => done('start') }); },
       });
       // "เริ่มเกม" runs the whole course with a pre-test; a level button jumps straight in (practice)
-      if (choice === 'start') this.course(); else this.start(Number(choice));
+      if (choice === 'start') this.course();
+      else { this.courseId = null; this.pre = null; this.post = null; this.start(Number(choice)); }
     } catch (e) { if (!(e instanceof Cancelled)) console.error(e); }
   }
 
@@ -629,8 +656,31 @@ export class Game {
           : (pre === null ? 'ไม่มีผลก่อนเรียนของรอบนี้ (เริ่มจากปุ่มด่าน) จึงคำนวณพัฒนาการไม่ได้'
             : `พัฒนาการการเรียนรู้ (normalized gain) g = ${g === null ? '— (ก่อนเรียนได้เต็มแล้ว)' : g.toFixed(2)} · ระดับ${TEST.band(g)}`),
         h: 0.66, bodySize: 32,
-        buttons: [{ id: 'ok', label: phase === 'pre' ? 'เริ่มภารกิจ →' : 'ดูเหรียญรางวัล →', style: 'primary' }],
+        buttons: [{ id: 'ok', label: phase === 'pre' ? 'เริ่มภารกิจ →' : (this.courseId ? 'ตอบแบบประเมินความพึงพอใจ →' : 'ดูเหรียญรางวัล →'), style: 'primary' }],
       });
+      return true;
+    } catch (e) {
+      if (!(e instanceof Cancelled)) console.error(e);
+      return false;
+    }
+  }
+
+  /** Satisfaction survey (once per full course, after the post-test). Not voiced — not learning content. */
+  async runSurvey() {
+    const r = this.newRun(-1);
+    const hub = ctx.world.scenes.hub;
+    ctx.hud.set({ visible: true, level: null, stage: 'CRITERION', checklist: [], scores: null, timer: null, resources: null, bag: null, ppe: null, objective: SURVEY.title });
+    try {
+      await r.goTo('hub', 'start');
+      r.say(hub.teacher, T.teacherName, SURVEY.intro, { speak: false });
+      const ratings = [];
+      for (let n = 0; n < SURVEY.items.length; n++) {
+        r.objective(`${SURVEY.title} ข้อ ${n + 1}/${SURVEY.items.length}`);
+        ratings.push(await r.surveyItem(SURVEY.items[n], { n: n + 1, of: SURVEY.items.length }));
+      }
+      saveSurvey({ player: this.player || '', courseId: this.courseId, ratings, seconds: Math.round(r.elapsed), date: new Date().toISOString(), mode: ctx.vr ? 'vr' : 'desktop' });
+      r.log('survey', { ratings });
+      ctx.hud.coach('ขอบคุณที่ช่วยตอบแบบประเมินนะ!', 'good');
       return true;
     } catch (e) {
       if (!(e instanceof Cancelled)) console.error(e);
@@ -641,6 +691,8 @@ export class Game {
   async final() {
     // the post-test comes first (it saves itself); a cancelled test returns to whatever cancelled it
     if (!(await this.runTest('post'))) return;
+    // a full course (started with "เริ่มเกม") also asks for the student's satisfaction
+    if (this.courseId && !(await this.runSurvey())) return;
     const r = this.newRun(-1);
     ctx.hud.set({ visible: false });
     const all = LEVELS.map((_, i) => this.results[i]);
@@ -659,6 +711,7 @@ export class Game {
           if (hero) { hero.position.set(p.w / 2 + 0.12, -p.h / 2, 0.02); p.group.add(hero); }
         },
       });
+      this.courseId = null;               // the course is over; replays are practice
       if (choice === 'again') this.start(0); else this.title();
     } catch (e) { if (!(e instanceof Cancelled)) console.error(e); }
   }

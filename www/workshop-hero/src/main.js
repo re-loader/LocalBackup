@@ -5,8 +5,9 @@ import { World } from './world.js';
 import { Interaction, Locomotion, Hands, Hints } from './input.js';
 import { HUD } from './hud.js';
 import { Panel } from './panel.js';
-import { Game, loadRuns, loadTests } from './game.js';
-import { LEVELS, TEST, normalizedGain } from './strings.js';
+import { Game, loadRuns, loadTests, loadSurveys } from './game.js';
+import { courseRows, summarize, researchCsv } from './research.js';
+import { LEVELS, TEST, SURVEY, RESEARCH, normalizedGain } from './strings.js';
 import { setupLook } from './look.js';
 import { loadPhotoManifest } from './textures.js';
 import { loadActorManifest } from './actors.js';
@@ -165,7 +166,7 @@ musicBtn.addEventListener('click', () => { ctx.audio.init(); ctx.audio.setMusic(
 voiceBtn.addEventListener('click', () => { ctx.audio.voiceOn = !ctx.audio.voiceOn; if (!ctx.audio.voiceOn) ctx.audio.stopVoices(); paintToggles(); });
 $('menuBtn').addEventListener('click', () => {
   if (ctx.game.run && ctx.game.run.levelIndex >= 0) ctx.game.pause();
-  else { overlay.classList.remove('hidden'); renderResults(); renderTests(); }
+  else { overlay.classList.remove('hidden'); renderAll(); }
 });
 $('overlayClose').addEventListener('click', () => { if (started) overlay.classList.add('hidden'); });
 paintToggles();
@@ -203,8 +204,52 @@ function renderTests() {
   }</tbody></table>`;
 }
 
+/** Class-level results for the study: E1/E2, E.I., pre/post, satisfaction (this device's data). */
+function renderResearch() {
+  const box = $('research');
+  const rows = courseRows({ runs: loadRuns(), tests: loadTests(), surveys: loadSurveys() });
+  const s = summarize(rows);
+  const f = (v, d = 2) => (v === null || v === undefined ? '—' : v.toFixed(d));
+  const mark = (ok) => (ok ? '<span class="ok">ผ่าน</span>' : '<span class="no">ไม่ผ่าน</span>');
+  let html = '';
+  if (!s.N) {
+    html += `<p class="fine">ยังไม่มีนักเรียนเล่นครบหลักสูตร (กด "เริ่มเกม": ก่อนเรียน → 3 ด่าน → หลังเรียน → ประเมินความพึงพอใจ)${rows.length ? ` · เริ่มแล้ว ${rows.length} คน` : ''}</p>`;
+  } else {
+    html += `<table><thead><tr><th class="l">ตัวชี้วัด</th><th>ผล</th><th>เกณฑ์</th><th></th></tr></thead><tbody>
+      <tr><td class="l">นักเรียนที่เล่นครบหลักสูตร</td><td><b>${s.N}</b> คน</td><td colspan="2">เริ่มทั้งหมด ${s.started} คน</td></tr>
+      <tr><td class="l">ประสิทธิภาพ E<sub>1</sub>/E<sub>2</sub> (คะแนนระหว่างเล่น / หลังเรียน)</td><td><b>${f(s.E1)}/${f(s.E2)}</b></td><td>${RESEARCH.e}/${RESEARCH.e}</td><td>${mark(s.passE)}</td></tr>
+      <tr><td class="l">ดัชนีประสิทธิผล E.I. (= ⟨g⟩ ของ Hake จากค่าเฉลี่ยห้อง)</td><td><b>${f(s.EI)}</b></td><td>≥ ${RESEARCH.ei.toFixed(2)}</td><td>${mark(s.passEI)}</td></tr>
+      <tr><td class="l">คะแนนก่อนเรียน x̄ (S.D.) เต็ม ${s.max}</td><td>${f(s.pre.mean)} (${f(s.pre.sd)})</td><td colspan="2" rowspan="2">ทดสอบ t แบบไม่อิสระ<br>ด้วย CSV งานวิจัย</td></tr>
+      <tr><td class="l">คะแนนหลังเรียน x̄ (S.D.) เต็ม ${s.max}</td><td>${f(s.post.mean)} (${f(s.post.sd)})</td></tr>
+      <tr><td class="l">normalized gain เฉลี่ยรายคน</td><td>${f(s.gainMean)}</td><td colspan="2">ระดับ${TEST.band(s.gainMean)}</td></tr>
+    </tbody></table>`;
+  }
+  if (s.sat.n) {
+    const o = s.sat.overall;
+    html += `<table><thead><tr><th class="l">ความพึงพอใจ (n = ${s.sat.n})</th><th>x̄</th><th>S.D.</th><th>ระดับ</th></tr></thead><tbody>${
+      s.sat.aspects.map((a) => `<tr class="aspect"><td class="l">${a.name}</td><td>${f(a.mean)}</td><td>${f(a.sd)}</td><td>${SURVEY.level(a.mean)}</td></tr>${
+        s.sat.items.map((it, i) => (it.a === a.key ? `<tr><td class="l">${i + 1}. ${escapeHtml(it.text)}</td><td>${f(it.mean)}</td><td>${f(it.sd)}</td><td>${SURVEY.level(it.mean)}</td></tr>` : '')).join('')}`).join('')
+    }<tr class="aspect"><td class="l">รวม</td><td><b>${f(o.mean)}</b></td><td>${f(o.sd)}</td><td><b>${SURVEY.level(o.mean)}</b></td></tr></tbody></table>`;
+  }
+  html += '<p class="note">คำนวณจากข้อมูลในเครื่องนี้เท่านั้น · E<sub>1</sub> ใช้คะแนนรอบแรกของแต่ละด่าน · ถ้าใช้หลายเครื่อง ให้ดาวน์โหลด "CSV งานวิจัย" จากทุกเครื่องมารวมกัน</p>';
+  box.innerHTML = html;
+}
+function renderAll() { renderResearch(); renderResults(); renderTests(); }
+
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
+function download(text, name) {
+  const blob = new Blob(['\ufeff' + text], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${name}-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+// one row per student (course): pre/post items, mission K-S-A, process %, satisfaction — for SPSS / R / Excel
+$('csvResearchBtn').addEventListener('click', () => {
+  download(researchCsv(courseRows({ runs: loadRuns(), tests: loadTests(), surveys: loadSurveys() })), 'workshop-hero-research');
+});
 $('csvBtn').addEventListener('click', () => {
   const runs = loadRuns();
   const head = ['date', 'player', 'level', 'level_name', 'K', 'S', 'A', 'total', 'stars', 'pass', 'seconds', 'mode', 'events_json'];
@@ -238,12 +283,12 @@ $('csvTestBtn').addEventListener('click', () => {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
 $('clearBtn').addEventListener('click', () => {
-  if (!confirm('ลบผลการเล่นและผลแบบทดสอบทั้งหมดบนเครื่องนี้?')) return;
-  try { localStorage.removeItem('workshopHero.runs'); localStorage.removeItem('workshopHero.tests'); } catch { /* ignore */ }
-  renderResults(); renderTests();
+  if (!confirm('ลบผลการเล่น ผลแบบทดสอบ และแบบประเมินความพึงพอใจทั้งหมดบนเครื่องนี้?')) return;
+  try { for (const k of ['runs', 'tests', 'surveys']) localStorage.removeItem(`workshopHero.${k}`); } catch { /* ignore */ }
+  renderAll();
 });
-renderResults();
-renderTests();
+$('studyTitle').textContent = RESEARCH.title;
+renderAll();
 
 $('loading').classList.add('hidden');
 overlay.classList.remove('hidden');

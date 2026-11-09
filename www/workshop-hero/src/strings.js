@@ -5,7 +5,7 @@ export const FONT = '"Noto Sans Thai", "Leelawadee UI", "Sukhumvit Set", "Thonbu
 export const T = {
   title: 'The Workshop Hero',
   tagline: 'ซ่อมได้ เรียนรู้ได้ เป็นฮีโร่ได้จริง!',
-  sub: 'เกมจำลองสถานการณ์ ฝึกทักษะการซ่อมบำรุงและความปลอดภัย สำหรับนักเรียนระดับมัธยมศึกษาตอนต้น',
+  sub: 'เกมจำลองสถานการณ์ ส่งเสริมความรู้เรื่องเครื่องมือช่างพื้นฐาน สำหรับนักเรียนระดับมัธยมศึกษาตอนต้น',
   start: 'เริ่มเกม',
   startEn: '(Start Game)',
   chooseLevel: 'หรือเลือกด่าน',
@@ -277,3 +277,39 @@ export const TEST = {
 export function normalizedGain(pre, post, max) {
   return pre >= max ? null : (post - pre) / (max - pre);
 }
+
+/** The study this game is the instrument for — shown on the start screen and in the research export. */
+export const RESEARCH = {
+  title: 'การพัฒนาเกมแอปพลิเคชันเพื่อการศึกษาในรูปแบบสถานการณ์จำลอง เพื่อส่งเสริมความรู้เรื่องเครื่องมือช่างพื้นฐาน สำหรับนักเรียนมัธยมศึกษาตอนต้น',
+  /** E1/E2 efficiency criterion (percent): process scores (missions) / outcome scores (post-test) */
+  e: 80,
+  /** Effectiveness index criterion (Goodman, Fletcher & Schneider, 1980) */
+  ei: 0.5,
+};
+
+/**
+ * Student satisfaction, 5-point rating scale, asked once after the post-test of a full course.
+ * Not voiced: VAJA speaks learning content only.
+ */
+export const SURVEY = {
+  title: 'แบบประเมินความพึงพอใจ',
+  intro: 'ทำแบบทดสอบเสร็จแล้ว ช่วยบอกครูหน่อยว่ารู้สึกอย่างไรกับเกมนี้ ตอบตามความรู้สึกจริง ไม่มีผลกับคะแนน',
+  /** index 0 = 1 point … index 4 = 5 points */
+  scale: ['น้อยที่สุด', 'น้อย', 'ปานกลาง', 'มาก', 'มากที่สุด'],
+  /** SPSS-friendly key → Thai name, in report order */
+  aspects: { content: 'ด้านเนื้อหา', design: 'ด้านการออกแบบเกม', use: 'ด้านการใช้งาน', benefit: 'ด้านประโยชน์ที่ได้รับ' },
+  items: [
+    { a: 'content', text: 'เนื้อหาเรื่องเครื่องมือช่างพื้นฐานเข้าใจง่าย เหมาะกับระดับชั้นของฉัน' },
+    { a: 'content', text: 'สถานการณ์ในเกมใกล้เคียงกับปัญหาที่พบจริงในโรงเรียน' },
+    { a: 'content', text: 'คำอธิบายและคำแนะนำของครูช่างช่วยให้ฉันเข้าใจมากขึ้น' },
+    { a: 'design', text: 'ภาพ ตัวละคร และเสียงในเกมสวยงาม น่าสนใจ' },
+    { a: 'design', text: 'ภารกิจและมินิเกมสนุก และท้าทายพอดี' },
+    { a: 'design', text: 'ลำดับขั้นตอนในแต่ละด่านชัดเจน ทำตามได้ง่าย' },
+    { a: 'use', text: 'เลือกและใช้เครื่องมือในเกมได้ง่าย' },
+    { a: 'use', text: 'เกมทำงานลื่นไหล ไม่ติดขัด' },
+    { a: 'benefit', text: 'หลังเล่นเกม ฉันเลือกใช้เครื่องมือช่างได้ถูกต้องและปลอดภัยมากขึ้น' },
+    { a: 'benefit', text: 'ฉันอยากเรียนเรื่องอื่นด้วยเกมแบบนี้อีก' },
+  ],
+  /** Mean-score interpretation (class width 0.8, e.g. บุญชม ศรีสะอาด) */
+  level: (m) => (m === null || Number.isNaN(m) ? '—' : m > 4.5 ? 'มากที่สุด' : m > 3.5 ? 'มาก' : m > 2.5 ? 'ปานกลาง' : m > 1.5 ? 'น้อย' : 'น้อยที่สุด'),
+};
