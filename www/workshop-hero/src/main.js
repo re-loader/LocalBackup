@@ -1,3 +1,4 @@
+import { loadThaiFont } from './fontscale.js';      // first: canvas lettering in TH SarabunPSK
 import * as THREE from 'three';
 import { ctx } from './ctx.js';
 import { Sound } from './audio.js';
@@ -36,7 +37,7 @@ Object.assign(ctx, { renderer, scene, camera, rig });
 ctx.audio = new Sound();
 ctx.audio.loadVoices();
 // photographic materials (tools/gen-textures.py) must be known before the rooms are built
-await Promise.all([loadPhotoManifest(), loadActorManifest()]);
+await Promise.all([loadPhotoManifest(), loadActorManifest(), loadThaiFont()]);
 ctx.world = new World(scene);
 ctx.interaction = new Interaction(renderer, camera, scene, rig);
 ctx.loco = new Locomotion(rig, camera, ctx.interaction);

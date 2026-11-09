@@ -11,6 +11,7 @@ import {
   toolChest, cabinet, plant, whiteboard, ladder, toolBag, lightSwitch, makeCharacter,
 } from './models.js';
 import { Actor, hasActor } from './actors.js';
+import { ceilingFanModel, doorModel, powerStrip, pendantLampParts, basinModel, pillarTap, angleValve, pTrap } from './props3d.js';
 
 /** Poses that actually exist on disk (tools/gen-actors.py), keyed for an Actor. */
 const posesOf = (map) => Object.fromEntries(Object.entries(map).filter(([, n]) => hasActor(n)));
@@ -109,18 +110,9 @@ function wallClock(r = 0.17) {
 
 /** Ceiling fan (every Thai classroom has one). Spins; casts no shadow (it would flicker at 15 Hz). */
 function ceilingFan(parent, x, z, h) {
-  const g = new THREE.Group(); g.position.set(x, h, z); parent.add(g);
-  const cream = mat('#efeae0', { rough: 0.45 });
-  cyl(0.015, 0.015, 0.35, cream, 0, -0.175, 0, g, 8);
-  cyl(0.11, 0.13, 0.1, cream, 0, -0.38, 0, g, 20);
-  const rot = new THREE.Group(); rot.position.y = -0.42; g.add(rot);
-  cyl(0.06, 0.06, 0.04, mat('#c9c2b4', { rough: 0.4 }), 0, 0, 0, rot, 14);
-  for (let i = 0; i < 3; i++) {
-    const a = (i * Math.PI * 2) / 3;
-    const b = box(0.6, 0.012, 0.13, cream, Math.cos(a) * 0.38, 0, Math.sin(a) * 0.38, rot);
-    b.rotation.order = 'YXZ'; b.rotation.y = -a; b.rotation.x = 0.14;
-  }
-  g.userData.rotor = rot;
+  const { group: g, rotor } = ceilingFanModel();
+  g.position.set(x, h, z); parent.add(g);
+  g.userData.rotor = rotor;
   return g;
 }
 function noCast(root) { root.traverse((o) => { if (o.isMesh) o.castShadow = false; }); }
@@ -227,9 +219,7 @@ function ceilingPanel(parent, x, z, h, m = litPanel) {
 
 function doorAt(R, wallKey, along, label, color = '#2f6fc4') {
   const o = R.onWall(wallKey, along, 0, 0.01);
-  box(1.0, 2.1, 0.05, mat(color, { rough: 0.55 }), 0, 1.05, 0.025, o);
-  box(1.12, 2.18, 0.04, mat('#e9eef2'), 0, 1.09, 0.0, o);
-  cyl(0.025, 0.025, 0.14, M.steel(), 0.38, 1.0, 0.08, o, 10).rotation.z = Math.PI / 2;
+  o.add(doorModel(color));
   const s = signMesh(label, 0.9, 0.2, { bg: '#16306b', size: 52 });
   s.position.set(0, 2.38, 0.03); o.add(s);
   return o;
@@ -468,8 +458,8 @@ export class World {
       map: posterTex({ title: 'ความปลอดภัยมาก่อน', body: 'ตรวจเครื่องมือก่อนใช้ ทำงานอย่างระมัดระวัง', accent: '#e23b3b' }),
     }));
     R.onWall('right', 2.3, 1.7, 0.02).add(sp);
-    const chest = toolChest(); chest.position.set(-3.9, 0, 3.4); chest.rotation.y = Math.PI; st.add(chest);
-    const cab = cabinet(0.9, 1.9, 0.45, '#c9d3dc'); cab.position.set(-4.7, 0, 3.0); cab.rotation.y = Math.PI / 2; st.add(cab);
+    const chest = toolChest(); chest.position.set(-3.9, 0, 3.4); st.add(chest);          // drawers toward the room
+    const cab = cabinet(0.9, 1.9, 0.45, '#c9d3dc'); cab.position.set(-4.7, 0, 3.0); cab.rotation.y = -Math.PI / 2; st.add(cab);   // doors toward the room
     for (const x of [-2.5, 0, 2.5]) for (const z of [-2, 1]) ceilingPanel(st, x, z, 3.4);
     bakeStatic(st);
     const wsBeams = wsWin.map((c) => sunbeam(c, SUNS.workshop.dir, 3.8));
@@ -578,11 +568,11 @@ export class World {
     const cord = new THREE.Group(); cord.position.set(0.6, 0, 2.0); dyn.add(cord);
     const puddle = new THREE.Mesh(new THREE.CircleGeometry(0.55, 24), new THREE.MeshStandardMaterial({ color: '#7fc4ff', roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.7 }));
     puddle.rotation.x = -Math.PI / 2; puddle.position.y = 0.004; puddle.scale.set(1.3, 0.8, 1); cord.add(puddle);
-    const cordMat = mat('#f2b705', { rough: 0.6 });
+    const cordMat = mat('#f2b705', { rough: 0.5 });
     const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(-0.9, 0.015, -0.4), new THREE.Vector3(-0.3, 0.015, 0.1), new THREE.Vector3(0.2, 0.015, -0.1), new THREE.Vector3(0.9, 0.015, 0.3), new THREE.Vector3(2.0, 0.015, 0.9)]);
-    const cordMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.012, 6, false), cordMat); cord.add(cordMesh);
-    const plugBox = box(0.16, 0.06, 0.1, mat('#e9e9e9'), 0.0, 0.03, 0.0, cord);
-    const plug = box(0.06, 0.04, 0.05, M.black(), -0.1, 0.03, 0.0, cord);
+    const cordMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 60, 0.008, 8, false), cordMat); cord.add(cordMesh);
+    const { strip: plugBox, plug } = powerStrip();
+    cord.add(plugBox); plug.position.set(-0.09, 0.062, 0.0); cord.add(plug);
     hazards.cord = cord; cord.userData.puddle = puddle; cord.userData.plug = plug;
     const hzSaw = makeItem('saw'); hzSaw.position.set(-1.55, 0.92, 1.45); hzSaw.rotation.set(0, -Math.PI / 2 - 0.3, Math.PI / 2); dyn.add(hzSaw);
     hzSaw.userData.home = { pos: hzSaw.position.clone(), rot: hzSaw.rotation.clone(), scale: hzSaw.scale.clone() };
@@ -706,11 +696,7 @@ export class World {
     for (const [x, z] of [[-2, -1.2], [2, 0.6], [-2, 2.2], [2, 2.4]]) lamps.push(ceilingPanel(dyn, x, z, 3, lampMat));
     // the broken ceiling bulb (pendant)
     const lamp = new THREE.Group(); lamp.position.set(1.2, 3, -1.9); dyn.add(lamp);
-    cyl(0.12, 0.12, 0.04, M.white(), 0, -0.02, 0, lamp, 20);
-    cyl(0.006, 0.006, 0.18, M.black(), 0, -0.12, 0, lamp, 6);
-    const socket = cyl(0.025, 0.025, 0.06, mat('#e9e9e9'), 0, -0.24, 0, lamp, 12);
-    const shade = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.14, 20, 1, true), mat('#ffffff', { rough: 0.5, side: THREE.DoubleSide }));
-    shade.position.y = -0.27; lamp.add(shade);
+    const socket = pendantLampParts(lamp);          // canopy, cord, E27 socket (y −0.24), enamel shade
     const oldBulb = makeItem('bulb'); oldBulb.rotation.x = -Math.PI / 2; oldBulb.position.y = -0.27; lamp.add(oldBulb);
     oldBulb.userData.glass.color.set('#9a9a8a'); oldBulb.userData.glass.opacity = 0.9;
     const newBulb = makeItem('bulb'); newBulb.rotation.x = -Math.PI / 2; newBulb.position.y = -0.27; newBulb.visible = false; lamp.add(newBulb);
@@ -807,9 +793,11 @@ export class World {
     mirror.position.set(0, 1.65, -2.27);   // 2 cm proud of its frame (coplanar faces z-fight)
     box(3.3, 1.0, 0.02, mat('#b0bcc4', { metal: 0.6, rough: 0.3 }), 0, 1.65, -2.3, st);
     // drain pipes under the basins
-    for (const x of [-1.2, 0, 1.2]) cyl(0.025, 0.025, 0.4, mat('#e9eef2'), x, 0.62, -2.1, st, 10);
-    // wall water pipe feeding the valves
-    box(3.4, 0.04, 0.04, M.steel(), 0, 0.45, -2.27, st);
+    for (const x of [-1.2, 0, 1.2]) pTrap(st, x, 0.82, -2.0, -2.3);
+    rbox(3.6, 0.12, 0.02, mat('#e9eef2', { rough: 0.3 }), 0, 0.94, -2.29, st, 0.006);   // backsplash
+    // wall water pipe feeding the valves, with clips
+    { const p = cyl(0.016, 0.016, 3.4, M.steel(), 0, 0.45, -2.27, st, 14); p.rotation.z = Math.PI / 2;
+      for (const x of [-1.5, -0.5, 0.5, 1.5]) box(0.02, 0.045, 0.03, mat('#9aa3ab', { metal: 0.6, rough: 0.4 }), x, 0.45, -2.28, st); }
     const pl = plant(); pl.position.set(2.1, 0, 1.6); pl.scale.setScalar(0.8); st.add(pl);
     for (const z of [-0.6, 1.0]) ceilingPanel(st, 0, z, 3);
     bakeStatic(st);
@@ -821,26 +809,17 @@ export class World {
     const basins = [];
     const faucets = [];
     for (const x of [-1.2, 0, 1.2]) {
-      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.12, 24, 1, true), mat('#ffffff', { rough: 0.2, side: THREE.DoubleSide }));
-      b.position.set(x, 0.94, -2.0); dyn.add(b); basins.push(b);
-      cyl(0.15, 0.15, 0.01, mat('#ffffff', { rough: 0.2 }), x, 0.885, -2.0, dyn, 24);
-      const f = new THREE.Group(); f.position.set(x, 0.88, -2.24); dyn.add(f);
-      cyl(0.025, 0.03, 0.18, M.steel(), 0, 0.09, 0, f, 14);
-      const spout = cyl(0.016, 0.016, 0.18, M.steel(), 0, 0.17, 0.08, f, 12); spout.rotation.x = Math.PI / 2;
-      const nozzle = cyl(0.018, 0.014, 0.04, M.steel(), 0, 0.15, 0.17, f, 12);
-      const head = new THREE.Group(); head.position.set(0, 0.2, 0); f.add(head);
-      cyl(0.03, 0.03, 0.04, M.steel(), 0, 0, 0, head, 6);   // hex nut (faucet head)
-      const handle = box(0.12, 0.02, 0.02, mat('#d0343a', { rough: 0.4 }), 0, 0.035, 0, head);
+      const b = basinModel();                        // ceramic vessel basin on the counter
+      b.position.set(x, 0.88, -2.0); dyn.add(b); basins.push(b);
+      const { group: f, head, handle, nozzle } = pillarTap();
+      f.position.set(x, 0.88, -2.24); dyn.add(f);
       f.userData = { head, handle, nozzle };
       faucets.push(f);
     }
     const leaky = faucets[1];
     // angle stop valve under the middle basin
-    const valve = new THREE.Group(); valve.position.set(0.25, 0.6, -2.05); dyn.add(valve);
-    cyl(0.012, 0.012, 0.16, M.steel(), 0, -0.08, -0.12, valve, 8);
-    cyl(0.02, 0.02, 0.12, M.steel(), 0, 0, 0, valve, 10).rotation.x = Math.PI / 2;
-    const vHandle = new THREE.Group(); vHandle.position.set(0, 0, 0.08); valve.add(vHandle);
-    const vk = cyl(0.04, 0.04, 0.02, mat('#2f6fc4', { rough: 0.4 }), 0, 0, 0, vHandle, 6); vk.rotation.x = Math.PI / 2;
+    const { group: valve, handle: vHandle } = angleValve();   // stop valve, supply pipe and braided hose up to the leaky tap
+    valve.position.set(0.25, 0.6, -2.05); dyn.add(valve);
     const vlbl = signMesh('วาล์วน้ำ', 0.24, 0.07, { bg: '#2f6fc4', size: 46, radius: 10 });
     vlbl.position.set(0.0, 0.13, 0.05); valve.add(vlbl);
     // drips + spray particles

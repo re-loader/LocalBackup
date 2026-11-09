@@ -462,3 +462,6 @@ export function buildTool(id) {
   }
   return templates.get(id).clone();
 }
+
+/** Shared with src/props3d.js (materials, PPE, furniture, room fixtures). */
+export const G3 = { TM, shiny, add, flat, side, turned, turnedX, rodX, rbox, roundRect, strip, decalMat, decalTop, decalSide, bake, lathe };

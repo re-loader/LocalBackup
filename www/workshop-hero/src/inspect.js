@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FONT, ITEMS, GROUPS, TOOL_INFO } from './strings.js';
+import { FONT, ITEMS, GROUPS, TOOL_INFO, ITEM_INFO } from './strings.js';
 import { Panel } from './panel.js';
 import { makeItem } from './models.js';
 import { toTex } from './textures.js';
@@ -7,11 +7,19 @@ import { rr, clamp } from './util.js';
 import { N } from './narration.js';
 import { ctx } from './ctx.js';
 
-// หยิบเครื่องมือจากผนังขึ้นมาดูใกล้ๆ: ชี้ชื่อส่วนประกอบบนตัวเครื่องมือ บอกหน้าที่และข้อควรระวัง (ครูช่างอ่านให้ฟัง)
-// จอคอม: ลากเพื่อหมุนดู · แว่น VR: กดไกหรือบีบกริปที่เครื่องมือเพื่อถือหมุนดูเองในมือ กดอีกครั้งเพื่อปล่อย
-// ใช้ได้เมื่อไม่มีการเลือกเครื่องมือในภารกิจค้างอยู่ — เริ่มเลือกเมื่อไรก็วางคืนผนังให้อัตโนมัติ
+// หยิบเครื่องมือ (ผนังเครื่องมือ) วัสดุ (ชั้นวางวัสดุ) และอุปกรณ์ป้องกัน (ชั้น PPE) ขึ้นมาดูใกล้ๆ:
+// ชี้ชื่อส่วนประกอบบนตัวของ บอกหน้าที่และข้อควรระวัง (ครูช่างอ่านให้ฟัง)
+// จอคอม: ลากเพื่อหมุนดู · แว่น VR: กดไกหรือบีบกริปที่ของเพื่อถือหมุนดูเองในมือ กดอีกครั้งเพื่อปล่อย
+// ใช้ได้เมื่อไม่มีการเลือกของในภารกิจค้างอยู่ — เริ่มเลือกเมื่อไรก็วางคืนที่เดิมให้อัตโนมัติ
 
 const FLAT = new Set(['hammer', 'screwdriver', 'wrench', 'adjwrench', 'pliers']);
+/** How each material / PPE item is turned to face you (Euler XYZ, before the turntable). */
+const PRESENT = {
+  wood: [1.0, Math.PI / 2, 0], pvc: [0.35, Math.PI / 2, 0], nails: [0.6, 0.5, 0], screws: [0.6, -0.5, 0],
+  bulb: [Math.PI / 2, 0, 0], washer: [1.1, 0, 0], teflon: [0.2, 0.4, 0],
+  helmet: [0.25, 0, 0], gloves: [1.0, 0, 0], goggles: [0.15, Math.PI, 0],
+};
+const infoOf = (id) => TOOL_INFO[id] || ITEM_INFO[id];
 const v = () => new THREE.Vector3();
 
 function labelSprite(text) {
@@ -36,8 +44,11 @@ export class ToolInspector {
     this.ws = ctx.world.scenes.workshop;
     this.cur = null;
     this.hit = new Map();
+    /** every item you can pick up: tools on the wall, materials on the rack, PPE on its shelf */
+    this.items = { ...this.ws.toolWall, ...this.ws.materials, ...this.ws.ppe };
     const hidden = new THREE.MeshBasicMaterial({ visible: false });
-    for (const [id, tool] of Object.entries(this.ws.toolWall)) {
+    for (const [id, tool] of Object.entries(this.items)) {
+      if (!infoOf(id)) continue;
       tool.updateWorldMatrix(true, true);
       const box = new THREE.Box3().setFromObject(tool);
       const size = box.getSize(v()).addScalar(0.03);
@@ -56,11 +67,11 @@ export class ToolInspector {
     ctx.game.addTicker((dt) => this.update(dt));
   }
 
-  /** A choice of tools is open in a mission (the wall tools are pick targets). */
-  _choosing() { return Object.values(this.ws.toolWall).some((o) => ctx.interaction.targets.has(o)); }
+  /** A choice is open in a mission (tools, materials or PPE are pick targets). */
+  _choosing() { return Object.values(this.items).some((o) => ctx.interaction.targets.has(o)); }
 
   can(id) {
-    const t = this.ws.toolWall[id];
+    const t = this.items[id];
     if (this.cur || ctx.interaction.capture || ctx.world.currentName !== 'workshop') return false;
     if (!t.visible || t.position.distanceToSquared(t.userData.home.pos) > 1e-4) return false;   // in the bag, in a hand…
     return !this._choosing();
@@ -68,15 +79,17 @@ export class ToolInspector {
 
   open(id) {
     if (this.cur) this.close();
-    const tool = this.ws.toolWall[id];
-    const info = TOOL_INFO[id];
+    const tool = this.items[id];
+    const info = infoOf(id);
+    const kind = ITEMS[id].kind;                            // tool | material | ppe
     tool.visible = false;                                   // it's in your hands now
     tool.scale.copy(tool.userData.home.scale);
     ctx.audio.whoosh();
 
     // the tool, turned so its working side faces you, centred on a pivot that turns
     const obj = makeItem(id);
-    if (FLAT.has(id)) obj.rotation.set(Math.PI / 2, 0, 0); else obj.rotation.set(0, -Math.PI / 2, 0);
+    if (PRESENT[id]) obj.rotation.set(...PRESENT[id]);
+    else if (FLAT.has(id)) obj.rotation.set(Math.PI / 2, 0, 0); else obj.rotation.set(0, -Math.PI / 2, 0);
     obj.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(obj);
     const size = box.getSize(v());
@@ -106,13 +119,15 @@ export class ToolInspector {
 
     // info card on the right (a normal panel shrunk to card size, so its text stays sharp)
     const grp = GROUPS.find((x) => x.id === ITEMS[id].group);
-    const p = new Panel({ w: 0.92, h: 0.76, border: grp?.color || '#16306b' });
+    const accent = grp?.color || (kind === 'ppe' ? '#e0902f' : '#2e9b4a');
+    const eyebrow = grp ? `กลุ่ม${grp.th}` : kind === 'ppe' ? 'อุปกรณ์ป้องกันส่วนบุคคล (PPE)' : 'วัสดุช่าง';
+    const p = new Panel({ w: 0.92, h: 0.76, border: accent });
     p.setContent({
-      eyebrow: grp ? `กลุ่ม${grp.th}` : 'เครื่องมือช่าง', title: ITEMS[id].th, accent: grp?.color || '#16306b', bodySize: 30, titleSize: 50,
+      eyebrow, title: ITEMS[id].th, accent, bodySize: 30, titleSize: 50,
       list: [{ tag: 'ใช้', text: info.use, color: '#2a64c8' }, { tag: '!', text: info.safety, color: '#e23b3b' }],
-      footer: ctx.vr ? 'กดไกหรือบีบกริปที่เครื่องมือ เพื่อถือหมุนดูเอง' : 'ลากเมาส์เพื่อหมุนดูรอบด้าน',
+      footer: ctx.vr ? 'กดไกหรือบีบกริปที่ของ เพื่อถือหมุนดูเอง' : 'ลากเมาส์เพื่อหมุนดูรอบด้าน',
     });
-    p.addButton({ id: 'back', label: 'วางคืนที่ผนัง', style: 'primary', x: 0, y: -0.76 / 2 + 0.17, w: 0.5, h: 0.11, onClick: () => this.close() });
+    p.addButton({ id: 'back', label: kind === 'tool' ? 'วางคืนที่ผนัง' : 'วางคืนที่ชั้น', style: 'primary', x: 0, y: -0.76 / 2 + 0.17, w: 0.5, h: 0.11, onClick: () => this.close() });
     const card = new THREE.Group(); card.add(p.group); card.scale.setScalar(0.38);
     card.position.copy(cam).addScaledVector(fwd, dist + 0.04).addScaledVector(right, 0.15 + reach * 0.22);
     card.position.y = cam.y - 0.06;
