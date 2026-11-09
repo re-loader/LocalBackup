@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { T, FONT, LEVELS, STAGE, ADISAC, ITEMS, TEST, normalizedGain } from './strings.js';
+import { T, FONT, LEVELS, STAGE, ADISAC, ITEMS, TEST, ADVICE, normalizedGain } from './strings.js';
 import { Flow, Cancelled, rr, drawWrapped, clamp, easeInOut, shuffle } from './util.js';
 import { Panel, Bubble, PX } from './panel.js';
 import { drawStar } from './textures.js';
@@ -91,12 +91,11 @@ export class Run {
     ctx.hud.set({ stage: key });
     ctx.world.scenes.hub.board.redraw(key);
     this.log('stage', { key });
-    ctx.audio.good();
-    ctx.audio.voice(N.stage(key), 'coach');           // "ขั้นที่ 2 DIVIDE แยกองค์ความรู้"
+    ctx.audio.good();                                 // the stage change is shown, not spoken
   }
   objective(text) { ctx.hud.set({ objective: text }); }
   checkItem(i, done = true) { ctx.hud.check(i, done); }
-  coach(text, kind = 'tip') { ctx.hud.coach(text, kind); }
+  coach(text, kind = 'tip', opts = {}) { ctx.hud.coach(text, kind, opts); }
 
   startTimer(limit) { this.timer = { left: limit, limit, warned: false }; ctx.hud.set({ timer: limit }); }
   stopTimer() { const t = this.timer; this.timer = null; ctx.hud.set({ timer: null }); return t; }
@@ -224,7 +223,8 @@ export class Run {
           if (!ok) btns[answer].setState('correct');
           btns.forEach((b, j) => { if (j !== i && j !== answer) b.setState('disabled'); });
           this.k(ok, tag);
-          if (ok) { ctx.audio.ping(); ctx.hud.coach(`ถูกต้อง! ${why}`, 'good'); } else { ctx.audio.error(); ctx.hud.coach(why, 'tip'); }
+          // the explanation is the lesson: spoken whether the answer was right or wrong
+          if (ok) { ctx.audio.ping(); ctx.hud.coach(`ถูกต้อง! ${why}`, 'good', { speak: true }); } else { ctx.audio.error(); ctx.hud.coach(why, 'tip'); }
           p.addButton({ id: 'next', label: T.next, style: 'primary', x: 0.5, y: -h / 2 + 0.11, w: 0.4, h: 0.11, onClick: () => resolve(ok) });
         },
       }));
@@ -247,7 +247,8 @@ export class Run {
         idleT += dt;
         if (idleT > idle.sec && !hinted.length) {
           hinted = (idle.objs || []).map((o) => ctx.hints.show(o));
-          if (idle.text) ctx.hud.coach(idle.text, 'tip');
+          // the arrow hint is about using the game, not the subject: shown, not spoken
+          if (idle.text) ctx.hud.coach(idle.text, 'tip', { speak: idle.text !== ADVICE.idle });
         }
       }) : null;
       return () => {
@@ -372,7 +373,6 @@ export class Run {
   synthesis(results) {
     const L = this.L;
     results.forEach((ok, i) => this.checkItem(i, ok));
-    ctx.audio.voice(N.synthesis(results.filter(Boolean).length, L.checklist.length), 'coach');
     const sc = this.scores();
     return this.dialog({
       eyebrow: '4.SYNTHESIS · ประเมินความก้าวหน้าตามเป้าหมาย', title: 'เงื่อนไขผ่านด่าน', accent: STAGE.SYNTHESIS.color,
@@ -402,7 +402,6 @@ export class Run {
     this.game.recordResult(this.levelIndex, rec);
     this.log('criterion', { total, stars });
     ctx.audio.fanfare();
-    ctx.audio.voice(N.result(pass, stars), 'coach');
     const last = this.levelIndex === LEVELS.length - 1;
     const buttons = pass
       ? [{ id: 'next', label: last ? 'รับเหรียญมาสเตอร์ช่าง →' : T.nextMission, style: 'primary' }, { id: 'retry', label: T.retry, style: 'ghost' }]
@@ -435,7 +434,6 @@ export class Run {
     ctx.hud.clearToast();
     ctx.hands.release();
     ctx.audio.stopVoices();
-    window.speechSynthesis?.cancel();
   }
 }
 
@@ -534,7 +532,6 @@ export class Game {
     ctx.world.scenes.workshop.reset();
     try {
       await r.goTo('workshop', 'start');
-      ctx.audio.voice(N.title(), 'coach');
       const choice = await r.dialog({
         w: 1.7, h: 1.12, border: '#16306b', at: { pos: new THREE.Vector3(0, 1.55, 1.15), yaw: undefined },
         buttons: [
@@ -623,7 +620,6 @@ export class Game {
       // result card
       const pre = phase === 'post' && this.pre ? this.pre.score : null;
       const g = pre === null ? null : normalizedGain(pre, score, max);
-      ctx.audio.voice(phase === 'pre' ? N.testPre(score, max) : N.testPost(pre, score, max, TEST.band(g)), 'coach');
       if (phase === 'post') ctx.audio.fanfare(); else ctx.audio.good();
       await r.dialog({
         eyebrow: phase === 'pre' ? '1.AIM · วัดพื้นฐานก่อนเรียน' : '6.CRITERION · วัดผลหลังเรียน', accent: '#7a6fd0', border: '#7a6fd0',
@@ -652,9 +648,8 @@ export class Game {
     try {
       await r.goTo('hub', 'start');
       ctx.world.scenes.hub.teacher.wave(3);
-      r.say(ctx.world.scenes.hub.teacher, T.teacherName, master ? 'ยินดีด้วย! เธอคือมาสเตอร์ช่างผู้พิทักษ์โรงเรียนตัวจริง' : 'เก่งมากที่มาถึงตรงนี้ ลองฝึกด่านที่ยังไม่ผ่านอีกครั้งนะ');
+      r.say(ctx.world.scenes.hub.teacher, T.teacherName, master ? 'ยินดีด้วย! เธอคือมาสเตอร์ช่างผู้พิทักษ์โรงเรียนตัวจริง' : 'เก่งมากที่มาถึงตรงนี้ ลองฝึกด่านที่ยังไม่ผ่านอีกครั้งนะ', { speak: false });
       if (master) ctx.audio.fanfare();
-      ctx.audio.voice(N.final(master), 'coach');
       const choice = await r.dialog({
         w: 1.5, h: 1.15, border: '#ffc21a',
         buttons: [{ id: 'menu', label: T.menu, style: 'primary' }, { id: 'again', label: 'เล่นใหม่ตั้งแต่ด่าน 1', style: 'ghost' }],

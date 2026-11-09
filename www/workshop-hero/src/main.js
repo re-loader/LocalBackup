@@ -162,7 +162,7 @@ const paintToggles = () => {
   voiceBtn.classList.toggle('off', !ctx.audio.voiceOn);
 };
 musicBtn.addEventListener('click', () => { ctx.audio.init(); ctx.audio.setMusic(!ctx.audio.musicOn); paintToggles(); });
-voiceBtn.addEventListener('click', () => { ctx.audio.voiceOn = !ctx.audio.voiceOn; if (!ctx.audio.voiceOn) window.speechSynthesis?.cancel(); paintToggles(); });
+voiceBtn.addEventListener('click', () => { ctx.audio.voiceOn = !ctx.audio.voiceOn; if (!ctx.audio.voiceOn) ctx.audio.stopVoices(); paintToggles(); });
 $('menuBtn').addEventListener('click', () => {
   if (ctx.game.run && ctx.game.run.levelIndex >= 0) ctx.game.pause();
   else { overlay.classList.remove('hidden'); renderResults(); renderTests(); }

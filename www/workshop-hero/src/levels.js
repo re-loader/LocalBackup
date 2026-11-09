@@ -300,8 +300,8 @@ async function level2(r) {
       if (st.bolts === 4) {
         st.chairDone = true; cr.wobble = false;
         ctx.audio.ping();
-        r.coach('ทดสอบนั่งแล้ว — เก้าอี้มั่นคง ไม่โยกเยกอีก!', 'good');
-        if (cr.fon) { cr.fon.wave(2.5); r.say(cr.fon, T.girlName, 'เย้! นั่งได้แล้ว ไม่โยกเลย ขอบใจนะ'); }
+        r.coach('ทดสอบนั่งแล้ว — เก้าอี้มั่นคง ไม่โยกเยกอีก!', 'good', { speak: true });
+        if (cr.fon) { cr.fon.wave(2.5); r.say(cr.fon, T.girlName, 'เย้! นั่งได้แล้ว ไม่โยกเลย ขอบใจนะ', { speak: false }); }
       }
     } else if (id === 'switch') {
       ctx.audio.switchClick(wp(cr.switchHolder));
@@ -309,14 +309,14 @@ async function level2(r) {
       if (!cr.switchOn) {
         if (st.powerOffFirst === null) st.powerOffFirst = true;
         if (switchHint) { r.unhint(switchHint); switchHint = null; }
-        r.coach(st.newIn ? 'ปิดสวิตช์อยู่ — เปิดอีกครั้งเพื่อทดสอบ' : 'ตัดไฟแล้ว ปลอดภัย พร้อมเปลี่ยนหลอด', st.newIn ? 'info' : 'good');
+        r.coach(st.newIn ? 'ปิดสวิตช์อยู่ — เปิดอีกครั้งเพื่อทดสอบ' : 'ตัดไฟแล้ว ปลอดภัย พร้อมเปลี่ยนหลอด', st.newIn ? 'info' : 'good', { speak: true });
       } else if (st.newIn) {
         st.lightDone = true;
         if (switchHint) { r.unhint(switchHint); switchHint = null; }
         cr.setLit(true); ctx.world.applyLighting();
         ctx.audio.ping(); ctx.audio.good();
         r.coach('ไฟสว่างแล้ว! ห้องเรียนกลับมาใช้งานได้', 'good');
-        if (cr.fon) { cr.fon.mood = 'happy'; cr.fon.holdMood = true; r.say(cr.fon, T.girlName, 'สว่างแล้ว! ห้องเรียนเรากลับมาแล้ว ขอบคุณมากเลยนะ'); }
+        if (cr.fon) { cr.fon.mood = 'happy'; cr.fon.holdMood = true; r.say(cr.fon, T.girlName, 'สว่างแล้ว! ห้องเรียนเรากลับมาแล้ว ขอบคุณมากเลยนะ', { speak: false }); }
       } else {
         r.coach('หลอดยังขาดอยู่ เปิดสวิตช์ไปก็ไม่ติด — ปิดไว้ก่อนแล้วเปลี่ยนหลอด', 'tip');
       }
@@ -326,7 +326,7 @@ async function level2(r) {
         await r.fly(cr.ladder, new THREE.Vector3(1.2, 0, -1.6), { sec: 0.8, arc: 0.3 });
         cr.ladder.rotation.set(0, 0, 0);
         st.ladderPlaced = true;
-        r.coach('ตั้งบันไดใต้หลอดไฟอย่างมั่นคงแล้ว ปีนขึ้นไปได้', 'good');
+        r.coach('ตั้งบันไดใต้หลอดไฟอย่างมั่นคงแล้ว ปีนขึ้นไปได้', 'good', { speak: true });
       } else {
         await r.moveTo('ladder');
         st.onLadder = true;
@@ -345,7 +345,7 @@ async function level2(r) {
         await r.timing({ anchor: wp(cr.oldBulb), title: 'หมุนคลายหลอดเก่าออก', mode: 'loosen', hits: 2 }, 'bulb-out');
         st.oldOut = true;
         await r.fly(cr.oldBulb, new THREE.Vector3(1.0, 0.03, -1.1), { sec: 0.6, arc: 0.05, hide: true });
-        r.coach('ถอดหลอดเก่าแล้ว — ใส่หลอดใหม่จากกระเป๋าช่าง', 'good');
+        r.coach('ถอดหลอดเก่าแล้ว — ใส่หลอดใหม่จากกระเป๋าช่าง', 'good', { speak: true });
       } else if (!st.newIn) {
         await r.chooseTool({ title: 'เลือกของจากกระเป๋าช่าง', options: got, correct: ['bulb'], why: { default: ADVICE.wrongToolFor.bulb }, tag: 'bulb' });
         cr.newBulb.visible = true;
@@ -451,14 +451,14 @@ async function level3(r) {
       await r.moveTo('valve');
       ctx.audio.switchClick(wp(rest.valve));
       rest.setValve(!rest.valveOpen);
-      if (!rest.valveOpen) r.coach('ปิดวาล์วน้ำแล้ว ถอดก๊อกได้อย่างปลอดภัย', 'good');
+      if (!rest.valveOpen) r.coach('ปิดวาล์วน้ำแล้ว ถอดก๊อกได้อย่างปลอดภัย', 'good', { speak: true });
       else if (st.headOff) { rest.spray(1.2); ctx.audio.spray(wp(rest.faucet)); r.a(10, 'valve-reopened', 'อย่าเพิ่งเปิดวาล์วตอนก๊อกยังถอดอยู่!'); }
       else r.coach('เปิดวาล์วอยู่ — ถ้าจะถอดก๊อกต้องปิดก่อนนะ', 'tip');
       await r.moveTo('sink');
     } else if (id === 'washer') {
       await r.fly(rest.oldWasher, new THREE.Vector3(0.7, 0.9, -1.95), { sec: 0.5, hide: true });
       st.washerOut = true;
-      r.coach('เอาซีลยางเก่าที่สึกออกแล้ว — ใส่ซีลยางใหม่', 'good');
+      r.coach('เอาซีลยางเก่าที่สึกออกแล้ว — ใส่ซีลยางใหม่', 'good', { speak: true });
     } else if (!st.headOff) {
       if (rest.valveOpen) {
         st.sprayed++;
@@ -487,7 +487,7 @@ async function level3(r) {
       newWasher.userData.temp = true;     // restroom.reset() removes it if the run is abandoned
       st.washerIn = true;
       ctx.audio.good();
-      r.coach('ใส่ซีลยางใหม่แล้ว — ประกอบหัวก๊อกกลับ', 'good');
+      r.coach('ใส่ซีลยางใหม่แล้ว — ประกอบหัวก๊อกกลับ', 'good', { speak: true });
     } else {
       const tool = await r.chooseTool({ title: 'ขันหัวก๊อกกลับด้วยอะไร?', ...faucetTool, tag: 'faucet-tool-2' });
       await r.fly(head, wp(rest.faucet).add(headHome), { sec: 0.5, arc: 0.1 });
@@ -516,7 +516,7 @@ async function level3(r) {
   rest.flowing = false; rest.puddle.visible = false;
   await r.wait(1.2);
   ctx.audio.ping();
-  r.coach('ปิดแล้วน้ำไม่หยดอีก — ซ่อมก๊อกสำเร็จ!', 'good');
+  r.coach('ปิดแล้วน้ำไม่หยดอีก — ซ่อมก๊อกสำเร็จ!', 'good', { speak: true });
   r.log('faucet', { sprayed: st.sprayed });
   await r.wait(1.0);
 
@@ -532,7 +532,7 @@ async function level3(r) {
   r.startTimer(L.hazardTime);
   const found = new Set();
   const fixHazard = async (hz) => {
-    if (hz.id === 'goggles') { ws.friendGoggles.visible = true; ws.friendBusy = false; r.say(ws.friend, T.friendName, 'ขอบใจนะ! ลืมสวมแว่นไปเลย'); }
+    if (hz.id === 'goggles') { ws.friendGoggles.visible = true; ws.friendBusy = false; r.say(ws.friend, T.friendName, 'ขอบใจนะ! ลืมสวมแว่นไปเลย', { speak: false }); }
     if (hz.id === 'cord') { ws.hazards.cord.userData.plug.position.set(0.7, 0.03, 0.4); ws.hazards.cord.userData.puddle.visible = false; ctx.audio.switchClick(wp(ws.hazards.cord)); }
     if (hz.id === 'saw') { await r.fly(ws.hazards.saw, new THREE.Vector3(-2.6, 0.93, 1.75), { sec: 0.5 }); ws.hazards.saw.rotation.set(0, 0, Math.PI / 2); }
   };
@@ -612,7 +612,7 @@ async function level3(r) {
   });
   S.books.visible = true; ctx.audio.thump(wp(S.books)); ctx.audio.ping();
   ws.friend.wave();
-  r.say(ws.friend, T.friendName, 'แข็งแรงมาก! ทำงานเป็นทีมกับเธอสนุกจริงๆ');
+  r.say(ws.friend, T.friendName, 'แข็งแรงมาก! ทำงานเป็นทีมกับเธอสนุกจริงๆ', { speak: false });
   await r.wait(1.5);
 
   // ---- 4. SYNTHESIS ----
@@ -646,7 +646,7 @@ function orderSteps(r, steps) {
             next++;
             if (next === steps.length) {
               ctx.audio.ping();
-              r.coach('ตรวจสอบ → วิเคราะห์ → วางแผน → ปฏิบัติ → ประเมินและทดสอบ ใช้ได้กับงานซ่อมทุกงาน!', 'good');
+              r.coach('ตรวจสอบ → วิเคราะห์ → วางแผน → ปฏิบัติ → ประเมินและทดสอบ ใช้ได้กับงานซ่อมทุกงาน!', 'good', { speak: true });
               p.addButton({ id: 'go', label: T.next, style: 'primary', x: 0.45, y: -0.48, w: 0.4, h: 0.1, onClick: () => resolve() });
             }
           } else {

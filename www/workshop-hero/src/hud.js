@@ -237,7 +237,11 @@ export class HUD {
   check(i, done = true) { if (this.s.checklist[i]) { this.s.checklist[i].done = done; this._dirty = true; } }
 
   /** ADVICE: immediate coaching, on screen, in the headset, and spoken. */
-  coach(text, kind = 'tip', { speak = true, sec = null } = {}) {
+  /**
+   * ADVICE. Spoken (VAJA) only when it teaches: explanations, tips and warnings. Plain confirmations
+   * ('good': "ใส่…ลงกระเป๋าแล้ว", "สวม…แล้ว") show as text only, unless the caller marks them { speak: true }.
+   */
+  coach(text, kind = 'tip', { speak = kind !== 'good', sec = null } = {}) {
     this.toast = { text, kind };
     this.toastUntil = performance.now() + (sec ?? Math.max(4, text.length * 0.09)) * 1000;
     this.adviceFlash = 2.5;

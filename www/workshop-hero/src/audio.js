@@ -1,10 +1,8 @@
-import { ctx as app } from './ctx.js';
-const ctxIsVR = () => !!app.vr;
 
 // เสียงทั้งหมดสังเคราะห์ด้วย Web Audio — ไม่มีไฟล์เสียง จึงเล่นออฟไลน์ได้
 // ความสมจริง: เสียงมีทิศทาง 3 มิติ (HRTF) ตามตำแหน่งต้นเสียง · เสียงก้องตามขนาดห้อง ·
 // เสียงบรรยากาศประจำห้อง (พัดลม ไฟฟลูออเรสเซนต์ นกนอกหน้าต่าง นาฬิกา) · เสียงฝีเท้า
-// และเสียงพูดภาษาไทยผ่าน speechSynthesis ถ้าเครื่องมีเสียงภาษาไทย
+// และเสียงพูดภาษาไทยจาก VAJA (NECTEC) เท่านั้น — ไฟล์ที่สร้างไว้แล้ว ไม่ใช้เสียงของเบราว์เซอร์
 
 const ROOMS = {
   hub: { decay: 0.7, wet: 0.16, window: [-3.4, 1.8, 1.4], floor: 'wood' },
@@ -58,8 +56,6 @@ export class Sound {
     const d = this._noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     this.verb.buffer = this._ir(1.0);
-    this._pickVoice();
-    if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = () => this._pickVoice();
     if (this.musicOn) this.startMusic();
     if (this._pendingRoom) this.setRoom(this._pendingRoom);
   }
@@ -392,8 +388,8 @@ export class Sound {
     if (!this.voiceOn || !text) return 0;
     const files = this._clips(text, role);
     if (!files || !this.ctx) {
+      // VAJA is the only voice: a line with no recording stays silent (its text is on screen) and is logged
       if (this.voiceMap && !this.missing.has(`${role}|${text}`)) { this.missing.add(`${role}|${text}`); console.warn(`[voice] no VAJA recording for ${role}: ${text}`); }
-      if (!ctxIsVR()) this.speak(text);      // desktop last resort; the headset has no browser voice
       return 0;
     }
     const token = (this._voiceToken[role] = (this._voiceToken[role] || 0) + 1);
@@ -401,7 +397,7 @@ export class Sound {
     this._playing[role] = [];
     this._endAt[role] = 0;
     let bufs;
-    try { bufs = await Promise.all(files.map((f) => this._buffer(f))); } catch { this.speak(text); return 0; }
+    try { bufs = await Promise.all(files.map((f) => this._buffer(f))); } catch { return 0; }
     if (token !== this._voiceToken[role]) return 0;           // superseded while loading
     const out = pos ? this._out(pos, this.sfx, 40) : this.voiceBus;
     // one person talks at a time: wait for anyone else still speaking (a role interrupts only itself)
@@ -431,22 +427,4 @@ export class Sound {
     }
   }
 
-  // ------------------------------------------------------------ browser Thai voice (fallback)
-  _pickVoice() {
-    const ss = window.speechSynthesis;
-    if (!ss) return;
-    const vs = ss.getVoices();
-    this._thVoice = vs.find((v) => /^th/i.test(v.lang)) || null;
-  }
-  speak(text) {
-    const ss = window.speechSynthesis;
-    if (!this.voiceOn || !ss || !this._thVoice) return;
-    ss.cancel();
-    const u = new SpeechSynthesisUtterance(text.replace(/[!—•→]/g, ' '));
-    u.voice = this._thVoice; u.lang = this._thVoice.lang; u.rate = 1.05; u.pitch = 1.1;
-    u.onstart = () => this.duck(true);
-    u.onend = () => this.duck(false);
-    ss.speak(u);
-  }
-  get hasThaiVoice() { return !!this._thVoice; }
 }
