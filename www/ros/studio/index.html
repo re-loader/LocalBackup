@@ -7,7 +7,7 @@
 <meta name="description" content="Reload OS Studio: design an app's screens in the browser on the real Reload OS interface, try them, and export C for the app kit.">
 <link rel="canonical" href="https://os.re-loader.com/studio/">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<meta name="build-api" content="https://reloados.re-loader.com/api/build">
+<meta name="build-api" content="https://reloados.re-loader.com/api/build"><meta name="studio-api" content="https://reloados.re-loader.com/api/studio">
 <link rel="stylesheet" href="studio.css">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
@@ -22,6 +22,7 @@
     <div class="pop" id="export-pop" role="menu" hidden>
       <button id="x-zip" role="menuitem">Project folder (zip) - for the app kit</button>
       <button id="x-elf" role="menuitem">ELF for this board</button>
+      <button id="x-design" role="menuitem">Design file (.design) - to keep or to send</button>
       <p class="pop-note" id="x-note"></p>
     </div>
     <span class="sep"></span>
@@ -32,6 +33,12 @@
   <button id="run" class="run" title="Try the app on the screen (Ctrl+R)"><svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.500z"/></svg><span>Run</span></button>
   <button id="theme" class="icon" title="Light or dark page" aria-label="Light or dark page"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
   <a class="help" href="../docs/studio.html">Help</a>
+  <button id="account" class="account" title="Your account: your projects on the server, and Export › ELF" hidden>Sign in</button>
+  <div class="pop acct-pop" id="account-pop" role="menu" hidden>
+    <p class="pop-note" id="acct-who"></p>
+    <button id="acct-projects" role="menuitem">My projects…</button>
+    <button id="acct-out" role="menuitem">Sign out</button>
+  </div>
 </header>
 
 <main class="ide">
@@ -111,6 +118,31 @@
     <h2>New app</h2>
     <div class="templates" id="templates"></div>
     <div class="dlg-foot"><button value="cancel">Cancel</button></div>
+  </form>
+</dialog>
+<dialog id="dlg-account" class="dlg acct">
+  <form id="acct-form" method="dialog" novalidate>
+    <h2 id="acct-title">Sign in</h2>
+    <p class="acct-note" id="acct-note"></p>
+    <label class="acct-f" id="f-name">Your name <input id="acct-name" autocomplete="name" maxlength="80"></label>
+    <label class="acct-f" id="f-email">Email <input id="acct-email" type="email" autocomplete="email" maxlength="254"></label>
+    <label class="acct-f" id="f-pass">Password <input id="acct-pass" type="password" autocomplete="current-password" maxlength="200"></label>
+    <p class="acct-err" id="acct-err" role="alert"></p>
+    <div class="dlg-foot acct-foot">
+      <button type="button" class="link" id="acct-switch"></button>
+      <button type="button" class="link" id="acct-forgot">Forgot the password?</button>
+      <span class="fill"></span>
+      <button value="cancel" formnovalidate>Cancel</button>
+      <button type="submit" class="strong" id="acct-go">Sign in</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="dlg-projects" class="dlg">
+  <form method="dialog">
+    <h2>My projects</h2>
+    <p class="acct-note">On the server: open one from any computer. Save (Ctrl+S) keeps the open one there.</p>
+    <div class="cloud-list" id="cloud-list"></div>
+    <div class="dlg-foot"><button type="button" class="link" id="cloud-file">Open a .design file instead…</button><span class="fill"></span><button value="cancel">Close</button></div>
   </form>
 </dialog>
 <input type="file" id="open-file" accept=".design,application/json" hidden>

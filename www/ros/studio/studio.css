@@ -204,3 +204,25 @@ h2 { display: flex; align-items: center; justify-content: space-between; margin:
   cursor: pointer; font: inherit; }
 .btn:hover { background: var(--hover); }
 .pair .icon { flex: none; }
+
+/* the account: the button, its menu, the sign-in dialog, the projects on the server */
+.account { margin-left: 6px; padding: 4px 10px; border: 1px solid var(--hair); border-radius: 6px; background: none; cursor: pointer; white-space: nowrap; }
+.account:hover { background: var(--hover); }
+.acct-pop { right: 8px; left: auto; top: 44px; min-width: 200px; }
+.dlg.acct { width: 380px; }
+.acct-f { display: flex; flex-direction: column; gap: 4px; margin: 0 0 10px; font-size: 12px; color: var(--muted); }
+.acct-f input { padding: 7px 9px; border: 1px solid var(--hair); border-radius: 6px; background: var(--bg, transparent); font-size: 14px; }
+.acct-note { margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.acct-err { min-height: 1.2em; margin: 0; color: var(--err, #E5484D); font-size: 12px; }
+.acct-foot { align-items: center; gap: 8px; }
+.acct-foot .fill, .dlg-foot .fill { flex: 1; }
+button.link { border: 0; background: none; padding: 0; color: var(--blue); cursor: pointer; font-size: 12px; }
+button.strong, .dlg-foot button.strong { background: var(--accent); color: var(--accent-t); border-color: var(--accent); }
+.cloud-list { max-height: 50vh; overflow: auto; border: 1px solid var(--hair); border-radius: 8px; }
+.cloud-list .row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--hair); cursor: pointer; }
+.cloud-list .row:last-child { border-bottom: 0; }
+.cloud-list .row:hover { background: var(--hover); }
+.cloud-list .name { flex: 1; }
+.cloud-list .kind { color: var(--muted); font-size: 12px; }
+.cloud-list .empty { padding: 16px; color: var(--muted); }
+

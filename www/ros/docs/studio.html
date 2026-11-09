@@ -55,6 +55,10 @@
   <li><p><b>Run</b> tries it on the screen, with the mouse as a finger and Esc as the back swipe.</p></li>
   <li><p><b>Problems</b> at the bottom checks the screen on every board, both ways round: a widget that runs off the
     edge, a name C can't use.</p></li>
+  <li><p><b>Sign in</b> (top right) to keep your designs on our server - Save (Ctrl+S) and Open, from any computer,
+    pictures and sounds included - and to use Export › ELF. An account is an email address and a password; we send a
+    mail to confirm the address, and one with a link when you forget the password. Without an account Studio works as
+    it always did, in your browser.</p></li>
   <li><p><b>Export › ELF</b> builds the app on our server with the app kit and gives you the <code>.elf</code> for the
     board you picked: copy it into <code>apps/</code> on the device's flash drive or SD card and restart the device. A
     compiler error comes back into Problems. Nothing of your app stays on the server.</p></li>
@@ -79,7 +83,9 @@ cd appkit
 
 <h2 id="notes">Good to know</h2>
 <ul>
-  <li>Your design stays in this browser (and in the <code>.design</code> file you save). Nothing is sent anywhere.</li>
+  <li>Signed out, your design stays in this browser (and in the <code>.design</code> file: Export › Design file).
+    Signed in, Save keeps it in your account too: its password is stored as a salted scrypt hash, and nothing of your
+    designs is shared with anyone.</li>
   <li>Studio can use what an app may call on a device: the code stays inside <code>reloados/api.txt</code>.</li>
   <li>Pictures and sounds stay in this browser too (and in the <code>.design</code> file). The app's file grows with them
     and is loaded into the device's memory whole: Problems warns above 2 MB, and the build server takes 6 MB. A picture

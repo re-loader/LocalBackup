@@ -1586,6 +1586,10 @@
     return JSON.stringify(Object.assign({}, P, { assetData: data }), null, 1);
   }
   function saveDesign() {
+    if (account) return cloudSave();
+    saveDesignFile();
+  }
+  function saveDesignFile() {
     download(P.app.file + '.design', designFile(), 'application/json');
     msg('Saved ' + P.app.file + '.design');
   }
@@ -1660,7 +1664,7 @@
     keep();
     msg('Opened ' + P.app.name);
   }
-  $('#f-open').addEventListener('click', function () { $('#open-file').click(); });
+  $('#f-open').addEventListener('click', function () { if (account) openCloud(); else $('#open-file').click(); });
   $('#open-file').addEventListener('change', function (e) {
     const f = e.target.files[0];
     if (f) f.text().then(openDesign);
@@ -1675,9 +1679,11 @@
   function exportMenu() {
     const b = BOARDS.find(function (x) { return x.id === P.board; }), elf = $('#x-elf');
     elf.textContent = 'ELF for the ' + b.name + ' (' + P.app.file + '.elf)';
-    elf.disabled = !buildInfo || building;
+    const signIn = buildInfo && buildInfo.signin && !account;
+    elf.disabled = !buildInfo || building || signIn;
     $('#x-note').textContent = !buildInfo ? 'No build server on this copy of the site: build the zip with the app kit.'
-      : building ? 'Building…' : 'Built on os.re-loader.com with the app kit for Reload OS ' + buildInfo.kit + '; nothing is kept there.';
+      : building ? 'Building…' : signIn ? 'Sign in (top right) to build the .elf on the server; the zip needs no account.'
+      : 'Built on the server with the app kit for Reload OS ' + buildInfo.kit + '; nothing is kept there.';
   }
   $('#f-export').addEventListener('click', function (e) {
     e.stopPropagation();
@@ -1687,6 +1693,7 @@
   document.addEventListener('click', function (e) { if (!pop.contains(e.target)) pop.hidden = true; });
   $('#x-zip').addEventListener('click', function () { pop.hidden = true; exportProject(); });
   $('#x-elf').addEventListener('click', function () { pop.hidden = true; buildElf(); });
+  $('#x-design').addEventListener('click', function () { pop.hidden = true; saveDesignFile(); });
   function buildElf() {
     const errs = problems.filter(function (p) { return p.sev === 'error'; });
     if (errs.length) { toggleProblems(true); msg('Fix the errors first: the code would not build'); return; }
@@ -1703,8 +1710,10 @@
           (Date.now() - t0 > 20000 ? ' (the first build of a board compiles ESP-IDF: minutes)' : ''));
     }, 1000);
     const done = function (text) { clearInterval(tick); building = false; msg(text); exportMenu(); };
-    fetch(BUILD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board: board, name: name, files: files, assets: assets }) })
+    fetch(BUILD_URL, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, account ? { Authorization: 'Bearer ' + account.token } : {}),
+                       body: JSON.stringify({ board: board, name: name, files: files, assets: assets }) })
       .then(function (r) {
+        if (r.status === 401) { setAccount(null); done('Sign in again (top right): the session has ended'); return; }
         if (r.status === 200) return r.blob().then(function (b) {
           download(name + '.elf', b, 'application/octet-stream');
           done(name + '.elf built in ' + (r.headers.get('X-Build-Seconds') || '?') + ' s - copy it into apps/ on the device\'s flash drive or SD card, then restart the device');
@@ -1742,6 +1751,163 @@
   });
   function msg(t) {
     $('#msg').textContent = t;
+  }
+
+  /* ---------------------------------------------------------------- the account (server/studio)
+   * Signed in, a design is kept on the server (Save, Open - its .design file, pictures and sounds included) and Export ›
+   * ELF builds there; signed out, all of Studio works in this browser as before, and Export gives the zip. The session
+   * is a token in this browser (localStorage), sent as Authorization: no cookies, so a page on another origin works. */
+  const STUDIO_API = (document.querySelector('meta[name="studio-api"]') || {}).content || '../api/studio';
+  const ACCT_KEY = 'ros-studio-account';
+  let account = null, accounts = null, acctMode = 'in', resetToken = null;
+  try { account = JSON.parse(localStorage.getItem(ACCT_KEY)); } catch (e) { account = null; }
+  function api(method, p, body) {
+    return fetch(STUDIO_API + p, { method: method, cache: 'no-store',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, account ? { Authorization: 'Bearer ' + account.token } : {}),
+      body: body == null ? undefined : JSON.stringify(body) })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (r.ok) return j;
+          if (r.status === 401 && account && p !== '/login') setAccount(null);
+          const e = new Error(j.error || 'The server answered ' + r.status);
+          e.status = r.status;
+          e.body = j;
+          throw e;
+        });
+      }, function () { throw new Error('The server does not answer'); });
+  }
+  function setAccount(a) {
+    account = a;
+    try { if (a) localStorage.setItem(ACCT_KEY, JSON.stringify(a)); else localStorage.removeItem(ACCT_KEY); } catch (e) { /* this page only */ }
+    accountUi();
+    exportMenu();
+  }
+  function accountUi() {
+    const b = $('#account');
+    b.hidden = !accounts;
+    b.textContent = account ? (account.name || account.email) : 'Sign in';
+    $('#f-save').title = account ? 'Save to your account (Ctrl+S)' : 'Save the .design file (Ctrl+S)';
+    $('#f-open').title = account ? 'Open one of your projects' : 'Open a .design file';
+  }
+  fetch(STUDIO_API, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (info) {
+    accounts = info;
+    accountUi();
+    if (account && accounts) api('GET', '/me').then(function (r) { account.name = r.user.name; setAccount(account); }, function () {});
+    if (accounts) linkFromMail();
+  });
+  /* a link from one of our mails: ?verify=… confirms the address, ?reset=… sets a new password */
+  function linkFromMail() {
+    const q = new URLSearchParams(location.search), v = q.get('verify'), r = q.get('reset');
+    if (!v && !r) return;
+    history.replaceState(null, '', location.pathname);
+    if (r) { resetToken = r; acctDialog('reset'); return; }
+    api('POST', '/verify', { token: v }).then(function (j) { acctDialog('in', j.message); }, function (e) { acctDialog('in', e.message); });
+  }
+  const TITLES = { in: 'Sign in', up: 'Create an account', forgot: 'A new password', reset: 'Set your password' };
+  function acctDialog(mode, note) {
+    acctMode = mode;
+    $('#acct-title').textContent = TITLES[mode];
+    $('#f-name').hidden = mode !== 'up';
+    $('#f-email').hidden = mode === 'reset';
+    $('#f-pass').hidden = mode === 'forgot';
+    $('#acct-pass').autocomplete = mode === 'in' ? 'current-password' : 'new-password';
+    $('#acct-pass').value = '';
+    $('#acct-go').textContent = { in: 'Sign in', up: 'Create the account', forgot: 'Send me a link', reset: 'Set the password' }[mode];
+    const sw = mode === 'in' ? (accounts && accounts.signup ? 'Create an account' : '') : 'Sign in instead';
+    $('#acct-switch').textContent = sw;
+    $('#acct-switch').hidden = !sw;
+    $('#acct-forgot').hidden = mode !== 'in';
+    $('#acct-note').textContent = note || {
+      in: accounts && accounts.signup ? 'Your projects on the server, from any computer, and Export › ELF.'
+        : 'Your projects on the server, from any computer, and Export › ELF. Accounts are made by Reloader for now.',
+      up: 'We send a mail to confirm the address. The password: 8 characters or more.',
+      forgot: 'We send a mail with a link to set a new password.',
+      reset: 'A new password: 8 characters or more.' }[mode];
+    $('#acct-err').replaceChildren();
+    const d = $('#dlg-account');
+    if (!d.open) d.showModal();
+    (mode === 'reset' ? $('#acct-pass') : mode === 'up' ? $('#acct-name') : $('#acct-email')).focus();
+  }
+  $('#acct-switch').addEventListener('click', function () { acctDialog(acctMode === 'in' ? 'up' : 'in'); });
+  $('#acct-forgot').addEventListener('click', function () { acctDialog('forgot'); });
+  $('#acct-form').addEventListener('submit', function (e) {
+    if (e.submitter && e.submitter.value === 'cancel') return;
+    e.preventDefault();
+    const email = $('#acct-email').value.trim(), pass = $('#acct-pass').value, name = $('#acct-name').value.trim(), go = $('#acct-go');
+    const err = function (x) {
+      $('#acct-err').replaceChildren(x.message);
+      if (x.body && x.body.unverified) $('#acct-err').append(' ', el('button', { type: 'button', class: 'link', onclick: function () {
+        api('POST', '/resend', { email: email }).then(function (j) { acctDialog('in', j.message); }, err);
+      } }, 'Send the mail again'));
+    };
+    go.disabled = true;
+    let p;
+    if (acctMode === 'in') {
+      p = api('POST', '/login', { email: email, password: pass }).then(function (r) {
+        setAccount({ token: r.token, email: r.user.email, name: r.user.name });
+        $('#dlg-account').close();
+        msg('Signed in as ' + r.user.email + ': Save keeps the design in your account');
+      });
+    } else if (acctMode === 'up') {
+      p = api('POST', '/signup', { email: email, password: pass, name: name }).then(function (j) { acctDialog('in', j.message); });
+    } else if (acctMode === 'forgot') {
+      p = api('POST', '/forgot', { email: email }).then(function (j) { acctDialog('in', j.message); });
+    } else {
+      p = api('POST', '/reset', { token: resetToken, password: pass }).then(function (j) { resetToken = null; acctDialog('in', j.message); });
+    }
+    p.catch(err).then(function () { go.disabled = false; });
+  });
+  const acctPop = $('#account-pop');
+  $('#account').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (!account) return acctDialog('in');
+    $('#acct-who').textContent = account.email;
+    acctPop.hidden = !acctPop.hidden;
+  });
+  document.addEventListener('click', function (e) { if (!acctPop.contains(e.target)) acctPop.hidden = true; });
+  $('#acct-out').addEventListener('click', function () {
+    acctPop.hidden = true;
+    api('POST', '/logout').catch(function () {}).then(function () { setAccount(null); msg('Signed out: the design stays in this browser'); });
+  });
+  $('#acct-projects').addEventListener('click', function () { acctPop.hidden = true; openCloud(); });
+  $('#cloud-file').addEventListener('click', function () { $('#dlg-projects').close(); $('#open-file').click(); });
+  function openCloud() {
+    const list = $('#cloud-list');
+    list.replaceChildren(el('div', { class: 'empty' }, 'Loading…'));
+    if (!$('#dlg-projects').open) $('#dlg-projects').showModal();
+    api('GET', '/projects').then(function (r) {
+      list.replaceChildren();
+      if (!r.projects.length) list.append(el('div', { class: 'empty' }, 'Nothing here yet: Save keeps the open design in your account.'));
+      r.projects.forEach(function (p) {
+        list.append(el('div', { class: 'row', title: 'Open it', onclick: function () { cloudOpen(p.id); } }, icon('app'),
+          el('span', { class: 'name' }, p.name + (P.cloud === p.id ? ' (open)' : '')),
+          el('span', { class: 'kind' }, new Date(p.updated * 1000).toLocaleString() + ' · ' + Math.ceil(p.size / 1024) + ' KB'),
+          el('button', { type: 'button', class: 'act keep', title: 'Delete it', onclick: function (e) { e.stopPropagation(); cloudDelete(p); } }, '×')));
+      });
+    }, function (e) { list.replaceChildren(el('div', { class: 'empty' }, e.message)); });
+  }
+  function cloudOpen(id) {
+    api('GET', '/projects/' + id).then(function (p) {
+      $('#dlg-projects').close();
+      openDesign(p.data);
+      P.cloud = p.id;
+      keep();
+      msg('Opened ' + p.name + ' from your account');
+    }, function (e) { msg(e.message); });
+  }
+  function cloudDelete(p) {
+    if (!confirm('Delete "' + p.name + '" from your account? It cannot be brought back.')) return;
+    api('DELETE', '/projects/' + p.id).then(function () {
+      if (P.cloud === p.id) { delete P.cloud; keep(); }
+      openCloud();
+    }, function (e) { msg(e.message); });
+  }
+  function cloudSave() {
+    const name = P.app.name, data = designFile();
+    msg('Saving ' + name + ' to your account…');
+    const create = function () { return api('POST', '/projects', { name: name, data: data }); };
+    (P.cloud ? api('PUT', '/projects/' + P.cloud, { name: name, data: data }).catch(function (e) { if (e.status === 404) return create(); throw e; }) : create())
+      .then(function (r) { P.cloud = r.id; keep(); msg('Saved ' + name + ' to your account'); }, function (e) { msg('Not saved: ' + e.message); });
   }
 
   /* ---------------------------------------------------------------- run */
