@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>The Workshop Hero</title>
+<meta name="description" content="เกมจำลองสถานการณ์ WebXR ฝึกทักษะการซ่อมบำรุงและความปลอดภัย ออกแบบตามแบบจำลอง ADISAC" />
+<link rel="stylesheet" href="./styles.css" />
+<!-- three.js เก็บไว้ในเครื่อง เล่นได้แม้ไม่มีอินเทอร์เน็ต -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="gogglesFx"></div>
+  <div id="loading">กำลังเตรียมห้องช่าง…</div>
+  <div id="hud" class="hidden"></div>
+
+  <div id="menuBar" class="hidden">
+    <button id="vrBtnInGame" class="hidden" type="button">เข้าโหมด VR</button>
+    <button id="musicBtn" type="button" title="เพลงประกอบ">♪ เพลง</button>
+    <button id="voiceBtn" type="button" title="เสียงพูดภาษาไทย">เสียงพูด</button>
+    <button id="menuBtn" type="button">เมนู</button>
+  </div>
+
+  <div id="start" class="hidden">
+    <div class="card">
+      <button id="overlayClose" type="button" aria-label="ปิด">×</button>
+      <div class="brand">
+        <h1>The <span>Workshop</span> Hero</h1>
+        <p class="tag">ซ่อมได้ เรียนรู้ได้ เป็นฮีโร่ได้จริง!</p>
+        <p class="lead">เกมจำลองสถานการณ์ ฝึกทักษะการซ่อมบำรุงและความปลอดภัย สำหรับนักเรียนระดับมัธยมศึกษาตอนต้น</p>
+      </div>
+
+      <div class="adisac">
+        <span style="--c:#e05a2f"><b>1</b>AIM<small>เป้าหมาย</small></span>
+        <span style="--c:#2f9fd0"><b>2</b>DIVIDE<small>แยกองค์ความรู้</small></span>
+        <span style="--c:#37c2a8"><b>3</b>INTEGRATE<small>บูรณาการ</small></span>
+        <span style="--c:#57b26b"><b>4</b>SYNTHESIS<small>ประเมินผล</small></span>
+        <span style="--c:#e0902f"><b>5</b>ADVICE<small>ให้คำแนะนำ</small></span>
+        <span style="--c:#7a6fd0"><b>6</b>CRITERION<small>เกณฑ์ประเมิน</small></span>
+      </div>
+
+      <div class="levels">
+        <div style="--c:#2e9b4a"><b>ด่าน 1 · Easy</b>ห้องโถงแห่งการเรียนรู้<small>K &amp; A — ความรู้พื้นฐาน · ทรัพยากร</small></div>
+        <div style="--c:#d99a0b"><b>ด่าน 2 · Medium</b>ห้องเรียน ม.2/1<small>S &amp; K — เครื่องมือ 7 กลุ่ม · PPE</small></div>
+        <div style="--c:#d0343a"><b>ด่าน 3 · Hard</b>โรงซ่อมใหญ่<small>K, S &amp; A — ซ่อม 5 ขั้น · Teamwork</small></div>
+      </div>
+
+      <div class="go">
+        <label class="name">ชื่อผู้เล่น / เลขที่ <input id="playerName" maxlength="40" placeholder="เช่น ม.2/1 เลขที่ 12" autocomplete="off" /></label>
+        <div class="btns">
+          <button id="enterVR" type="button" class="vr" disabled>เข้าสู่โหมด VR</button>
+          <button id="playDesktop" type="button" class="play">เล่นบนจอนี้</button>
+        </div>
+        <p id="vrNote" class="fine">กำลังตรวจหาแว่น VR…</p>
+      </div>
+
+      <div class="cols">
+        <div>
+          <h2>ในแว่น VR</h2>
+          <ul>
+            <li>ชี้ลำแสงไปที่สิ่งของ แล้ว<b>กดไก (Trigger)</b> เพื่อเลือก</li>
+            <li>อนาล็อกซ้าย — เดิน · อนาล็อกขวา — หมุนตัว</li>
+            <li>ปุ่ม B / Y — เมนูพักเกม</li>
+          </ul>
+        </div>
+        <div>
+          <h2>บนคอมพิวเตอร์ / แท็บเล็ต</h2>
+          <ul>
+            <li><b>คลิก / แตะ</b> ที่สิ่งของเพื่อเลือก</li>
+            <li><b>ลาก</b> เพื่อมองรอบตัว · W A S D — เดิน</li>
+            <li>มินิเกม: คลิก หรือกด <b>Space</b> เมื่อเข็มอยู่ในโซนสีเขียว</li>
+          </ul>
+        </div>
+      </div>
+
+      <details class="res">
+        <summary>ผลการเล่นบนเครื่องนี้ (สำหรับครู)</summary>
+        <div id="results"></div>
+        <div class="resbtns">
+          <button id="csvBtn" type="button">ดาวน์โหลด CSV</button>
+          <button id="clearBtn" type="button" class="ghost">ลบผลทั้งหมด</button>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
