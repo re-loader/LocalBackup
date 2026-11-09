@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { T, FONT, LEVELS, STAGE, ADISAC, ITEMS } from './strings.js';
+import { T, FONT, LEVELS, STAGE, ADISAC, ITEMS, TEST, normalizedGain } from './strings.js';
 import { Flow, Cancelled, rr, drawWrapped, clamp, easeInOut, shuffle } from './util.js';
 import { Panel, Bubble, PX } from './panel.js';
 import { drawStar } from './textures.js';
@@ -13,6 +13,14 @@ import { portrait, hasActor } from './actors.js';
 // แต่ละด่านทำงานใน Run ของตัวเอง — เริ่มด่านใหม่กลางทาง Run เดิมถูกยกเลิกทั้งหมด
 
 const STORE = 'workshopHero.runs';
+
+const TESTS = 'workshopHero.tests';
+export function loadTests() {
+  try { return JSON.parse(localStorage.getItem(TESTS) || '[]'); } catch { return []; }
+}
+function saveTest(rec) {
+  try { const all = loadTests(); all.push(rec); localStorage.setItem(TESTS, JSON.stringify(all.slice(-600))); } catch { /* shown in-game anyway */ }
+}
 
 export function loadRuns() {
   try { return JSON.parse(localStorage.getItem(STORE) || '[]'); } catch { return []; }
@@ -174,6 +182,29 @@ export class Run {
   }
 
   /** Multiple-choice question; returns true when the first answer was right. */
+  /** One pre/post-test item. No feedback — the answer is only recorded. Resolves with the chosen index. */
+  testItem({ q, options }, { n, of, phase }) {
+    this.check();
+    return this.flow.wrap((resolve) => {
+      const h = 0.72 + options.length * 0.15;
+      const p = new Panel({ w: 1.5, h, border: '#7a6fd0' });
+      p.setContent({
+        eyebrow: phase === 'pre' ? '1.AIM · แบบทดสอบก่อนเรียน — ตอบตามที่รู้ ไม่มีเฉลย' : '6.CRITERION · แบบทดสอบหลังเรียน — ไม่มีเฉลย',
+        title: `ข้อ ${n} / ${of}`, body: q, accent: '#7a6fd0', bodySize: 36,
+      });
+      ctx.audio.voice(q, 'coach');
+      let picked = false;
+      options.forEach((o, i) => p.addButton({
+        id: i, label: `${'ABCD'[i]}.  ${o}`, style: 'option', align: 'left', size: 32,
+        x: 0, y: h / 2 - 0.5 - i * 0.15, w: 1.36, h: 0.12,
+        onClick: (b) => { if (picked) return; picked = true; b.setState('selected'); setTimeout(() => resolve(i), 380); },
+      }));
+      this.place(p.group);
+      p.pop();
+      return () => p.dispose();
+    });
+  }
+
   quiz({ q, options, answer, why }, { at = null, n = null, of = null, eyebrow = '2.DIVIDE · ความรู้ (K)', tag = 'quiz' } = {}) {
     this.check();
     return this.flow.wrap((resolve) => {
@@ -533,7 +564,8 @@ export class Game {
           }
           drawTitle(p, this.results); p.addButton({ id: 'start', label: T.start, sub: T.startEn, style: 'primary', x: 0, y: -0.112, w: 0.7, h: 0.17, size: 54, onClick: () => done('start') }); },
       });
-      this.start(choice === 'start' ? 0 : Number(choice));
+      // "เริ่มเกม" runs the whole course with a pre-test; a level button jumps straight in (practice)
+      if (choice === 'start') this.course(); else this.start(Number(choice));
     } catch (e) { if (!(e instanceof Cancelled)) console.error(e); }
   }
 
@@ -555,7 +587,64 @@ export class Game {
     else this.final();
   }
 
+  /** The full course: pre-test, then mission 1 (the post-test comes before the final badge). */
+  async course() {
+    this.courseId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    this.pre = null; this.post = null;
+    if (await this.runTest('pre')) this.start(0);
+  }
+
+  /**
+   * Pre/post knowledge test in the staff room (ADISAC layer 2). Same 10 items both times, order
+   * shuffled, no feedback. Saved per item for item analysis; the post-test shows Hake's gain.
+   */
+  async runTest(phase) {
+    const r = this.newRun(-1);
+    const hub = ctx.world.scenes.hub;
+    ctx.hud.set({ visible: true, level: null, stage: phase === 'pre' ? 'AIM' : 'CRITERION', checklist: [], scores: null, timer: null, resources: null, bag: null, ppe: null, objective: TEST.title[phase] });
+    try {
+      await r.goTo('hub', 'start');
+      hub.board.redraw(phase === 'pre' ? 'AIM' : 'CRITERION');
+      r.say(hub.teacher, T.teacherName, TEST.intro[phase]);
+      const items = shuffle(TEST.items.map((it, idx) => ({ ...it, idx })));
+      const answers = [];
+      for (let n = 0; n < items.length; n++) {
+        r.objective(`${TEST.title[phase]} ข้อ ${n + 1}/${items.length}`);
+        const chosen = await r.testItem(items[n], { n: n + 1, of: items.length, phase });
+        answers.push({ item: items[n].idx + 1, chosen, correct: chosen === items[n].answer, k: items[n].k });
+        r.log('test', { phase, item: items[n].idx + 1, chosen, correct: chosen === items[n].answer });
+      }
+      answers.sort((a, b) => a.item - b.item);
+      const max = items.length;
+      const score = answers.filter((a) => a.correct).length;
+      const rec = { player: this.player || '', phase, score, max, answers, seconds: Math.round(r.elapsed), date: new Date().toISOString(), mode: ctx.vr ? 'vr' : 'desktop', courseId: this.courseId || null };
+      saveTest(rec);
+      this[phase] = rec;
+      // result card
+      const pre = phase === 'post' && this.pre ? this.pre.score : null;
+      const g = pre === null ? null : normalizedGain(pre, score, max);
+      ctx.audio.voice(phase === 'pre' ? N.testPre(score, max) : N.testPost(pre, score, max, TEST.band(g)), 'coach');
+      if (phase === 'post') ctx.audio.fanfare(); else ctx.audio.good();
+      await r.dialog({
+        eyebrow: phase === 'pre' ? '1.AIM · วัดพื้นฐานก่อนเรียน' : '6.CRITERION · วัดผลหลังเรียน', accent: '#7a6fd0', border: '#7a6fd0',
+        title: phase === 'pre' ? `ก่อนเรียน ได้ ${score} / ${max}` : (pre === null ? `หลังเรียน ได้ ${score} / ${max}` : `ก่อน ${pre} → หลัง ${score} (เต็ม ${max})`),
+        body: phase === 'pre'
+          ? 'จำคะแนนนี้ไว้ — หลังจบภารกิจทั้ง 3 ด่าน จะได้ทำแบบทดสอบชุดเดิมอีกครั้งเพื่อดูพัฒนาการ'
+          : (pre === null ? 'ไม่มีผลก่อนเรียนของรอบนี้ (เริ่มจากปุ่มด่าน) จึงคำนวณพัฒนาการไม่ได้'
+            : `พัฒนาการการเรียนรู้ (normalized gain) g = ${g === null ? '— (ก่อนเรียนได้เต็มแล้ว)' : g.toFixed(2)} · ระดับ${TEST.band(g)}`),
+        h: 0.66, bodySize: 32,
+        buttons: [{ id: 'ok', label: phase === 'pre' ? 'เริ่มภารกิจ →' : 'ดูเหรียญรางวัล →', style: 'primary' }],
+      });
+      return true;
+    } catch (e) {
+      if (!(e instanceof Cancelled)) console.error(e);
+      return false;
+    }
+  }
+
   async final() {
+    // the post-test comes first (it saves itself); a cancelled test returns to whatever cancelled it
+    if (!(await this.runTest('post'))) return;
     const r = this.newRun(-1);
     ctx.hud.set({ visible: false });
     const all = LEVELS.map((_, i) => this.results[i]);
@@ -570,7 +659,7 @@ export class Game {
         w: 1.5, h: 1.15, border: '#ffc21a',
         buttons: [{ id: 'menu', label: T.menu, style: 'primary' }, { id: 'again', label: 'เล่นใหม่ตั้งแต่ด่าน 1', style: 'ghost' }],
         draw: (p) => {
-          drawFinal(p, all, master);
+          drawFinal(p, all, master, this.pre, this.post);
           const hero = portrait(this.heroSprite('thumbs'), 1.0);
           if (hero) { hero.position.set(p.w / 2 + 0.12, -p.h / 2, 0.02); p.group.add(hero); }
         },
@@ -660,7 +749,7 @@ function drawTitle(p, results) {
   p.commit();
 }
 
-function drawFinal(p, all, master) {
+function drawFinal(p, all, master, pre = null, post = null) {
   const g = p.clear();
   const { W, H } = p;
   g.fillStyle = '#fff8e1'; rr(g, 8, 8, W - 16, H - 24, 30); g.fill();
@@ -684,7 +773,14 @@ function drawFinal(p, all, master) {
     g.textAlign = 'right';
     g.fillText(r ? `${'★'.repeat(r.stars)}${'☆'.repeat(3 - r.stars)}  K${r.K} S${r.S} A${r.A}  ${r.total}/300` : 'ยังไม่ได้เล่น', W - 150, y - 6);
   });
+  if (post) {
+    const gain = pre ? normalizedGain(pre.score, post.score, post.max) : null;
+    g.textAlign = 'center'; g.fillStyle = '#7a6fd0'; g.font = `800 28px ${FONT}`;
+    g.fillText(pre
+      ? `แบบทดสอบ: ก่อนเรียน ${pre.score}/${pre.max} → หลังเรียน ${post.score}/${post.max} · g = ${gain === null ? '—' : gain.toFixed(2)} (${TEST.band(gain)})`
+      : `แบบทดสอบหลังเรียน ${post.score}/${post.max}`, cx, 696);
+  }
   g.textAlign = 'center'; g.fillStyle = '#2e7d32'; g.font = `600 24px ${FONT}`;
-  g.fillText(T.final.footer, cx, H - 160);
+  g.fillText(T.final.footer, cx, H - 140);
   p.commit();
 }

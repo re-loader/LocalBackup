@@ -1,4 +1,4 @@
-import { STAGE, T, LEVELS } from './strings.js';
+import { STAGE, T, LEVELS, TEST } from './strings.js';
 
 // สิ่งที่ครูช่างอ่านออกเสียง (VAJA) — ใช้ร่วมกันทั้งตัวเกมและ tools/build-voice.mjs
 // แต่ละประโยคประกอบจาก "ชิ้น" ที่บันทึกเสียงไว้แล้ว เกมจึงพูดข้อความยาวได้ด้วยเสียงจริงทั้งหมด
@@ -20,6 +20,12 @@ export const N = {
   result: (pass, stars) => (pass ? `${T.result.title} ได้ ${stars} ดาว ${T.result.praise[Math.min(2, Math.max(0, stars - 1))]}` : `${T.result.titleRetry} ${T.result.fail}`),
   title: () => `${T.tagline} กดปุ่มเริ่มเกมได้เลย`,
   final: (master) => (master ? `${T.final.title} ${T.final.body}` : T.final.notYet),
+  /** pre/post test — scores out of 10 and the gain band */
+  testScore: (n, max) => `ได้ ${n} คะแนน จาก ${max}`,
+  testPre: (n, max) => `คะแนนก่อนเรียน ได้ ${n} คะแนน จาก ${max} ไปเริ่มภารกิจกันเลย!`,
+  testPost: (pre, post, max, band) => (pre === null
+    ? `คะแนนหลังเรียน ได้ ${post} คะแนน จาก ${max}`
+    : `คะแนนก่อนเรียน ได้ ${pre} คะแนน จาก ${max} คะแนนหลังเรียน ได้ ${post} คะแนน จาก ${max} พัฒนาการระดับ${band}`),
 };
 
 /** Every recorded piece the narrations above are stitched from. */
@@ -42,5 +48,10 @@ export function narrationPieces() {
   T.result.praise.forEach((x) => p.add(x));
   p.add(T.tagline); p.add('กดปุ่มเริ่มเกมได้เลย');
   p.add(T.final.title); p.add(T.final.body); p.add(T.final.notYet);
+  for (const it of TEST.items) p.add(it.q);
+  const max = TEST.items.length;
+  for (let n = 0; n <= max; n++) p.add(N.testScore(n, max));
+  p.add('คะแนนก่อนเรียน'); p.add('คะแนนหลังเรียน'); p.add('ไปเริ่มภารกิจกันเลย!');
+  for (const b of ['สูง', 'ปานกลาง', 'ต่ำ', '—']) p.add(`พัฒนาการระดับ${b}`);
   return [...p];
 }

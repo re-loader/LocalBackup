@@ -5,8 +5,8 @@ import { World } from './world.js';
 import { Interaction, Locomotion, Hands, Hints } from './input.js';
 import { HUD } from './hud.js';
 import { Panel } from './panel.js';
-import { Game, loadRuns } from './game.js';
-import { LEVELS } from './strings.js';
+import { Game, loadRuns, loadTests } from './game.js';
+import { LEVELS, TEST, normalizedGain } from './strings.js';
 import { setupLook } from './look.js';
 import { loadPhotoManifest } from './textures.js';
 import { loadActorManifest } from './actors.js';
@@ -165,7 +165,7 @@ musicBtn.addEventListener('click', () => { ctx.audio.init(); ctx.audio.setMusic(
 voiceBtn.addEventListener('click', () => { ctx.audio.voiceOn = !ctx.audio.voiceOn; if (!ctx.audio.voiceOn) window.speechSynthesis?.cancel(); paintToggles(); });
 $('menuBtn').addEventListener('click', () => {
   if (ctx.game.run && ctx.game.run.levelIndex >= 0) ctx.game.pause();
-  else { overlay.classList.remove('hidden'); renderResults(); }
+  else { overlay.classList.remove('hidden'); renderResults(); renderTests(); }
 });
 $('overlayClose').addEventListener('click', () => { if (started) overlay.classList.add('hidden'); });
 paintToggles();
@@ -179,6 +179,30 @@ function renderResults() {
     runs.map((r) => `<tr><td>${escapeHtml(r.player || '-')}</td><td>${r.level}</td><td>${r.K}</td><td>${r.S}</td><td>${r.A}</td><td><b>${r.total}</b></td><td>${'★'.repeat(r.stars)}</td><td>${Math.floor(r.seconds / 60)}:${String(r.seconds % 60).padStart(2, '0')}</td><td>${r.mode === 'vr' ? 'VR' : 'จอ'}</td></tr>`).join('')
   }</tbody></table>`;
 }
+/** Pre/post pairs: same course run (or, failing that, the same player name), latest of each. */
+function testPairs() {
+  const groups = new Map();
+  for (const t of loadTests()) {
+    const key = t.courseId || `name:${t.player}`;
+    const g = groups.get(key) || { player: t.player, pre: null, post: null, date: t.date };
+    g[t.phase] = t; g.player = t.player || g.player; g.date = t.date;
+    groups.set(key, g);
+  }
+  return [...groups.values()];
+}
+function renderTests() {
+  const pairs = testPairs().slice(-15).reverse();
+  const box = $('testResults');
+  if (!pairs.length) { box.innerHTML = '<p class="fine">ยังไม่มีผลแบบทดสอบ — กด "เริ่มเกม" เพื่อเล่นครบหลักสูตร (มีแบบทดสอบก่อน-หลังเรียน)</p>'; return; }
+  box.innerHTML = `<table><thead><tr><th>ผู้เล่น</th><th>ก่อนเรียน</th><th>หลังเรียน</th><th>g (Hake)</th><th>ระดับ</th></tr></thead><tbody>${
+    pairs.map((p) => {
+      const g = p.pre && p.post ? normalizedGain(p.pre.score, p.post.score, p.post.max) : null;
+      const cell = (t) => (t ? `${t.score}/${t.max}` : '—');
+      return `<tr><td>${escapeHtml(p.player || '-')}</td><td>${cell(p.pre)}</td><td>${cell(p.post)}</td><td><b>${g === null ? '—' : g.toFixed(2)}</b></td><td>${p.pre && p.post ? TEST.band(g) : '—'}</td></tr>`;
+    }).join('')
+  }</tbody></table>`;
+}
+
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 $('csvBtn').addEventListener('click', () => {
@@ -193,12 +217,33 @@ $('csvBtn').addEventListener('click', () => {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
+// one row per test sitting, one column per item (1/0) and the letter chosen — ready for SPSS / R / Excel
+$('csvTestBtn').addEventListener('click', () => {
+  const tests = loadTests();
+  const n = TEST.items.length;
+  const head = ['date', 'player', 'course_id', 'phase', 'score', 'max', 'seconds', 'mode',
+    ...Array.from({ length: n }, (_, i) => `item${i + 1}`), ...Array.from({ length: n }, (_, i) => `chosen${i + 1}`)];
+  const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = tests.map((t) => {
+    const by = Object.fromEntries((t.answers || []).map((a) => [a.item, a]));
+    return [t.date, t.player, t.courseId, t.phase, t.score, t.max, t.seconds, t.mode,
+      ...Array.from({ length: n }, (_, i) => (by[i + 1] ? (by[i + 1].correct ? 1 : 0) : '')),
+      ...Array.from({ length: n }, (_, i) => (by[i + 1] ? 'ABCD'[by[i + 1].chosen] : ''))].map(q).join(',');
+  });
+  const blob = new Blob(['\ufeff' + [head.join(','), ...rows].join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `workshop-hero-prepost-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
 $('clearBtn').addEventListener('click', () => {
-  if (!confirm('ลบผลการเล่นทั้งหมดบนเครื่องนี้?')) return;
-  try { localStorage.removeItem('workshopHero.runs'); } catch { /* ignore */ }
-  renderResults();
+  if (!confirm('ลบผลการเล่นและผลแบบทดสอบทั้งหมดบนเครื่องนี้?')) return;
+  try { localStorage.removeItem('workshopHero.runs'); localStorage.removeItem('workshopHero.tests'); } catch { /* ignore */ }
+  renderResults(); renderTests();
 });
 renderResults();
+renderTests();
 
 $('loading').classList.add('hidden');
 overlay.classList.remove('hidden');

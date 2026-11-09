@@ -63,9 +63,9 @@ export class HUD {
   _renderDom() {
     const { s, dom } = this;
     dom.root.classList.toggle('hidden', !s.visible || ctx.vr);
-    if (s.level) {
-      dom.level.innerHTML = `<span style="background:${s.level.color}">ด่าน ${s.level.id}</span> ${s.level.name} <small>(${s.level.diff})</small>`;
-    }
+    dom.level.innerHTML = s.level
+      ? `<span style="background:${s.level.color}">ด่าน ${s.level.id}</span> ${s.level.name} <small>(${s.level.diff})</small>`
+      : '';
     for (const el of dom.adisac.children) {
       el.classList.toggle('on', el.dataset.k === s.stage);
       el.classList.toggle('flash', el.dataset.k === 'ADVICE' && this.adviceFlash > 0);
