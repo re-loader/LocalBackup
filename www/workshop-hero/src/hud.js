@@ -248,7 +248,7 @@ export class HUD {
     this.dom.msg.textContent = text;
     this._renderVRToast();
     this._dirty = true;
-    if (speak) ctx.audio?.speak(text);
+    if (speak) ctx.audio?.voice(text, 'coach');
   }
   clearToast() { this.toast = null; this.dom.toast.classList.add('hidden'); this._renderVRToast(); }
 

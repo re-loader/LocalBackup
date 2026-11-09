@@ -1,0 +1,97 @@
+{
+ "floor-wood": {
+  "file": "floor-wood.jpg",
+  "covers": [
+   1.6,
+   1.6
+  ]
+ },
+ "wall-plaster": {
+  "file": "wall-plaster.jpg",
+  "covers": [
+   2.4,
+   2.4
+  ]
+ },
+ "wall-block": {
+  "file": "wall-block.jpg",
+  "covers": [
+   2.0,
+   1.33
+  ]
+ },
+ "floor-concrete": {
+  "file": "floor-concrete.jpg",
+  "covers": [
+   3.0,
+   3.0
+  ]
+ },
+ "floor-tile-beige": {
+  "file": "floor-tile-beige.jpg",
+  "covers": [
+   1.2,
+   1.2
+  ]
+ },
+ "floor-tile-blue": {
+  "file": "floor-tile-blue.jpg",
+  "covers": [
+   0.8,
+   0.8
+  ]
+ },
+ "wall-tile-white": {
+  "file": "wall-tile-white.jpg",
+  "covers": [
+   0.8,
+   0.8
+  ]
+ },
+ "ceiling-tiles": {
+  "file": "ceiling-tiles.jpg",
+  "covers": [
+   1.2,
+   1.2
+  ]
+ },
+ "wood-light": {
+  "file": "wood-light.jpg",
+  "covers": [
+   0.6,
+   0.6
+  ]
+ },
+ "bench-top": {
+  "file": "bench-top.jpg",
+  "covers": [
+   1.0,
+   1.0
+  ]
+ },
+ "pegboard": {
+  "file": "pegboard.jpg",
+  "covers": [
+   0.6,
+   0.6
+  ]
+ },
+ "steel-painted": {
+  "file": "steel-painted.jpg",
+  "covers": [
+   0.5,
+   0.5
+  ]
+ },
+ "brushed-steel": {
+  "file": "brushed-steel.jpg",
+  "covers": [
+   0.3,
+   0.3
+  ]
+ },
+ "window-view": {
+  "file": "window-view.jpg",
+  "covers": null
+ }
+}

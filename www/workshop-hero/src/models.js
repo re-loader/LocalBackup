@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { woodTex } from './textures.js';
+import { woodTex, photo } from './textures.js';
 import { blobShadow } from './look.js';
 
 // โมเดลทั้งหมดสร้างจากรูปทรงพื้นฐาน — เครื่องมือ วัสดุ PPE เฟอร์นิเจอร์ และตัวละคร
@@ -7,6 +7,8 @@ import { blobShadow } from './look.js';
 
 const mats = new Map();
 export function mat(color, { rough = 0.7, metal = 0, emissive = null, ei = 1, map = null, transparent = false, opacity = 1, side = THREE.FrontSide, bump = null, bs = 1 } = {}) {
+  // painted metal (desk frames, cabinets, tool chest…) gets the photographed powder-coat when it exists
+  if (!map && metal >= 0.2 && metal < 0.85) { const p = photo('steel-painted', { repeat: [1, 1] }); if (p) { map = p; bump = p; bs = 0.35; } }
   const key = [color, rough, metal, emissive, ei, map?.uuid, transparent, opacity, side, bump?.uuid, bs].join('|');
   if (!mats.has(key)) {
     const m = new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal, map, transparent, opacity, side });
@@ -16,14 +18,42 @@ export function mat(color, { rough = 0.7, metal = 0, emissive = null, ei = 1, ma
   }
   return mats.get(key);
 }
+// photographed wood/steel when generated (tools/gen-textures.py), drawn canvas otherwise
+const ph = (name, repeat = [1, 1]) => photo(name, { repeat });
 export const M = {
-  steel: () => mat('#c8d0d8', { rough: 0.26, metal: 0.92 }),
+  steel: () => { const p = ph('brushed-steel', [0.4, 0.4]); return mat('#d4dbe2', { rough: 0.3, metal: 0.92, map: p, bump: p, bs: 0.15 }); },
   dark: () => mat('#2b3138', { rough: 0.6, metal: 0.3 }),
   black: () => mat('#16191d', { rough: 0.8 }),
   white: () => mat('#f4f4f2', { rough: 0.6 }),
-  wood: () => mat('#ffffff', { rough: 0.75, map: woodTex('#c8935a', 1) }),
-  woodDark: () => mat('#ffffff', { rough: 0.75, map: woodTex('#8a5a33', 1) }),
+  wood: () => { const p = ph('wood-light'); return p ? mat('#ffffff', { rough: 0.55, map: p, bump: p, bs: 0.5 }) : mat('#ffffff', { rough: 0.75, map: woodTex('#c8935a', 1) }); },
+  woodDark: () => { const p = ph('wood-light'); return p ? mat('#9a6740', { rough: 0.55, map: p, bump: p, bs: 0.5 }) : mat('#ffffff', { rough: 0.75, map: woodTex('#8a5a33', 1) }); },
+  bench: () => { const p = ph('bench-top'); return p ? mat('#ffffff', { rough: 0.85, map: p, bump: p, bs: 1.2 }) : mat('#ffffff', { map: woodTex('#b98352', 6), rough: 0.8 }); },
 };
+
+/** Box with rounded edges (three.js RoundedBoxGeometry algorithm) — real furniture never has razor edges. */
+export class RoundedBoxGeometry extends THREE.BoxGeometry {
+  constructor(width = 1, height = 1, depth = 1, segments = 1, radius = 0.01) {
+    const seg = segments * 2 + 1;
+    radius = Math.min(width / 2, height / 2, depth / 2, radius);
+    super(1, 1, 1, seg, seg, seg);
+    const pos = this.attributes.position, nor = this.attributes.normal;
+    const p = new THREE.Vector3(), n = new THREE.Vector3();
+    const inner = new THREE.Vector3(width, height, depth).divideScalar(2).subScalar(radius);
+    const half = 0.5 / seg;
+    for (let i = 0; i < pos.count; i++) {
+      p.fromBufferAttribute(pos, i);
+      n.set(p.x - Math.sign(p.x) * half, p.y - Math.sign(p.y) * half, p.z - Math.sign(p.z) * half).normalize();
+      pos.setXYZ(i, inner.x * Math.sign(p.x) + n.x * radius, inner.y * Math.sign(p.y) + n.y * radius, inner.z * Math.sign(p.z) + n.z * radius);
+      nor.setXYZ(i, n.x, n.y, n.z);
+    }
+  }
+}
+export function rbox(w, h, d, material, x = 0, y = 0, z = 0, parent = null, r = 0.008) {
+  const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 1, r), material);
+  m.position.set(x, y, z);
+  if (parent) parent.add(m);
+  return m;
+}
 
 export function box(w, h, d, material, x = 0, y = 0, z = 0, parent = null) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
@@ -194,7 +224,7 @@ export function makeItem(id, opts = {}) {
 // ======================================================================
 export function schoolDesk() {
   const g = new THREE.Group();
-  box(0.62, 0.03, 0.46, M.wood(), 0, 0.72, 0, g);
+  rbox(0.62, 0.03, 0.46, M.wood(), 0, 0.72, 0, g, 0.01);
   box(0.56, 0.12, 0.4, mat('#5c6b78', { rough: 0.6, metal: 0.3 }), 0, 0.64, 0, g).scale.set(1, 0.15, 1);
   for (const x of [-0.27, 0.27]) for (const z of [-0.19, 0.19]) cyl(0.014, 0.014, 0.71, mat('#4b5965', { metal: 0.5, rough: 0.5 }), x, 0.355, z, g, 8);
   return g;
@@ -204,8 +234,8 @@ export function schoolDesk() {
 export function schoolChair({ bolts = false } = {}) {
   const g = new THREE.Group();
   const frame = mat('#4b5965', { metal: 0.5, rough: 0.5 });
-  const seat = box(0.42, 0.025, 0.4, M.wood(), 0, 0.44, 0, g);
-  box(0.42, 0.24, 0.022, M.wood(), 0, 0.72, 0.19, g);
+  const seat = rbox(0.42, 0.025, 0.4, M.wood(), 0, 0.44, 0, g, 0.01);
+  rbox(0.42, 0.24, 0.022, M.wood(), 0, 0.72, 0.19, g, 0.01);
   for (const x of [-0.19, 0.19]) {
     cyl(0.012, 0.012, 0.44, frame, x, 0.22, -0.17, g, 8);
     cyl(0.012, 0.012, 0.86, frame, x, 0.43, 0.17, g, 8);
@@ -238,7 +268,7 @@ export function schoolChair({ bolts = false } = {}) {
 
 export function teacherDesk() {
   const g = new THREE.Group();
-  box(1.4, 0.04, 0.7, M.woodDark(), 0, 0.76, 0, g);
+  rbox(1.4, 0.04, 0.7, M.woodDark(), 0, 0.76, 0, g, 0.012);
   box(0.4, 0.72, 0.66, M.woodDark(), -0.48, 0.37, 0, g);
   for (let i = 0; i < 3; i++) box(0.36, 0.2, 0.01, mat('#a87449'), -0.48, 0.16 + i * 0.23, -0.335, g);
   box(0.04, 0.72, 0.66, M.woodDark(), 0.68, 0.37, 0, g);
@@ -274,7 +304,7 @@ export function bookshelf(w = 1.2, h = 1.9, d = 0.35, rows = 4) {
 
 export function workbench(w = 2, d = 0.8) {
   const g = new THREE.Group();
-  box(w, 0.07, d, mat('#ffffff', { map: woodTex('#b98352', 6), rough: 0.8 }), 0, 0.86, 0, g);
+  rbox(w, 0.07, d, M.bench(), 0, 0.86, 0, g, 0.012);
   const leg = mat('#3b4a5a', { metal: 0.4, rough: 0.5 });
   for (const x of [-w / 2 + 0.06, w / 2 - 0.06]) for (const z of [-d / 2 + 0.06, d / 2 - 0.06]) box(0.06, 0.83, 0.06, leg, x, 0.415, z, g);
   box(w - 0.1, 0.03, d - 0.1, mat('#8a6a48'), 0, 0.2, 0, g);
@@ -295,7 +325,7 @@ export function vise() {
 export function toolChest() {
   const g = new THREE.Group();
   const red = mat('#d0343a', { rough: 0.45, metal: 0.3 });
-  box(0.9, 0.9, 0.5, red, 0, 0.45 + 0.08, 0, g);
+  rbox(0.9, 0.9, 0.5, red, 0, 0.45 + 0.08, 0, g, 0.02);
   for (let i = 0; i < 5; i++) {
     box(0.84, 0.13, 0.01, mat('#b52a30', { rough: 0.45, metal: 0.3 }), 0, 0.2 + i * 0.16, -0.255, g);
     box(0.4, 0.02, 0.02, M.steel(), 0, 0.24 + i * 0.16, -0.27, g);
@@ -307,7 +337,7 @@ export function toolChest() {
 export function cabinet(w = 0.9, h = 1.8, d = 0.45, color = '#d6dde4') {
   const g = new THREE.Group();
   const m = mat(color, { rough: 0.5, metal: 0.3 });
-  box(w, h, d, m, 0, h / 2, 0, g);
+  rbox(w, h, d, m, 0, h / 2, 0, g, 0.015);
   box(0.005, h - 0.1, 0.01, mat('#8f99a3'), 0, h / 2, -d / 2 - 0.005, g);
   for (const x of [-0.05, 0.05]) box(0.015, 0.15, 0.02, M.steel(), x, h * 0.55, -d / 2 - 0.015, g);
   return g;
@@ -346,7 +376,7 @@ export function ladder() {
 export function toolBag() {
   const g = new THREE.Group();
   const navy = mat('#1d3060', { rough: 0.85 });
-  box(0.56, 0.24, 0.28, navy, 0, 0.12, 0, g);
+  rbox(0.56, 0.24, 0.28, navy, 0, 0.12, 0, g, 0.04);
   box(0.56, 0.03, 0.28, mat('#f2b705', { rough: 0.6 }), 0, 0.245, 0, g);
   const h = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.014, 8, 16, Math.PI), M.black());
   h.position.y = 0.26; g.add(h);

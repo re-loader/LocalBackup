@@ -116,7 +116,7 @@ async function level1(r) {
       r.k(false, `job${ji + 1}-mat`); waste++; wrongHere++;
       r.a(8, 'waste-material');
       ctx.audio.error();
-      r.coach(`${ADVICE.wasted} (${job.hint})`, 'warn');
+      r.coach(`${ADVICE.wasted} ${job.hint}`, 'warn');
     }
     const matObj = ws.materials[m];
     await r.fly(matObj, benchMat, { sec: 0.7 });
@@ -209,7 +209,7 @@ async function level2(r) {
       const obj = ws.toolWall[id] || ws.materials[id];
       r.fly(obj, new THREE.Vector3(0.7, 1.05, -0.55), { sec: 0.8, arc: 0.5, hide: true });
       ctx.hud.set({ bag: [...got] });
-      r.coach(`ใส่${ITEMS[id].th}ลงกระเป๋าแล้ว (${got.length}/3)`, 'good');
+      r.coach(`ใส่${ITEMS[id].th}ลงกระเป๋าแล้ว ${got.length} จาก 3`, 'good');
     } else if (satisfied) {
       r.coach('มีเครื่องมือขันสกรูในกระเป๋าแล้ว ไม่ต้องหยิบซ้ำ', 'info');
     } else {

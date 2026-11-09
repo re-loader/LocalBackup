@@ -22,6 +22,11 @@ export class Sound {
     this._bed = null;
     this.room = null;
     this._pendingRoom = null;
+    this.voiceMap = null;            // "role|text" → file, from voice/manifest.json (tools/build-voice.mjs)
+    this._byRole = {};
+    this._buffers = new Map();
+    this._playing = {};
+    this._voiceToken = {};
   }
 
   /** Must be called from a user gesture. Safe to call repeatedly. */
@@ -42,6 +47,7 @@ export class Sound {
     this.ambSend = c.createGain(); this.ambSend.gain.value = 0.3;
     this.amb.connect(this.ambSend); this.ambSend.connect(this.verb);
     this.mus = c.createGain(); this.mus.gain.value = 0.0; this.mus.connect(this.master);
+    this.voiceBus = c.createGain(); this.voiceBus.gain.value = 1.0; this.voiceBus.connect(this.master);
     const len = c.sampleRate * 2;
     this._noise = c.createBuffer(1, len, c.sampleRate);
     const d = this._noise.getChannelData(0);
@@ -321,7 +327,90 @@ export class Sound {
   setMusicLevel(v) { this.musicLevel = v; if (this.mus && this._musicTimer) this.mus.gain.setTargetAtTime(v, this.t, 0.8); }
   duck(on) { if (this.mus && this._musicTimer) this.mus.gain.setTargetAtTime(on ? this.musicLevel * 0.35 : this.musicLevel, this.t, 0.25); }
 
-  // ------------------------------------------------------------ Thai voice
+  // ------------------------------------------------------------ recorded Thai voices (VAJA)
+  async loadVoices() {
+    try {
+      const r = await fetch('voice/manifest.json', { cache: 'no-cache' });
+      if (r.ok) this.voiceMap = await r.json();
+    } catch { this.voiceMap = null; }
+    this._byRole = {};
+    for (const k of Object.keys(this.voiceMap || {})) {
+      const i = k.indexOf('|');
+      (this._byRole[k.slice(0, i)] ||= []).push(k.slice(i + 1));
+    }
+    for (const r of Object.keys(this._byRole)) this._byRole[r].sort((a, b) => b.length - a.length);
+    return Object.keys(this.voiceMap || {}).length;
+  }
+
+  /** Clip files for a line: an exact recording, or the line stitched from recorded sentences. */
+  _clips(text, role) {
+    const map = this.voiceMap;
+    if (!map) return null;
+    const t = text.trim();
+    if (map[`${role}|${t}`]) return [map[`${role}|${t}`]];
+    const lines = this._byRole[role] || [];
+    const out = [];
+    let rest = t;
+    while (rest) {
+      const hit = lines.find((l) => rest.startsWith(l));
+      if (!hit) return null;
+      out.push(map[`${role}|${hit}`]);
+      rest = rest.slice(hit.length).trim();
+    }
+    return out.length ? out : null;
+  }
+
+  _buffer(file) {
+    if (!this._buffers.has(file)) {
+      this._buffers.set(file, fetch(`voice/${file}`).then((r) => {
+        if (!r.ok) throw new Error(`voice ${r.status}`);
+        return r.arrayBuffer();
+      }).then((b) => this.ctx.decodeAudioData(b)));
+    }
+    return this._buffers.get(file);
+  }
+
+  /**
+   * Says a line in a character's recorded voice: teacher / friend from their head in 3D
+   * (with the room's echo), the coach close and dry like a radio in your ear.
+   * Falls back to the browser's Thai voice (desktop) — the headset's is silent.
+   * Resolves with the spoken duration in seconds (0 when nothing was played).
+   */
+  async voice(text, role = 'coach', pos = null) {
+    if (!this.voiceOn || !text) return 0;
+    const files = this._clips(text, role);
+    if (!files || !this.ctx) { this.speak(text); return 0; }
+    const token = (this._voiceToken[role] = (this._voiceToken[role] || 0) + 1);
+    for (const s of this._playing[role] || []) { try { s.stop(); } catch { /* ended */ } }
+    this._playing[role] = [];
+    let bufs;
+    try { bufs = await Promise.all(files.map((f) => this._buffer(f))); } catch { this.speak(text); return 0; }
+    if (token !== this._voiceToken[role]) return 0;           // superseded while loading
+    const out = pos ? this._out(pos, this.sfx, 40) : this.voiceBus;
+    let t = this.t + 0.03;
+    const srcs = [];
+    for (const b of bufs) {
+      const s = this.ctx.createBufferSource();
+      s.buffer = b; s.connect(out); s.start(t);
+      srcs.push(s);
+      t += b.duration + 0.06;
+    }
+    this._playing[role] = srcs;
+    const dur = t - this.t;
+    this.duck(true);
+    clearTimeout(this._duckT);
+    this._duckT = setTimeout(() => this.duck(false), dur * 1000);
+    return dur;
+  }
+  stopVoices() {
+    for (const r of Object.keys(this._playing)) {
+      this._voiceToken[r] = (this._voiceToken[r] || 0) + 1;
+      for (const s of this._playing[r]) { try { s.stop(); } catch { /* ended */ } }
+      this._playing[r] = [];
+    }
+  }
+
+  // ------------------------------------------------------------ browser Thai voice (fallback)
   _pickVoice() {
     const ss = window.speechSynthesis;
     if (!ss) return;

@@ -121,7 +121,12 @@ export class Run {
     const sec = Math.max(4, text.length * 0.085);
     b?.say(name, text, sec);
     npc.talk(Math.min(sec, 4));
-    if (speak) ctx.audio.speak(text);
+    if (speak) {
+      const role = name === T.friendName ? 'friend' : 'teacher';
+      const mouth = npc.head.getWorldPosition(new THREE.Vector3());
+      // lips move for as long as the recording actually lasts
+      ctx.audio.voice(text, role, mouth).then((d) => { if (d) { npc.talk(d); b?.say(name, text, Math.max(sec, d + 1)); } });
+    }
     this.log('say', { name });
     return sec;
   }
@@ -171,6 +176,7 @@ export class Run {
       const h = 0.62 + options.length * 0.15;
       const p = new Panel({ w: 1.5, h, border: '#2f9fd0' });
       p.setContent({ eyebrow, title: n ? `คำถามที่ ${n}/${of}` : 'คำถาม', body: q, accent: '#2f9fd0', bodySize: 38 });
+      ctx.audio.voice(q, 'coach');        // the coach reads the question aloud
       let answered = false;
       const btns = options.map((o, i) => p.addButton({
         id: i, label: `${'ABC'[i]}.  ${o}`, style: 'option', align: 'left', size: 34,
@@ -224,6 +230,7 @@ export class Run {
    */
   async chooseTool({ title = T.chooseFromBag, options, correct, why = {}, at = null, tag = 'tool', eyebrow = 'ความรู้ (K) · เลือกให้ถูกงาน' }) {
     let first = true;
+    ctx.audio.voice(title, 'coach');
     for (;;) {
       this.check();
       const n = options.length;
@@ -384,6 +391,7 @@ export class Run {
     ctx.interaction.capture = null;
     ctx.hud.clearToast();
     ctx.hands.release();
+    ctx.audio.stopVoices();
     window.speechSynthesis?.cancel();
   }
 }

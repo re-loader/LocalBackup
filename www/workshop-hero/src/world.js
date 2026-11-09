@@ -4,10 +4,10 @@ import { FONT, ADISAC, GROUPS, ITEMS } from './strings.js';
 import { rr, drawWrapped } from './util.js';
 import { unlit, addCornerAO, sunbeam, shadowify, aimSun } from './look.js';
 import {
-  woodTex, concreteTex, tileTex, checkerTex, wallTex, pegboardTex, windowViewTex, signTex, posterTex, toTex,
+  woodTex, concreteTex, tileTex, checkerTex, wallTex, pegboardTex, windowViewTex, signTex, posterTex, toTex, photo,
 } from './textures.js';
 import {
-  mat, M, box, cyl, sph, makeItem, schoolDesk, schoolChair, teacherDesk, bookshelf, workbench, vise,
+  mat, M, box, rbox, cyl, sph, makeItem, schoolDesk, schoolChair, teacherDesk, bookshelf, workbench, vise,
   toolChest, cabinet, plant, whiteboard, ladder, toolBag, lightSwitch, makeCharacter,
 } from './models.js';
 
@@ -129,17 +129,41 @@ const SUNS = {
 };
 
 /** Builds floor, ceiling, walls, baseboards. Returns helpers to mount things on walls. */
+/** UVs scaled to metres: a texture with repeat = 1/covers then shows at its true size on any surface. */
+function metreUV(geo, sx, sy) {
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * sx, uv.getY(i) * sy);
+  return geo;
+}
+
+/**
+ * Room surface: the generated photo when it exists (tinted, its own luminance as bump), else the drawn
+ * canvas texture — both set up per metre for the metre UVs of the room shell.
+ */
+function surface(name, { tint = '#ffffff', rough = 0.85, bs = 1, mirror = true, fallback }) {
+  const p = photo(name, { mirror });
+  if (p) {
+    const m = new THREE.MeshStandardMaterial({ color: tint, map: p, roughness: rough, bumpMap: p, bumpScale: bs });
+    m.userData.photo = name;
+    return m;
+  }
+  return fallback();
+}
+
 function room(parent, { w, d, h, floor, wall, ceil = '#f7f7f4', base = '#6b4a2b' }) {
   const g = new THREE.Group();
   parent.add(g);
-  const fl = new THREE.Mesh(new THREE.PlaneGeometry(w, d), floor);
+  const fl = new THREE.Mesh(metreUV(new THREE.PlaneGeometry(w, d), w, d), floor);
   fl.rotation.x = -Math.PI / 2; g.add(fl);
   // walls and ceiling don't block the window sun (the windows aren't real holes) — only furniture casts
   wall.userData.noCast = true;
   // a ceiling under lit fluorescent panels is never this dark in real life: a little bounce light
-  const ceilMat = mat(ceil, { rough: 0.95, emissive: '#efe9dc', ei: 0.32 });
+  const cp = photo('ceiling-tiles');
+  const ceilMat = cp
+    ? new THREE.MeshStandardMaterial({ color: '#ffffff', map: cp, roughness: 0.95, emissive: '#efe9dc', emissiveIntensity: 0.32, emissiveMap: cp })
+    : mat(ceil, { rough: 0.95, emissive: '#efe9dc', ei: 0.32 });
   ceilMat.userData.noCast = true;
-  const ce = new THREE.Mesh(new THREE.PlaneGeometry(w, d), ceilMat);
+  const ce = new THREE.Mesh(metreUV(new THREE.PlaneGeometry(w, d), w, d), ceilMat);
   ce.rotation.x = Math.PI / 2; ce.position.y = h; g.add(ce);
   const walls = {
     front: { pos: [0, 0, -d / 2], rot: 0, len: w },
@@ -149,7 +173,7 @@ function room(parent, { w, d, h, floor, wall, ceil = '#f7f7f4', base = '#6b4a2b'
   };
   for (const k of Object.keys(walls)) {
     const W = walls[k];
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(W.len, h), wall);
+    const m = new THREE.Mesh(metreUV(new THREE.PlaneGeometry(W.len, h), W.len, h), wall);
     m.position.set(W.pos[0], h / 2, W.pos[2]); m.rotation.y = W.rot; g.add(m);
     const b = box(W.len, 0.1, 0.02, mat(base), 0, 0.05, 0.01);
     const holder = new THREE.Group();
@@ -170,7 +194,7 @@ function room(parent, { w, d, h, floor, wall, ceil = '#f7f7f4', base = '#6b4a2b'
 
 function windowAt(R, wallKey, along, y, ww = 1.6, wh = 1.3, curtain = null) {
   const o = R.onWall(wallKey, along, y, 0.004);
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(ww, wh), unlit(new THREE.MeshBasicMaterial({ map: windowViewTex() })));
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(ww, wh), unlit(new THREE.MeshBasicMaterial({ map: photo('window-view', { repeat: [1, 1] }) || windowViewTex() })));
   o.add(glass);
   o.userData.size = [ww, wh];
   const fm = mat('#e9eef2', { rough: 0.5, metal: 0.2 });
@@ -326,8 +350,8 @@ export class World {
     const st = new THREE.Group(); group.add(st);
     const R = room(st, {
       w: 7, d: 6, h: 3,
-      floor: mat('#ffffff', { map: woodTex('#b98352', 8, [3, 3]), rough: 0.5, bump: woodTex('#b98352', 8, [3, 3]), bs: 1.2 }),
-      wall: mat('#ffffff', { map: wallTex('#f3e6cc', [3, 1]), rough: 0.92, bump: wallTex('#f3e6cc', [3, 1]), bs: 0.6 }),
+      floor: surface('floor-wood', { rough: 0.45, bs: 0.8, fallback: () => mat('#ffffff', { map: woodTex('#b98352', 8, [0.43, 0.5]), rough: 0.5, bump: woodTex('#b98352', 8, [0.43, 0.5]), bs: 1.2 }) }),
+      wall: surface('wall-plaster', { tint: '#f6ead2', rough: 0.92, bs: 0.6, fallback: () => mat('#ffffff', { map: wallTex('#f3e6cc', [0.45, 0.33]), rough: 0.92, bump: wallTex('#f3e6cc', [0.45, 0.33]), bs: 0.6 }) }),
     });
     const hubWin = [windowAt(R, 'left', -1.4, 1.6, 2.0, 1.3, '#a8c66c')].map(windowCorners);
     const sg = signMesh('ห้องพักครู', 1.1, 0.3, { bg: '#ffffff', fg: '#1d2733', border: '#8a5a33', size: 64 });
@@ -384,8 +408,8 @@ export class World {
     const st = new THREE.Group(); group.add(st);
     const R = room(st, {
       w: 10, d: 8, h: 3.4,
-      floor: mat('#ffffff', { map: concreteTex([5, 4]), rough: 0.78, bump: concreteTex([5, 4]), bs: 1.5 }),
-      wall: mat('#ffffff', { map: wallTex('#dfe8ee', [4, 1]), rough: 0.92, bump: wallTex('#dfe8ee', [4, 1]), bs: 0.6 }),
+      floor: surface('floor-concrete', { rough: 0.72, bs: 1.2, fallback: () => mat('#ffffff', { map: concreteTex([0.5, 0.5]), rough: 0.78, bump: concreteTex([0.5, 0.5]), bs: 1.5 }) }),
+      wall: surface('wall-block', { tint: '#eef3f6', rough: 0.8, bs: 1.5, mirror: false, fallback: () => mat('#ffffff', { map: wallTex('#dfe8ee', [0.45, 0.3]), rough: 0.92, bump: wallTex('#dfe8ee', [0.45, 0.3]), bs: 0.6 }) }),
       base: '#3b4a5a',
     });
     // safety walkway lines
@@ -396,7 +420,8 @@ export class World {
     R.onWall('back', 0.6, 2.75, 0.02).add(s1);
     // tool wall
     const tw = R.onWall('front', -2.2, 1.6, 0.02);
-    box(3.3, 1.35, 0.03, mat('#ffffff', { map: pegboardTex([2, 1]), rough: 0.9, bump: pegboardTex([2, 1]), bs: 2 }), 0, 0, 0, tw);
+    const pegPhoto = photo('pegboard', { repeat: [3.3 / 0.6, 1.35 / 0.6] });
+    box(3.3, 1.35, 0.03, pegPhoto ? mat('#ffffff', { map: pegPhoto, rough: 0.9, bump: pegPhoto, bs: 2 }) : mat('#ffffff', { map: pegboardTex([2, 1]), rough: 0.9, bump: pegboardTex([2, 1]), bs: 2 }), 0, 0, 0, tw);
     box(3.4, 0.06, 0.06, mat('#8a5a33'), 0, 0.7, 0.02, tw);
     box(3.4, 0.06, 0.06, mat('#8a5a33'), 0, -0.7, 0.02, tw);
     const ts = signMesh('คลังแสงเครื่องมือ', 1.3, 0.28, { bg: '#d99a0b', fg: '#ffffff', size: 60 });
@@ -599,8 +624,8 @@ export class World {
     const st = new THREE.Group(); group.add(st);
     const R = room(st, {
       w: 8, d: 7, h: 3,
-      floor: mat('#ffffff', { map: checkerTex('#e8dcc4', '#d9c9aa', [8, 7]), rough: 0.8 }),
-      wall: mat('#ffffff', { map: wallTex('#fdf2d8', [4, 1]), rough: 0.95 }),
+      floor: surface('floor-tile-beige', { rough: 0.32, bs: 1.0, mirror: false, fallback: () => mat('#ffffff', { map: checkerTex('#e8dcc4', '#d9c9aa', [1, 1]), rough: 0.8 }) }),
+      wall: surface('wall-plaster', { tint: '#fff3d9', rough: 0.92, bs: 0.6, fallback: () => mat('#ffffff', { map: wallTex('#fdf2d8', [0.53, 0.33]), rough: 0.95 }) }),
     });
     const crWin = [windowAt(R, 'left', -1.4, 1.7, 1.8, 1.3, '#f2a6b4'), windowAt(R, 'left', 1.6, 1.7, 1.8, 1.3, '#f2a6b4')].map(windowCorners);
     const wbTex = (() => {
@@ -719,8 +744,8 @@ export class World {
     const st = new THREE.Group(); group.add(st);
     const R = room(st, {
       w: 5, d: 4.6, h: 3,
-      floor: mat('#ffffff', { map: tileTex('#9cc7e6', '#7aa6c8', 4, [5, 5]), rough: 0.22, bump: tileTex('#9cc7e6', '#7aa6c8', 4, [5, 5]), bs: 2.5 }),
-      wall: mat('#ffffff', { map: tileTex('#f6f7f8', '#d3d8dc', 4, [5, 3]), rough: 0.16, bump: tileTex('#f6f7f8', '#d3d8dc', 4, [5, 3]), bs: 2.5 }),
+      floor: surface('floor-tile-blue', { rough: 0.35, bs: 1.5, mirror: false, fallback: () => mat('#ffffff', { map: tileTex('#9cc7e6', '#7aa6c8', 4, [1, 1.09]), rough: 0.22, bump: tileTex('#9cc7e6', '#7aa6c8', 4, [1, 1.09]), bs: 2.5 }) }),
+      wall: surface('wall-tile-white', { rough: 0.12, bs: 1.5, mirror: false, fallback: () => mat('#ffffff', { map: tileTex('#f6f7f8', '#d3d8dc', 4, [1, 1]), rough: 0.16, bump: tileTex('#f6f7f8', '#d3d8dc', 4, [1, 1]), bs: 2.5 }) }),
       base: '#7aa6c8',
     });
     const rrWin = [windowAt(R, 'left', 0.2, 2.1, 1.0, 0.6)].map(windowCorners);
@@ -728,10 +753,10 @@ export class World {
     R.onWall('back', 0, 2.5, 0.02).add(sg);
     // counter + basins
     const counter = new THREE.Group(); counter.position.set(0, 0, -2.05); st.add(counter);
-    box(3.6, 0.06, 0.5, mat('#e9eef2', { rough: 0.3 }), 0, 0.85, 0, counter);
+    rbox(3.6, 0.06, 0.5, mat('#e9eef2', { rough: 0.3 }), 0, 0.85, 0, counter, 0.015);
     for (const x of [-1.75, 1.75]) box(0.06, 0.82, 0.46, mat('#cfd8de'), x, 0.41, 0, counter);
     const mirror = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.9), new THREE.MeshStandardMaterial({ color: '#eef3f6', roughness: 0.04, metalness: 1.0 }));   // real mirror: reflects the environment map
-    mirror.position.set(0, 1.65, -2.29);
+    mirror.position.set(0, 1.65, -2.27);   // 2 cm proud of its frame (coplanar faces z-fight)
     box(3.3, 1.0, 0.02, mat('#b0bcc4', { metal: 0.6, rough: 0.3 }), 0, 1.65, -2.3, st);
     // drain pipes under the basins
     for (const x of [-1.2, 0, 1.2]) cyl(0.025, 0.025, 0.4, mat('#e9eef2'), x, 0.62, -2.1, st, 10);
