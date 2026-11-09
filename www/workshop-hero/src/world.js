@@ -488,19 +488,39 @@ export class World {
     const toolWall = {};
     const twWorld = new THREE.Object3D();
     twWorld.position.set(-2.2, 1.6, -4 + 0.06);
+    const pinGeos = [];
     for (const [id, [x, y]] of Object.entries(toolSpots)) {
       const it = makeItem(id);
-      it.rotation.set(Math.PI / 2, 0, 0);         // handle down, head up
-      if (id === 'drill' || id === 'tape' || id === 'caulk') it.rotation.set(0, Math.PI / 2, 0);
-      it.position.set(twWorld.position.x + x, twWorld.position.y + y + (id === 'drill' || id === 'tape' || id === 'caulk' ? 0 : -0.15), twWorld.position.z + 0.05);
+      const sideOn = id === 'drill' || id === 'tape' || id === 'caulk';
+      it.rotation.set(Math.PI / 2, 0, 0);         // handle down, head up, working face toward the room
+      if (sideOn) it.rotation.set(0, Math.PI / 2, 0);
+      it.position.set(twWorld.position.x + x, twWorld.position.y + y + (sideOn ? 0 : -0.15), twWorld.position.z + 0.05);
+      if (id === 'saw') { it.rotation.set(0, -Math.PI / 2, 0); it.position.set(twWorld.position.x + x - 0.24, twWorld.position.y + y + 0.02, twWorld.position.z + 0.05); }
+      if (id === 'screwdriver') { it.rotation.set(-Math.PI / 2, 0, 0); it.position.y = twWorld.position.y + y + 0.14; }   // tip down, like a real holder
       it.scale.setScalar(1.25);
       dyn.add(it);
+      // steel pegboard hooks the tool rests on
+      it.updateMatrixWorld(true);
+      for (const h of it.userData.hang || []) {
+        const wp = it.localToWorld(new THREE.Vector3(...h));
+        const z0 = twWorld.position.z, z1 = wp.z + 0.016;
+        const rod = new THREE.CylinderGeometry(0.0028, 0.0028, z1 - z0, 8); rod.rotateX(Math.PI / 2); rod.translate(wp.x, wp.y - 0.001, (z0 + z1) / 2);
+        const tip = new THREE.CylinderGeometry(0.0028, 0.0028, 0.016, 8); tip.translate(wp.x, wp.y + 0.007, z1);
+        pinGeos.push(rod, tip);
+      }
       it.userData.home = { pos: it.position.clone(), rot: it.rotation.clone(), scale: it.scale.clone() };
       toolWall[id] = it;
       const lbl = signMesh(ITEMS[id].th, 0.32, 0.07, { bg: '#ffffff', fg: '#1d2733', size: 46, radius: 12 });
       lbl.position.set(twWorld.position.x + x, twWorld.position.y + y - 0.3, twWorld.position.z + 0.02);
       dyn.add(lbl);
     }
+    if (pinGeos.length) {
+      const pins = new THREE.Mesh(mergeGeometries(pinGeos.map((g) => g.toNonIndexed()), false), M.steel());
+      pins.castShadow = true; dyn.add(pins);
+    }
+    const inspectSign = signMesh('แตะเครื่องมือเพื่อหยิบขึ้นมาดูใกล้ๆ', 0.86, 0.085, { bg: '#16306b', fg: '#ffd23f', size: 34, radius: 14 });
+    inspectSign.position.set(twWorld.position.x + 1.15, twWorld.position.y - 0.42, twWorld.position.z + 0.02);
+    dyn.add(inspectSign);
     // materials on the rack (world positions computed from the rack transform)
     const matSpots = { wood: [-0.2, 0.89], pvc: [0.55, 0.91], nails: [-0.4, 0.4], screws: [0.0, 0.4], bulb: [0.4, 0.38], washer: [-0.35, 1.39], teflon: [0.1, 1.42] };
     const materials = {};

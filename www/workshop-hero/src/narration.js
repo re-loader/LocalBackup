@@ -1,4 +1,4 @@
-import { T, LEVELS, TEST } from './strings.js';
+import { T, LEVELS, TEST, ITEMS, TOOL_INFO } from './strings.js';
 
 // สิ่งที่ครูช่างอ่านออกเสียง (VAJA) — ใช้ร่วมกันทั้งตัวเกมและ tools/build-voice.mjs
 // แต่ละประโยคประกอบจาก "ชิ้น" ที่บันทึกเสียงไว้แล้ว เกมจึงพูดข้อความยาวได้ด้วยเสียงจริงทั้งหมด
@@ -12,6 +12,8 @@ export const N = {
   job: (job) => `${job.title} ${job.task}`,
   hazard: (hz) => `${hz.text} ช่วยแก้ไขด้วยนะ!`,
   missed: (list) => [`ยังเหลือจุดเสี่ยง ${list.length} จุด`, ...list.map((h) => h.text)].join(' '),
+  /** a tool picked off the wall: name, what it is for, one safety rule */
+  tool: (id) => `${ITEMS[id].th} ${TOOL_INFO[id].use} ข้อควรระวัง ${TOOL_INFO[id].safety}`,
 };
 // Shown but deliberately not spoken (VAJA voices learning content only): ADISAC stage changes,
 // SYNTHESIS / CRITERION results, scores and praise, the title and final screens.
@@ -30,5 +32,7 @@ export function narrationPieces() {
   p.add('ช่วยแก้ไขด้วยนะ!');
   for (let n = 1; n <= 3; n++) p.add(`ยังเหลือจุดเสี่ยง ${n} จุด`);
   for (const it of TEST.items) p.add(it.q);                 // the coach reads each test question
+  p.add('ข้อควรระวัง');
+  for (const [id, t] of Object.entries(TOOL_INFO)) { p.add(ITEMS[id].th); p.add(t.use); p.add(t.safety); }
   return [...p];
 }

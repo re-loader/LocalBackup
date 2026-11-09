@@ -29,6 +29,8 @@ export class Interaction {
     this.keys = new Set();
     this.controllers = [];
     this.onAnyPress = null;
+    /** (dx, dy) → handled instead of mouse-look while set */
+    this.dragHook = null;
     /** Test hook: { pos: Vector3, quat: Quaternion, trigger: bool } stands in for a tracked controller. */
     this.fakePose = null;
     this._nearT = 0;
@@ -118,8 +120,12 @@ export class Interaction {
         if (!this.mouse.dragging && Math.hypot(dx, dy) > 6) this.mouse.dragging = true;
         if (this.mouse.dragging) {
           const k = e.pointerType === 'touch' ? 0.006 : 0.0045;
-          this.yaw += (e.clientX - d.lx) * k;
-          this.pitch = clamp(this.pitch - (e.clientY - d.ly) * k, -1.35, 1.35);
+          // something held up for a close look (src/inspect.js) turns instead of the view
+          if (this.dragHook) this.dragHook(e.clientX - d.lx, e.clientY - d.ly);
+          else {
+            this.yaw += (e.clientX - d.lx) * k;
+            this.pitch = clamp(this.pitch - (e.clientY - d.ly) * k, -1.35, 1.35);
+          }
           d.lx = e.clientX; d.ly = e.clientY;
         }
       }
@@ -498,7 +504,7 @@ export class Hands {
       h.userData.thumb.rotation.x = -Math.max(trig, grip) * 0.6;
     }
     if (!this.held) return;
-    if (this.anim.spin > 0) { this.anim.spin -= dt; this.held.rotation.z += dt * 18; }
+    if (this.anim.spin > 0) { this.anim.spin -= dt; (this.held.getObjectByName('spin') || this.held).rotation.z += dt * 18; }
     if (this.anim.shake > 0) { this.anim.shake -= dt; this.held.position.x = Math.sin(this.anim.shake * 80) * 0.01; } else this.held.position.x = 0;
   }
 }

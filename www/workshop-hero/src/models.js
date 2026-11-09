@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { woodTex, photo } from './textures.js';
 import { blobShadow } from './look.js';
+import { buildTool, hasTool3d } from './tools3d.js';
 
 // โมเดลทั้งหมดสร้างจากรูปทรงพื้นฐาน — เครื่องมือ วัสดุ PPE เฟอร์นิเจอร์ และตัวละคร
 // เครื่องมือทุกชิ้นวางด้ามที่จุดกำเนิด และชี้ไปทาง -Z (ไปข้างหน้าจากมือ)
@@ -210,6 +211,7 @@ const ITEM_BUILDERS = {
 
 /** Builds a tool / material / PPE model. Returns a Group (handle at origin, pointing -Z). */
 export function makeItem(id, opts = {}) {
+  if (hasTool3d(id)) return buildTool(id);           // realistic tools (src/tools3d.js)
   const g = new THREE.Group();
   g.name = id;
   const b = TOOL_BUILDERS[id] || ITEM_BUILDERS[id];

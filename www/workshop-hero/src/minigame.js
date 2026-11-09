@@ -51,6 +51,7 @@ function runBar({ anchor, title, tool = null, mode = 'tighten', hits = 3, speed 
       toolObj.lookAt(toolObj.position.clone().add(dir));    // +Z away from the part → the tool's tip (-Z) on it
       ctx.scene.add(toolObj);
     }
+    const spinner = toolObj?.getObjectByName('spin') || null;
 
     const st = {
       phase: Math.random(), p: 0, center: mode === 'measure' ? 0.6 : 0.5,
@@ -145,6 +146,7 @@ function runBar({ anchor, title, tool = null, mode = 'tighten', hits = 3, speed 
         st.spin -= dt;
         if (mode === 'saw') toolObj.translateZ(Math.sin(st.spin * 40) * 0.01);
         else if (mode === 'hammer') toolObj.rotateX(Math.sin(st.spin * 30) * 0.08);
+        else if (spinner) spinner.rotateZ(dt * 40);            // the drill's chuck turns, not the whole drill
         else toolObj.rotateZ(dt * (mode === 'loosen' ? -14 : 14));
       }
       if (st.doneT >= 0) {
@@ -294,7 +296,7 @@ function runGesture({ anchor, title, tool = null, mode = 'tighten', hits = 3, ge
           const steady = ang / Math.max(dt, 0.001) < 1.3;
           st.progress += dt * (steady ? 0.42 : 0.12);
           if (!steady) { st.shakeWarn += dt; if (st.shakeWarn > 0.4) { say('ถือให้นิ่ง!', '#ff8a8a'); st.shakeWarn = 0; } }
-          if (toolObj) toolObj.rotateZ(dt * 25);
+          if (toolObj) (toolObj.getObjectByName('spin') || toolObj).rotateZ(dt * (toolObj.getObjectByName('spin') ? 45 : 25));
           st.prevQ = P.quat.clone(); st.held = true;
           if (Math.random() < 0.3) pulse(0.15, 16);
         } else {

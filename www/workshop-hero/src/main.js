@@ -6,6 +6,7 @@ import { Interaction, Locomotion, Hands, Hints } from './input.js';
 import { HUD } from './hud.js';
 import { Panel } from './panel.js';
 import { Game, loadRuns, loadTests, loadSurveys } from './game.js';
+import { ToolInspector } from './inspect.js';
 import { courseRows, summarize, researchCsv } from './research.js';
 import { LEVELS, TEST, SURVEY, RESEARCH, normalizedGain } from './strings.js';
 import { setupLook } from './look.js';
@@ -43,6 +44,7 @@ ctx.hands = new Hands(camera);
 ctx.hints = new Hints(scene);
 ctx.hud = new HUD(camera);
 ctx.game = new Game();
+ctx.inspect = new ToolInspector();     // pick a tool off the workshop wall to look at it
 
 // keep the last station so entering VR mid-game re-centres the player there
 const place = ctx.loco.place.bind(ctx.loco);
@@ -307,9 +309,12 @@ window.workshop = {
   },
   /** Selects a registered 3D object (tool, door, …) by its hover label. */
   pick(text) {
-    for (const [o, h] of ctx.interaction.targets) {
-      const l = typeof h.label === 'function' ? h.label() : h.label;
-      if (!o.userData.button && l && l.includes(text) && h.enabled()) { h.onSelect({ root: o }, { kind: 'debug' }); return true; }
+    // an exact label wins (so 'ไขควง' picks the tool, not 'หยิบดู ไขควง'), then any label containing the text
+    for (const exact of [true, false]) {
+      for (const [o, h] of ctx.interaction.targets) {
+        const l = typeof h.label === 'function' ? h.label() : h.label;
+        if (!o.userData.button && l && (exact ? l === text : l.includes(text)) && h.enabled()) { h.onSelect({ root: o }, { kind: 'debug' }); return true; }
+      }
     }
     return false;
   },
