@@ -76,6 +76,8 @@
     led: '<circle cx="8" cy="8" r="4"/><path d="M7 1h2v2H7zm0 12h2v2H7zM1 7h2v2H1zm12 0h2v2h-2z"/>',
     keypad: '<path d="M2 2h3v3H2zm4.500 0h3v3h-3zM11 2h3v3h-3zM2 6.500h3v3H2zm4.500 0h3v3h-3zM11 6.500h3v3h-3zM2 11h3v3H2zm4.500 0h3v3h-3zM11 11h3v3h-3z"/>',
     divider: '<path d="M1 7h14v2H1z"/>',
+    image: '<path fill-rule="evenodd" d="M1 3h14v10H1zm1.500 1.500v6.200l3.300-3.400 2.400 2.400 1.600-1.500 3.700 3.300V4.500z"/><circle cx="11" cy="6.500" r="1.300"/>',
+    sound: '<path d="M2 6h3l4-3.500v11L5 10H2z"/><path d="M11 5.200a4 4 0 0 1 0 5.600l-1-1a2.600 2.600 0 0 0 0-3.600zm2-2a6.800 6.800 0 0 1 0 9.600l-1-1a5.400 5.400 0 0 0 0-7.600z"/>',
     column: '<path fill-rule="evenodd" d="M2 2h12v12H2zm1.500 1.500v3.700h9V3.500zm0 5.300v3.700h9V8.800z"/>',
     row: '<path fill-rule="evenodd" d="M2 2h12v12H2zm1.500 1.500v9h3.700v-9zm5.300 0v9h3.700v-9z"/>',
     card: '<rect x="1.500" y="3" width="13" height="10" rx="3"/>',
@@ -113,6 +115,7 @@
     meter: { title: 'Meter', type: 'meter', props: { min: '0', max: '100', value: '50', color: 'accent', w: '180', h: '180' } },
     spinbox: { title: 'Spinbox', type: 'spinbox', props: { min: '0', max: '100', value: '10', step: '1', digits: '3' } },
     led: { title: 'LED', type: 'led', props: { color: 'ok', w: '28', h: '28' } },
+    image: { title: 'Picture', type: 'image', props: {} },
     keypad: { title: 'Keypad', type: 'keypad', props: { keys: '1,2,3\n4,5,6\n7,8,9\nBACKSPACE,0,OK', w: '240', h: '220' } },
     column: { title: 'Column', type: 'box', base: 'column', props: { layout: 'column', gap: '8', w: 'fill', h: 'content' } },
     row: { title: 'Row', type: 'box', base: 'row', props: { layout: 'row', cross: 'center', gap: '8', w: 'fill', h: 'content' } },
@@ -122,12 +125,12 @@
     divider: { title: 'Divider', type: 'divider', props: { color: 'border', w: 'fill', h: '1' } }
   };
   const PALETTE = [['Text', ['label', 'field']], ['Buttons', ['button', 'check', 'switch', 'keypad']],
-    ['Widgets', ['icon', 'slider', 'bar', 'arc', 'meter', 'spinner', 'led', 'dropdown', 'roller', 'spinbox', 'qr', 'calendar']],
+    ['Widgets', ['image', 'icon', 'slider', 'bar', 'arc', 'meter', 'spinner', 'led', 'dropdown', 'roller', 'spinbox', 'qr', 'calendar']],
     ['Data', ['list', 'table', 'chart']],
     ['Layouts', ['column', 'row', 'card', 'free', 'spacer', 'divider']]];
   const ROWICON = { label: 'label', field: 'field', button: 'button', check: 'check', switch: 'switch', icon: 'icon', slider: 'slider', bar: 'bar',
     arc: 'arc', spinner: 'spinner', dropdown: 'dropdown', roller: 'roller', qr: 'qr', list: 'list', table: 'table', chart: 'chart', divider: 'divider',
-    calendar: 'calendar', meter: 'meter', spinbox: 'spinbox', led: 'led', keypad: 'keypad' };
+    calendar: 'calendar', meter: 'meter', spinbox: 'spinbox', led: 'led', keypad: 'keypad', image: 'image' };
   function nodeIcon(n) {
     if (n.type === 'root') return 'screen';
     if (n.type !== 'box') return ROWICON[n.type];
@@ -158,7 +161,9 @@
     header: ['Month header', 'select', [['', 'Arrows'], ['dropdown', 'Dropdowns'], ['none', 'None']]],
     ticks: ['Ticks', 'number'], major: ['Major tick every', 'number'], labels: ['Tick labels', 'select', [['', 'Shown'], ['0', 'Hidden']]],
     step: ['Step', 'number'], digits: ['Digits', 'number'], decimals: ['Decimals', 'number'],
-    lit: ['Lit', 'select', [['', 'On'], ['0', 'Off']]], keys: ['Keys', 'area']
+    lit: ['Lit', 'select', [['', 'On'], ['0', 'Off']]], keys: ['Keys', 'area'],
+    src: ['Picture', 'picture'],
+    fit: ['Size', 'select', [['', 'As it is'], ['fit', 'All of it, scaled'], ['stretch', 'Stretched'], ['center', 'Centre, cut'], ['tile', 'Tiled']]]
   };
   const KEYS = { max2: 'max', kind2: 'kind', iconname: 'icon' };   /* one key in the design, two meanings on the panel */
   const CONTENT = {
@@ -168,7 +173,8 @@
     spinner: ['color'], dropdown: ['options', 'selected', 'font', 'fg'], roller: ['options', 'selected', 'rows', 'font'], qr: ['text', 'size'],
     list: ['items', 'font'], table: ['cells', 'colw', 'font'], chart: ['kind2', 'values', 'min', 'max2', 'color'], divider: ['color'],
     calendar: ['date', 'header', 'font'], meter: ['min', 'max2', 'value', 'ticks', 'major', 'labels', 'color', 'font'],
-    spinbox: ['min', 'max2', 'value', 'step', 'digits', 'decimals', 'font'], led: ['color', 'lit'], keypad: ['keys', 'font'], box: [], root: []
+    spinbox: ['min', 'max2', 'value', 'step', 'digits', 'decimals', 'font'], led: ['color', 'lit'], keypad: ['keys', 'font'],
+    image: ['src', 'fit'], box: [], root: []
   };
   const VALUE_TYPES = ['switch', 'check', 'slider', 'dropdown', 'roller', 'field', 'arc', 'calendar', 'spinbox', 'keypad'];
   const C_WORDS = 'auto break case char const continue default do double else enum extern float for goto if inline int long register return short signed sizeof static struct switch typedef union unsigned void volatile while body ui e'.split(' ');
@@ -218,7 +224,12 @@
   }
   function make(kind, props, kids) {
     const d = W[kind];
-    return { id: nextId++, type: d.type, name: freshName(d.base || kind), props: Object.assign({}, d.props, props), kids: kids || [] };
+    const n = { id: nextId++, type: d.type, name: freshName(d.base || kind), props: Object.assign({}, d.props, props), kids: kids || [] };
+    if (kind === 'image' && !n.props.src && P) {
+      const first = (P.assets || []).find(function (a) { return a.kind === 'picture'; });
+      if (first) n.props.src = first.name;
+    }
+    return n;
   }
   function makeRoot(props, kids) {
     return { id: nextId++, type: 'root', name: 'root', props: Object.assign({ layout: 'column', gap: '12' }, props), kids: kids || [] };
@@ -275,9 +286,204 @@
     const screens = t.make();
     reserved = {};
     P = { format: FORMAT, version: 1, app: { name: 'My app', file: 'myapp', symbol: 'LIST', color: '#6B4FBB' }, screens: screens, code: {},
-          board: keep ? keep.board : 'jc', turned: keep ? keep.turned : false, light: keep ? keep.light : false };
+          board: keep ? keep.board : 'jc', turned: keep ? keep.turned : false, light: keep ? keep.light : false, assets: [] };
     cur = 0;
     sel = root();
+    assetsReplace({});
+  }
+
+  /* ---------------------------------------------------------------- the assets: pictures and sounds
+   * P.assets says what there is ({ name, kind: 'picture' | 'sound', w, h, ms, bytes }); the bytes are in DATA, kept in
+   * this browser's IndexedDB (the design in localStorage would not hold them), in a .design file as base64, and in the
+   * renderer (sim_design_asset). A picture is a PNG, at most the screen's size; a sound a WAV, 16-bit mono at 16 kHz,
+   * which the device plays as it is. In the app they are files of main/assets/, embedded in the .elf. */
+  const DATA = {};
+  const KIND = { picture: 'p'.charCodeAt(0), sound: 's'.charCodeAt(0) };
+  const EXT = { picture: 'png', sound: 'wav' };
+  const SOUND_MAX_S = 60;
+  let idb = null;
+  function store(mode) {
+    return new Promise(function (ok, no) {
+      if (idb) return ok(idb.transaction('assets', mode).objectStore('assets'));
+      const r = indexedDB.open('ros-studio', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('assets'); };
+      r.onsuccess = function () { idb = r.result; ok(idb.transaction('assets', mode).objectStore('assets')); };
+      r.onerror = function () { no(r.error); };
+    });
+  }
+  function idbPut(name, data) { store('readwrite').then(function (st) { st.put(data, name); }).catch(function () {}); }
+  function idbDel(name) { store('readwrite').then(function (st) { st.delete(name); }).catch(function () {}); }
+  function idbAll() {
+    return store('readonly').then(function (st) {
+      return new Promise(function (ok) {
+        const o = {}, c = st.openCursor();
+        c.onsuccess = function () { const k = c.result; if (!k) return ok(o); o[k.key] = new Uint8Array(k.value); k.continue(); };
+        c.onerror = function () { ok(o); };
+      });
+    }).catch(function () { return {}; });
+  }
+  function toEngine(name) {
+    if (!M) return;
+    const a = (P.assets || []).find(function (x) { return x.name === name; }), d = DATA[name];
+    if (!a || !d) return;
+    const ptr = M.ccall('sim_design_asset_buf', 'number', ['number'], [d.length]);
+    M.HEAPU8.set(d, ptr);
+    M.ccall('sim_design_asset', null, ['string', 'number', 'number', 'number'], [name, KIND[a.kind], ptr, d.length]);
+  }
+  function fromEngine(name, kind) {
+    if (M) M.ccall('sim_design_asset', null, ['string', 'number', 'number', 'number'], [name, KIND[kind], 0, 0]);
+  }
+  /* every asset at once (New, Open): the old ones gone, here and in the browser's store */
+  function assetsReplace(data) {
+    Object.keys(DATA).forEach(function (k) {
+      const a = (P && P.assets || []).find(function (x) { return x.name === k; });
+      fromEngine(k, a ? a.kind : 'picture');
+      fromEngine(k, a && a.kind === 'picture' ? 'sound' : 'picture');
+      delete DATA[k];
+    });
+    store('readwrite').then(function (st) { st.clear(); Object.keys(data).forEach(function (k) { st.put(data[k], k); }); }).catch(function () {});
+    Object.keys(data).forEach(function (k) { DATA[k] = data[k]; toEngine(k); });
+  }
+  function assetName(file) {
+    let b = file.replace(/\.[^.]*$/, '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+    if (!/^[a-z]/.test(b)) b = 'a_' + b;
+    b = b.slice(0, 20);
+    const used = {};
+    (P.assets || []).forEach(function (a) { used[a.name] = 1; });
+    if (!used[b]) return b;
+    for (let i = 2; ; i++) if (!used[b + '_' + i]) return b + '_' + i;
+  }
+  function wav16(samples, rate) {
+    const n = samples.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const str = function (o, t) { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt '); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i])) * 32767, true);
+    return new Uint8Array(buf);
+  }
+  /* a file into an asset: a picture as a PNG no larger than the screen, a sound as a 16 kHz mono WAV */
+  function importAsset(file) {
+    const name = assetName(file.name);
+    const picture = /^image\//.test(file.type) || /\.(png|jpe?g|gif|webp|bmp)$/i.test(file.name);
+    const work = picture
+      ? createImageBitmap(file).then(function (bmp) {
+          const sz = size(), k = Math.min(1, Math.max(sz.w, sz.h) / Math.max(bmp.width, bmp.height));
+          const c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(bmp.width * k));
+          c.height = Math.max(1, Math.round(bmp.height * k));
+          c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+          return new Promise(function (ok) { c.toBlob(ok, 'image/png'); }).then(function (b) { return b.arrayBuffer(); }).then(function (ab) {
+            return { meta: { name: name, kind: 'picture', w: c.width, h: c.height, bytes: ab.byteLength }, data: new Uint8Array(ab),
+                     note: k < 1 ? ' (made ' + c.width + ' x ' + c.height + ', the screen\'s size)' : '' };
+          });
+        })
+      : file.arrayBuffer().then(function (ab) {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          return ctx.decodeAudioData(ab).then(function (buf) {
+            ctx.close();
+            const secs = Math.min(buf.duration, SOUND_MAX_S), off = new OfflineAudioContext(1, Math.max(1, Math.ceil(secs * 16000)), 16000);
+            const src = off.createBufferSource();
+            src.buffer = buf;
+            src.connect(off.destination);
+            src.start();
+            return off.startRendering().then(function (out) {
+              const d = wav16(out.getChannelData(0), 16000);
+              return { meta: { name: name, kind: 'sound', ms: Math.round(secs * 1000), bytes: d.length }, data: d,
+                       note: buf.duration > SOUND_MAX_S ? ' (the first ' + SOUND_MAX_S + ' s)' : '' };
+            });
+          });
+        });
+    return work.then(function (r) {
+      P.assets = (P.assets || []).concat([r.meta]);
+      DATA[name] = r.data;
+      idbPut(name, r.data);
+      toEngine(name);
+      keep();
+      msg('Added ' + (picture ? 'the picture ' : 'the sound ') + name + r.note);
+      return r.meta;
+    }, function () {
+      msg('"' + file.name + '" is not a ' + (picture ? 'picture' : 'sound') + ' this browser can read');
+      return null;
+    });
+  }
+  function assetFiles(kind) {
+    return new Promise(function (ok) {
+      const i = $('#asset-file');
+      i.accept = kind === 'picture' ? 'image/*' : kind === 'sound' ? 'audio/*,.wav,.mp3,.ogg,.m4a' : 'image/*,audio/*,.wav,.mp3,.ogg,.m4a';
+      i.onchange = function () {
+        const files = Array.from(i.files);
+        i.value = '';
+        files.reduce(function (pr, f) { return pr.then(function (list) { return importAsset(f).then(function (m) { return m ? list.concat([m]) : list; }); }); },
+                     Promise.resolve([])).then(function (list) { project(); attrs(); lintSoon(); ok(list); });
+      };
+      i.click();
+    });
+  }
+  function assetDelete(name) {
+    const a = P.assets.find(function (x) { return x.name === name; });
+    if (!a || !confirm('Delete the ' + a.kind + ' "' + name + '"? What uses it shows nothing.')) return;
+    P.assets = P.assets.filter(function (x) { return x !== a; });
+    delete DATA[name];
+    idbDel(name);
+    fromEngine(name, a.kind);
+    if (assetSel === name) assetSel = null;
+    keep();
+    all();
+  }
+  /* a new name: what uses it follows */
+  function assetRename(a, v) {
+    if (!/^[a-z][a-z0-9_]{0,22}$/.test(v) || P.assets.some(function (x) { return x !== a && x.name === v; })) return false;
+    const old = a.name;
+    walkAll(function (n) {
+      if (n.type === 'image' && n.props.src === old) n.props.src = v;
+      if (n.props.on === 'sound' && n.props.onv === old) n.props.onv = v;
+      if (n.type === 'root' && n.props.sound === old) n.props.sound = v;
+    });
+    fromEngine(old, a.kind);
+    DATA[v] = DATA[old];
+    delete DATA[old];
+    idbDel(old);
+    idbPut(v, DATA[v]);
+    a.name = v;
+    toEngine(v);
+    if (assetSel === old) assetSel = v;
+    return true;
+  }
+  /* Run, and a sound's Play: the browser plays it (the renderer has no speaker) */
+  let audio = null, playing = null;
+  function playAsset(name) {
+    const d = DATA[name];
+    if (!d) return;
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (playing) { try { playing.stop(); } catch (e) { /* ended */ } }
+    audio.decodeAudioData(d.slice().buffer).then(function (buf) {
+      const src = audio.createBufferSource();
+      src.buffer = buf;
+      src.connect(audio.destination);
+      src.start();
+      playing = src;
+    }, function () {});
+  }
+  function b64(d) {
+    let t = '';
+    for (let i = 0; i < d.length; i += 0x8000) t += String.fromCharCode.apply(null, d.subarray(i, i + 0x8000));
+    return btoa(t);
+  }
+  function unb64(t) {
+    const s = atob(t), d = new Uint8Array(s.length);
+    for (let i = 0; i < s.length; i++) d[i] = s.charCodeAt(i);
+    return d;
+  }
+  /* what the code uses: only those go into the app */
+  function usedAssets() {
+    if (!M) return { pictures: [], sounds: [] };
+    M.ccall('sim_design_load', 'string', ['string', 'string'], [designText(), screen().name]);
+    return JSON.parse(M.ccall('sim_design_used', 'string', [], []));
+  }
+  function usedFiles() {
+    const u = usedAssets();
+    return u.pictures.map(function (n) { return n + '.png'; }).concat(u.sounds.map(function (n) { return n + '.wav'; }));
   }
 
   /* ---------------------------------------------------------------- history, saving */
@@ -298,6 +504,7 @@
   function keep() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(P)); } catch (e) { /* the design stays in the page */ }
   }
+  let assetSel = null;                 /* an asset shown in Attributes instead of a widget */
   function restore(s) {
     const o = JSON.parse(s), id = sel && sel !== 'app' ? sel.id : 0;
     P.app = o.app;
@@ -415,6 +622,7 @@
           run.stack.push(name);
           setTimeout(function () { showInRun(name); }, 0);
         },
+        simSound: function (name) { if (run) playAsset(name); },
         simGoBack: function () {
           if (!run || run.stack.length < 2) return 0;
           run.stack.pop();
@@ -424,6 +632,7 @@
       };
       window.RosSim(cfg).then(function (m) {
         M = m;
+        Object.keys(DATA).forEach(toEngine);
         M.ccall('sim_design_app', null, ['string'], [P.app.name]);
         $('#boot').hidden = true;
         refresh();
@@ -692,7 +901,8 @@
   /* ---------------------------------------------------------------- selecting */
 
   function select(n) {
-    if (n === sel) return;
+    if (n === sel && !assetSel) return;
+    assetSel = null;
     sel = n;
     marks();
     tree();
@@ -840,6 +1050,16 @@
         i === 0 ? el('span', { class: 'kind' }, 'first') : null,
         P.screens.length > 1 ? el('button', { class: 'act', title: 'Delete the screen', onclick: function (e) { e.stopPropagation(); delScreen(i); } }, '×') : null));
     });
+    p.append(el('div', { class: 'group' }, 'Assets', el('button', { title: 'Add pictures or sounds', 'aria-label': 'Add pictures or sounds',
+      onclick: function () { assetFiles(); } }, '+')));
+    (P.assets || []).forEach(function (a) {
+      p.append(el('div', { class: 'row' + (assetSel === a.name ? ' on' : ''), title: a.kind === 'picture' ? 'A picture: a Picture widget shows it' :
+        'A sound: a widget\'s action or a screen plays it', onclick: function () { assetSel = a.name; project(); attrs(); } },
+        icon(a.kind === 'picture' ? 'image' : 'sound'), el('span', { class: 'name' }, a.name),
+        el('span', { class: 'kind' }, a.kind === 'picture' ? a.w + '×' + a.h : (a.ms / 1000).toFixed(1) + ' s'),
+        el('button', { class: 'act', title: 'Delete it', onclick: function (e) { e.stopPropagation(); assetDelete(a.name); } }, '×')));
+    });
+    if (!(P.assets || []).length) p.append(el('div', { class: 'note' }, 'Pictures and sounds of your own: +'));
     p.append(el('div', { class: 'group' }, 'Files'));
     FILES.forEach(function (f) {
       p.append(el('div', { class: 'row' + (mode !== 'design' && f === codeFile ? ' on' : ''), onclick: function () {
@@ -889,6 +1109,7 @@
       return field(a[0], c, c.id);
     }
     if (t === 'color') return colorField(a[0], get, set);
+    if (t === 'picture') return assetField(n, key, a[0], 'picture');
     let i;
     if (t === 'area') i = el('textarea', { rows: name === 'text' ? 2 : 4 });
     else if (t === 'select') i = el('select', {}, a[2].map(function (o) { return el('option', { value: o[0] }, o[1]); }));
@@ -959,6 +1180,7 @@
   function attrs() {
     const a = $('#attrs');
     a.replaceChildren();
+    if (assetSel) return assetAttrs(a, (P.assets || []).find(function (x) { return x.name === assetSel; }));
     if (sel === 'app') return appAttrs(a);
     const n = sel, sec = function (t) { a.append(el('div', { class: 'asec' }, t)); };
     if (!n) return;
@@ -971,6 +1193,7 @@
       })));
       a.append(selectField(n, 'anim', 'Comes in', [['', 'At once'], ['fade', 'Fading in'], ['left', 'Sliding in from the right'],
         ['right', 'Sliding in from the left'], ['up', 'Sliding up from below'], ['down', 'Sliding down from above']]));
+      a.append(assetField(n, 'sound', 'Plays', 'sound'));
     } else {
       const i = el('input', { type: 'text', spellcheck: 'false', title: 'The widget in the C: ui.' + n.name });
       a.append(field('Id', i, bind(i, function () { return n.name; }, function (v) { n.name = v; })));
@@ -1036,6 +1259,59 @@
     }
     if (n.type !== 'root' && n.type !== 'divider' && n.type !== 'spinner') eventAttrs(a, n, sec);
   }
+  /* a picture or a sound of the assets, or one added from a file */
+  function assetField(n, key, label, kind) {
+    const list = (P.assets || []).filter(function (x) { return x.kind === kind; });
+    const opts = [['', kind === 'picture' ? 'None' : 'Nothing']].concat(list.map(function (x) { return [x.name, x.name]; }), [['+', 'Add from a file…']]);
+    const i = el('select', {}, opts.map(function (o) { return el('option', { value: o[0] }, o[1]); }));
+    i.id = 'a' + ++fieldId;
+    i.value = n.props[key] || '';
+    i.addEventListener('change', function () {
+      if (i.value === '+') {
+        i.value = n.props[key] || '';
+        assetFiles(kind).then(function (got) {
+          const m = got.find(function (x) { return x.kind === kind; });
+          if (m) { n.props[key] = m.name; refreshSoon(); commit(); attrs(); }
+        });
+        return;
+      }
+      if (i.value) n.props[key] = i.value; else delete n.props[key];
+      refreshSoon();
+      tree();
+      commit();
+    });
+    const row = el('div', { class: 'pair' }, i);
+    if (kind === 'sound') row.append(el('button', { class: 'icon', title: 'Play it', 'aria-label': 'Play it', onclick: function () { if (n.props[key]) playAsset(n.props[key]); } }, icon('sound')));
+    return field(label, row, i.id);
+  }
+  function assetAttrs(a, x) {
+    if (!x) { assetSel = null; return attrs(); }
+    a.append(el('div', { class: 'asec' }, x.kind === 'picture' ? 'Picture' : 'Sound'));
+    const i = el('input', { type: 'text', spellcheck: 'false', title: 'Its name in the C: UI_' + (x.kind === 'picture' ? 'PIC_' : 'SND_') + x.name.toUpperCase() });
+    i.id = 'a' + ++fieldId;
+    i.value = x.name;
+    i.addEventListener('change', function () {
+      if (!assetRename(x, i.value.trim())) { msg('A name is a-z, 0-9 and _, starting with a letter, and not one in use'); i.value = x.name; return; }
+      keep();
+      commit();
+      all();
+    });
+    a.append(field('Name', i, i.id));
+    const d = DATA[x.name];
+    if (x.kind === 'picture') {
+      a.append(field('Size', el('div', { class: 'note' }, x.w + ' × ' + x.h + ' px, ' + Math.ceil(x.bytes / 1024) + ' KB')));
+      if (d) {
+        const url = URL.createObjectURL(new Blob([d], { type: 'image/png' }));
+        a.append(el('div', { class: 'preview' }, el('img', { src: url, alt: x.name, onload: function () { URL.revokeObjectURL(url); } })));
+      }
+    } else {
+      a.append(field('Length', el('div', { class: 'note' }, (x.ms / 1000).toFixed(1) + ' s, ' + Math.ceil(x.bytes / 1024) + ' KB')));
+      a.append(el('div', { class: 'note' }, el('button', { class: 'btn', onclick: function () { playAsset(x.name); } }, 'Play')));
+    }
+    a.append(el('div', { class: 'note' }, x.kind === 'picture' ? 'A Picture widget shows it. In the app: main/assets/' + x.name + '.png, inside the .elf.'
+      : 'A widget\'s action (Play a sound) or a screen (Plays) plays it. In the app: main/assets/' + x.name + '.wav, inside the .elf.'));
+    a.append(el('div', { class: 'note' }, el('button', { class: 'btn', onclick: function () { assetDelete(x.name); } }, 'Delete')));
+  }
   function propFieldFor(n, key, label) {
     return colorFieldOpt(label, function () { return n.props[key] || ''; }, function (v) { if (v) n.props[key] = v; else delete n.props[key]; });
   }
@@ -1058,8 +1334,10 @@
   function eventAttrs(a, n, sec) {
     const value = VALUE_TYPES.includes(n.type);
     sec(n.type === 'keypad' ? 'When a key is tapped' : value ? 'When it changes' : 'When it is tapped');
-    a.append(selectField(n, 'on', 'Do', [['', 'Nothing'], ['toast', 'Show a message'], ['screen', 'Open a screen'], ['back', 'Go back'], ['call', 'Call a function']], true));
+    a.append(selectField(n, 'on', 'Do', [['', 'Nothing'], ['toast', 'Show a message'], ['screen', 'Open a screen'], ['back', 'Go back'],
+      ['sound', 'Play a sound'], ['call', 'Call a function']], true));
     const on = n.props.on;
+    if (on === 'sound') a.append(assetField(n, 'onv', 'Sound', 'sound'));
     if (on === 'toast') {
       const i = el('input', { type: 'text' });
       a.append(field('Message', i, bind(i, function () { return n.props.onv || ''; }, function (v) { n.props.onv = v; })));
@@ -1128,8 +1406,11 @@
         'include(${CMAKE_CURRENT_LIST_DIR}/../reloados/elfapp.cmake)\ninclude($ENV{IDF_PATH}/tools/cmake/project.cmake)\nproject(' + n + ')\ninclude(elf_loader)\nproject_elf(' + n + ')\n';
     }
     if (f === 'main/CMakeLists.txt') {
+      const files = usedFiles();
       return '# ros.h comes from the firmware (the kit\'s reloados/main); it includes LVGL and the JPEG driver headers\n' +
-        'idf_component_register(SRCS "app.c" "ui.c"\n                       INCLUDE_DIRS "." "../../reloados/main"\n                       REQUIRES lvgl__lvgl esp_driver_jpeg)\n';
+        (files.length ? '# the pictures and sounds of the design are embedded in the app file (ui.c: _binary_<file>_start)\n' : '') +
+        'idf_component_register(SRCS "app.c" "ui.c"\n                       INCLUDE_DIRS "." "../../reloados/main"\n                       REQUIRES lvgl__lvgl esp_driver_jpeg' +
+        (files.length ? '\n                       EMBED_FILES ' + files.map(function (x) { return '"assets/' + x + '"'; }).join(' ') : '') + ')\n';
     }
     if (f === 'main/idf_component.yml') {
       return '# The same versions as the firmware: headers and settings must match\ndependencies:\n  idf: ">=5.5,<6.0"\n  lvgl/lvgl: "==9.2.2"\n' +
@@ -1224,6 +1505,8 @@
       if (!/^[a-z][a-z0-9_]{0,22}$/.test(s.name)) add('error', 'Screen "' + s.name + '": a name is a-z, 0-9 and _', null, i);
       if (screens[s.name]) add('error', 'Two screens are called "' + s.name + '"', null, i);
       screens[s.name] = 1;
+      if (s.root.props.sound && !(P.assets || []).some(function (x) { return x.name === s.root.props.sound && x.kind === 'sound' && DATA[x.name]; }))
+        add('error', 'Screen "' + s.name + '" plays "' + s.root.props.sound + '", which is not in the assets', null, i);
       walk(s.root, function (n, par) {
         if (n.type === 'root') return;
         if (!cid.test(n.name) || C_WORDS.includes(n.name)) add('error', 'Id "' + n.name + '": not a name C can use', n, i);
@@ -1233,11 +1516,19 @@
         const fills = (par.props.layout === 'column' && n.props.h === 'fill' && par.props.h === 'content') || (par.props.layout === 'row' && n.props.w === 'fill' && par.props.w === 'content');
         if (fills) add('warning', n.name + ': fills a parent that fits its content, so it has nothing to fill', n, i);
         if (n.type === 'keypad' && !(n.props.keys || '').trim()) add('warning', n.name + ': no keys', n, i);
+        const has = function (name, kind) { return (P.assets || []).some(function (x) { return x.name === name && x.kind === kind && DATA[name]; }); };
+        if (n.type === 'image' && !n.props.src) add('warning', n.name + ': no picture chosen', n, i);
+        if (n.type === 'image' && n.props.src && !has(n.props.src, 'picture')) add('error', n.name + ': the picture "' + n.props.src + '" is not in the assets', n, i);
+        if (n.props.on === 'sound' && !has(n.props.onv, 'sound')) add('error', n.name + ': the sound "' + (n.props.onv || '') + '" is not in the assets', n, i);
+        if (n.type === 'image' && n.props.fit && !n.props.w && !n.props.h) add('info', n.name + ': a picture fitted to its size wants a width and a height', n, i);
         if (n.type === 'calendar' && n.props.date && !/^\d{4}-\d{1,2}-\d{1,2}$/.test(n.props.date)) add('error', n.name + ': the date is YYYY-MM-DD', n, i);
       }, null);
     });
     if (!/^[a-z][a-z0-9_]{0,22}$/.test(P.app.file)) add('error', 'File name "' + P.app.file + '": a-z, 0-9 and _, starting with a letter', 'app', 0);
     if (P.app.file === 'hello') add('warning', 'File name "hello" is the app kit\'s example', 'app', 0);
+    const big = (P.assets || []).reduce(function (t, x) { return t + (x.bytes || 0); }, 0);
+    if (big > 6 * 1024 * 1024) add('error', 'The assets come to ' + (big / 1048576).toFixed(1) + ' MB: the build server takes 6 MB, and the app is loaded into memory whole', 'app', 0);
+    else if (big > 2 * 1024 * 1024) add('warning', 'The assets come to ' + (big / 1048576).toFixed(1) + ' MB: the app file gets big, and it is loaded into memory whole', 'app', 0);
     walkAll(function (n) {
       if (n.props.on === 'screen' && !screens[n.props.onv]) add('error', n.name + ' opens a screen that is not there: ' + n.props.onv, n, null);
     });
@@ -1288,8 +1579,14 @@
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
   }
+  /* the .design file: the project, with its assets' bytes */
+  function designFile() {
+    const data = {};
+    (P.assets || []).forEach(function (x) { if (DATA[x.name]) data[x.name] = b64(DATA[x.name]); });
+    return JSON.stringify(Object.assign({}, P, { assetData: data }), null, 1);
+  }
   function saveDesign() {
-    download(P.app.file + '.design', JSON.stringify(P, null, 1), 'application/json');
+    download(P.app.file + '.design', designFile(), 'application/json');
     msg('Saved ' + P.app.file + '.design');
   }
   /* a zip without compression: nothing here is big, and it needs no library */
@@ -1312,7 +1609,7 @@
     let off = 0;
     const u16 = function (v) { return [v & 255, v >> 8 & 255]; }, u32 = function (v) { return [v & 255, v >> 8 & 255, v >> 16 & 255, v >>> 24]; };
     Object.keys(files).forEach(function (name) {
-      const nm = enc.encode(name), data = enc.encode(files[name]), crc = crc32(data);
+      const nm = enc.encode(name), data = typeof files[name] === 'string' ? enc.encode(files[name]) : files[name], crc = crc32(data);
       const head = [].concat(u16(20), u16(0x0800), u16(0), u16(0), u16(0x21), u32(crc), u32(data.length), u32(data.length), u16(nm.length), u16(0));
       const local = new Uint8Array([0x50, 0x4B, 3, 4].concat(head));
       parts.push(local, nm, data);
@@ -1332,7 +1629,8 @@
     }
     const n = P.app.file, files = {};
     FILES.forEach(function (f) { files[n + '/' + f] = fileText(f); });
-    files[n + '/' + n + '.design'] = JSON.stringify(P, null, 1);
+    usedFiles().forEach(function (x) { const d = DATA[x.replace(/\.[a-z]+$/, '')]; if (d) files[n + '/main/assets/' + x] = d; });
+    files[n + '/' + n + '.design'] = designFile();
     const a = el('a', { href: URL.createObjectURL(zip(files)), download: n + '.zip' });
     a.click();
     msg('Exported ' + n + '.zip: put the folder in the app kit, then ./build.sh ' + n + ' ' + P.board);
@@ -1342,8 +1640,13 @@
     try { o = JSON.parse(text); } catch (e) { o = null; }
     if (!o || o.format !== FORMAT || !o.screens || !o.screens.length) { msg('Not a Reload OS Studio design'); return; }
     const was = { board: P.board, turned: P.turned, light: P.light };
+    const data = {};
+    Object.keys(o.assetData || {}).forEach(function (k) { try { data[k] = unb64(o.assetData[k]); } catch (e) { /* left out: Problems says so */ } });
+    delete o.assetData;
     P = o;
     P.code = P.code || {};
+    P.assets = P.assets || [];
+    assetsReplace(data);
     cur = 0;
     sel = root();
     renumber();
@@ -1393,12 +1696,14 @@
     const name = P.app.file, board = P.board, t0 = Date.now();
     const files = {};
     ['main/app.c', 'main/ui.c', 'main/ui.h'].forEach(function (f) { files[f] = fileText(f); });
+    const assets = {};
+    usedFiles().forEach(function (x) { const d = DATA[x.replace(/\.[a-z]+$/, '')]; if (d) assets[x] = b64(d); });
     const tick = setInterval(function () {
       msg('Building ' + name + '.elf for the ' + board + ' on the build server… ' + Math.round((Date.now() - t0) / 1000) + ' s' +
           (Date.now() - t0 > 20000 ? ' (the first build of a board compiles ESP-IDF: minutes)' : ''));
     }, 1000);
     const done = function (text) { clearInterval(tick); building = false; msg(text); exportMenu(); };
-    fetch(BUILD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board: board, name: name, files: files }) })
+    fetch(BUILD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board: board, name: name, files: files, assets: assets }) })
       .then(function (r) {
         if (r.status === 200) return r.blob().then(function (b) {
           download(name + '.elf', b, 'application/octet-stream');
@@ -1562,8 +1867,14 @@
   if (saved && saved.format === FORMAT && saved.screens && saved.screens.length) {
     P = saved;
     P.code = P.code || {};
+    P.assets = P.assets || [];
     sel = root();
     renumber();
+    idbAll().then(function (d) {
+      Object.keys(d).forEach(function (k) { if (P.assets.some(function (x) { return x.name === k; })) { DATA[k] = d[k]; toEngine(k); } });
+      all();
+      lintSoon();
+    });
   } else newProject(TEMPLATES[0]);
   last = state();
   deviceUi();
@@ -1578,6 +1889,15 @@
     design: designText,
     file: fileText,
     files: function () { const o = {}; FILES.forEach(function (f) { o[f] = fileText(f); }); return o; },
+    assets: function () { return { list: P.assets, used: usedAssets() }; },
+    addAsset: function (name, kind, bytes, meta) {        /* for checks: an asset without a file dialog */
+      P.assets = (P.assets || []).filter(function (x) { return x.name !== name; }).concat([Object.assign({ name: name, kind: kind, bytes: bytes.length }, meta || {})]);
+      DATA[name] = bytes;
+      idbPut(name, bytes);
+      toEngine(name);
+      keep();
+      all();
+    },
     project: function () { return P; },
     load: openDesign,
     problems: function () { return problems; },

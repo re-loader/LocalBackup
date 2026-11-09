@@ -45,8 +45,13 @@
     it; a Free area keeps each widget where you put it, anchored to a corner, an edge or the centre.</p></li>
   <li><p><b>Set them up</b> in Attributes. Sizes that fill or fit their content move with the screen; pixel sizes do not.
     Colours by name follow the light and dark theme on the device.</p></li>
-  <li><p><b>Say what happens</b> when a widget is tapped: a message, another screen, back, or a function of yours. A screen
-    can come in fading or sliding (Screen › Comes in); the way back is the way in, reversed.</p></li>
+  <li><p><b>Say what happens</b> when a widget is tapped: a message, another screen, back, a sound, or a function of yours.
+    A screen can come in fading or sliding (Screen › Comes in), and play a sound as it does (Screen › Plays) - a voice
+    prompt; the way back is the way in, reversed.</p></li>
+  <li><p><b>Pictures and sounds of your own:</b> Assets › <b>+</b> takes picture files (PNG, JPEG, GIF, WebP) and sound
+    files (WAV, MP3, OGG, M4A). A picture becomes a PNG no larger than the screen; a sound a 16 kHz mono WAV, the first
+    60 s. A <b>Picture</b> widget shows one - as it is, or scaled to its size, stretched, cut or tiled; Run plays the
+    sounds in the browser. They go inside the app's <code>.elf</code>: one file to copy, nothing else on the device.</p></li>
   <li><p><b>Run</b> tries it on the screen, with the mouse as a finger and Esc as the back swipe.</p></li>
   <li><p><b>Problems</b> at the bottom checks the screen on every board, both ways round: a widget that runs off the
     edge, a name C can't use.</p></li>
@@ -76,8 +81,11 @@ cd appkit
 <ul>
   <li>Your design stays in this browser (and in the <code>.design</code> file you save). Nothing is sent anywhere.</li>
   <li>Studio can use what an app may call on a device: the code stays inside <code>reloados/api.txt</code>.</li>
-  <li>Pictures of your own are not in Studio yet. Drawn icons and LVGL symbols are; add an image in <code>app.c</code> with
-    <code>ros_ui_png()</code>.</li>
+  <li>Pictures and sounds stay in this browser too (and in the <code>.design</code> file). The app's file grows with them
+    and is loaded into the device's memory whole: Problems warns above 2 MB, and the build server takes 6 MB. A picture
+    is decoded once while the app runs and freed when it closes. In the C: <code>ui_picture(UI_PIC_name)</code> and
+    <code>ui_sound(UI_SND_name)</code>; the files are <code>main/assets/</code>, embedded by <code>main/CMakeLists.txt</code>.
+    They work on firmware 1.4.0 too.</li>
   <li>Run shows the design. It does not run your <code>app.c</code>: that needs a device.</li>
   <li>Keypad keys: a row a line, a comma between keys; a key named like an LVGL symbol (<code>OK</code>,
     <code>BACKSPACE</code>, <code>LEFT</code> ...) shows the symbol. A calendar with no date shows the device's month.</li>
@@ -91,7 +99,8 @@ cd appkit
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a></p></div>
+      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>
 <a href="../en/products.html">Products</a>

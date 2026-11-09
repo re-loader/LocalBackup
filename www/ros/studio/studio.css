@@ -195,3 +195,12 @@ h2 { display: flex; align-items: center; justify-content: space-between; margin:
   .top, .ide, .status { display: none; }
   .narrow { display: grid; place-items: center; height: 100%; padding: 24px; text-align: center; color: var(--muted); }
 }
+
+/* the assets: a picture's preview, the buttons of an asset */
+.preview { padding: 6px 10px; }
+.preview img { display: block; max-width: 100%; max-height: 180px; border: 1px solid var(--border); border-radius: 4px;
+  background: repeating-conic-gradient(var(--hover) 0 25%, transparent 0 50%) 0 0 / 12px 12px; }
+.btn { border: 1px solid var(--border); background: var(--bg2, transparent); color: var(--text); border-radius: 6px; padding: 4px 12px;
+  cursor: pointer; font: inherit; }
+.btn:hover { background: var(--hover); }
+.pair .icon { flex: none; }
