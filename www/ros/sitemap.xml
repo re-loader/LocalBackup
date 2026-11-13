@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://server.re-loader.com/ros/boards.html</loc></url>
+  <url><loc>https://server.re-loader.com/ros/docs/android.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/docs/api.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/docs/guide.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/docs/</loc></url>
@@ -8,10 +9,12 @@
   <url><loc>https://server.re-loader.com/ros/en/boards.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/en/features.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/en/</loc></url>
+  <url><loc>https://server.re-loader.com/ros/en/install.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/en/products.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/en/try.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/features.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/</loc></url>
+  <url><loc>https://server.re-loader.com/ros/install.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/products.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/try.html</loc></url>
 </urlset>

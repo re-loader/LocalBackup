@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install · Reload OS</title>
+<meta name="description" content="Install Reload OS on an ESP32-P4 or ESP32-S3 touch board from the browser: pick the board, connect its USB port, press Install. Chrome or Edge on a computer.">
+<link rel="canonical" href="https://server.re-loader.com/ros/en/install.html">
+<meta property="og:title" content="Install · Reload OS">
+<meta property="og:description" content="Install Reload OS on an ESP32-P4 or ESP32-S3 touch board from the browser: pick the board, connect its USB port, press Install. Chrome or Edge on a computer.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html" aria-current="page">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a class="lang" href="../install.html" hreflang="th" lang="th">ไทย</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Install</p>
+    <h1>Install Reload OS from the browser</h1>
+    <p class="lead">Pick your board, connect it by USB and press Install: the browser writes Reload OS onto it. Nothing
+      to download or set up - it needs Chrome or Edge on a computer (Windows, macOS, Linux).</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap" id="install" data-base="../firmware/"
+       data-version="Reload OS %s, the system alone (the dev product)."
+       data-missing="The images are not on this copy of the site: install from https://os.re-loader.com/en/install.html"
+       data-tried="Written from a browser" data-untried="Not written from a browser yet">
+    <ol class="steps">
+      <li><h3>Pick your board</h3>
+        <p>An image runs on its own board only. Over USB nothing stops the wrong one: the board then starts with a dark
+          screen, and the right image puts it right.</p>
+        <div class="pick" id="install-boards" role="radiogroup" aria-label="Board"></div>
+        <p class="muted" id="install-status" role="status">Loading the list…</p>
+        <noscript><p class="callout">The installer needs JavaScript.</p></noscript></li>
+      <li><h3>Connect it</h3>
+        <p data-port="">Pick a board first: which of its USB sockets to use depends on it.</p>
+        <p data-port="usb" hidden>Connect the board's <strong>USB Type-C socket of the chip itself</strong> (USB
+          Serial/JTAG) to the computer. In the browser's list it is "USB JTAG/serial debug unit".</p>
+        <p data-port="uart" hidden>Connect the board's <strong>UART socket</strong> (its USB-serial chip, a CH340 or
+          CH343) to the computer. In the browser's list it is "USB Serial"; if nothing shows, the computer needs the
+          chip's driver - the installer links to it. Writing through this chip takes several minutes.</p>
+        <p class="muted">A board that does not answer: hold <kbd>BOOT</kbd>, tap <kbd>RESET</kbd>, release
+          <kbd>BOOT</kbd>, then press Install again.</p></li>
+      <li><h3>Install</h3>
+        <p><strong>This erases the whole board</strong> - the firmware it came with, its settings and its files. The
+          firmware a board was sold with cannot be put back from here.</p>
+        <p><esp-web-install-button id="install-btn" hidden>
+          <button slot="activate" class="btn primary" type="button">Install Reload OS</button>
+          <span slot="unsupported" class="callout">This browser cannot reach a USB serial port. Open this page in
+            Chrome or Edge on a computer.</span>
+          <span slot="not-allowed" class="callout">The installer works on an HTTPS page only.</span>
+        </esp-web-install-button></p>
+        <p class="install-info" id="install-info"></p></li>
+    </ol>
+
+    <div class="cards">
+      <div class="card"><h3>After it</h3>
+        <ul>
+          <li>The board restarts into the home screen in about 5 seconds</li>
+          <li>It shows "Not activated" until it gets its product key: Settings › About</li>
+          <li>Its flash drive is empty: apps come from <a href="../studio/index.html">Studio</a> or the
+            <a href="../docs/index.html">app kit</a></li>
+          <li>Later versions: Settings › About › Check online - no cable</li>
+        </ul></div>
+      <div class="card"><h3>Good to know</h3>
+        <ul>
+          <li>The installer is <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>, served from this
+            site; its window is in English</li>
+          <li>The image is the whole 16 MB flash; the browser sends it compressed</li>
+          <li>Not on a phone or tablet, and not in Safari or Firefox: they have no Web Serial</li>
+          <li>See the system first: <a href="try.html">Try it</a> runs it in the browser</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+<script type="module" src="../assets/esp-web-tools/install-button.js"></script>
+<script src="../assets/install.js"></script>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.5.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html" aria-current="page">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a class="lang" href="../install.html" hreflang="th" lang="th">ไทย</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>

@@ -25,6 +25,7 @@
 <a href="../en/boards.html">Boards</a>
 <a href="../en/products.html">Products</a>
 <a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
 <a href="../studio/index.html">Studio</a>
 <a href="../docs/index.html" aria-current="page">Developers</a>
       <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
@@ -32,12 +33,12 @@
   </div>
 </header>
 <main id="main">
-<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html" aria-current=page>Overview &amp; download</a></li><li><a href="studio.html">Studio</a></li><li><a href="guide.html">App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav></aside><article class="docs-main"><h1>Build apps for Reload OS</h1>
+<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html" aria-current=page>Overview &amp; download</a></li><li><a href="android.html">Coming from Android</a></li><li><a href="studio.html">Studio</a></li><li><a href="guide.html">App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav></aside><article class="docs-main"><h1>Build apps for Reload OS</h1>
 <p class="lead">An app is a small ELF file in the <code>apps/</code> folder of the device's flash drive or SD card. The
   launcher shows it as a tile; a tap reads it into memory, links it against the firmware and runs it. The app kit builds
   one without the firmware's source.</p>
 
-<div class="download" id="download"><div><h3>App kit 1.4.0</h3><p class="muted" style="margin:0">The app kit is not on the site yet: ask Reloader for it. It will be here to download with the next release.</p></div><a class="btn primary" href="https://www.re-loader.com">Ask Reloader</a></div>
+<div class="download" id="download"><div><h3>App kit 1.5.0</h3><p class="muted" style="margin:0">For Reload OS 1.5.0, and later firmware with app interface 2 · zip, 73 KB</p></div><a class="btn primary" href="../downloads/ReloadOS-1.5.0-appkit.zip" download>Download</a><div class="sha">SHA-256 6bffdffa6ea70c124cc70271914f3be7819be585aebd2436b803e4ca3702ca06</div></div>
 <p class="muted">In it: <code>build.sh</code> and <code>new.sh</code>, the <code>hello</code> example, and
   <code>reloados/</code> - the firmware's <code>ros.h</code>, its configuration and <code>api.txt</code>, the list of
   everything an app may call. A kit belongs to one firmware version (<code>reloados/VERSION</code>); the apps it builds
@@ -45,10 +46,12 @@
 
 <h2 id="quick-start">Quick start</h2>
 <ol class="steps">
-  <li><p><b>Install ESP-IDF v5.5.4</b> - exactly this version, the one the firmware is built with - with the target of
-    your board's chip, and run its <code>export.sh</code> in the terminal you build from. macOS or Linux.</p></li>
+  <li><p><b>Install ESP-IDF v6.1</b> - exactly this version, the one the firmware is built with since Reload OS 1.5.0
+    - with the target of your board's chip, and run its
+    <code>export.sh</code> in the terminal you build from. macOS or Linux. An app built with the 1.4.0 kit (ESP-IDF
+    v5.5.4) keeps working on 1.5.0.</p></li>
   <li><p><b>Unpack the kit and build the example</b> - the first build downloads LVGL and the ELF loader.</p>
-    <pre class="code"><code class="lang-bash">unzip ReloadOS-1.4.0-appkit.zip
+    <pre class="code"><code class="lang-bash">unzip ReloadOS-1.5.0-appkit.zip
 cd appkit
 ./build.sh hello            # -> hello/jc1060p470c/hello.elf</code></pre></li>
   <li><p><b>Copy it to the device</b>: open <code>http://&lt;device&gt;/files</code> in a browser (Settings › Remote
@@ -104,6 +107,8 @@ int main(int argc, char *argv[])     /* only hands the app back; the work starts
 
 <h2 id="more">More</h2>
 <div class="cards">
+  <div class="card"><div class="ico teal"><i class="i-apps"></i></div><h3><a href="android.html">Coming from Android</a></h3>
+    <p>What you know from Android - Studio, layouts, activities, APKs, the SDK - and what each is called here.</p></div>
   <div class="card"><div class="ico"><i class="i-code"></i></div><h3><a href="guide.html">App kit guide</a></h3>
     <p>Build, install, your own app, what an app can call, the rules, and what each message on the device means.</p></div>
   <div class="card"><div class="ico teal"><i class="i-apps"></i></div><h3><a href="api.html">API reference</a></h3>
@@ -117,12 +122,13 @@ int main(int argc, char *argv[])     /* only hands the app back; the work starts
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+      <p class="muted">Reload OS 1.5.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
         ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>
 <a href="../en/products.html">Products</a>
 <a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
 <a href="../studio/index.html">Studio</a>
 <a href="../docs/index.html">Developers</a></div>
   </div>

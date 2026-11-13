@@ -25,6 +25,7 @@
 <a href="../en/boards.html">Boards</a>
 <a href="../en/products.html">Products</a>
 <a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
 <a href="../studio/index.html" aria-current="page">Studio</a>
 <a href="../docs/index.html" aria-current="page">Developers</a>
       <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
@@ -32,33 +33,44 @@
   </div>
 </header>
 <main id="main">
-<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html">Overview &amp; download</a></li><li><a href="studio.html" aria-current=page>Studio</a></li><li><a href="guide.html">App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav></aside><article class="docs-main"><h1>Reload OS Studio</h1>
+<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html">Overview &amp; download</a></li><li><a href="android.html">Coming from Android</a></li><li><a href="studio.html" aria-current=page>Studio</a></li><li><a href="guide.html">App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav></aside><article class="docs-main"><h1>Reload OS Studio</h1>
 <p class="lead">A screen designer in the browser, in the manner of Android Studio's layout editor. The screen in the middle
   is the real interface: the same LVGL, shell, fonts and theme as on a device, compiled to WebAssembly. What you draw
-  exports as C for the app kit.</p>
+  exports as C for the app kit. Know Android? <a href="android.html">Coming from Android</a> says what each thing is
+  called here.</p>
 <p><a class="btn primary" href="../studio/index.html">Open Studio</a></p>
 
 <h2 id="use">How it works</h2>
 <ol class="steps">
   <li><p><b>Pick a board</b> in the toolbar, and turn the screen or switch to the light theme. The status bar is the real one.</p></li>
   <li><p><b>Drag widgets</b> from the Palette onto the screen or click to add one. A Column or a Row lays out what is in
-    it; a Free area keeps each widget where you put it, anchored to a corner, an edge or the centre.</p></li>
+    it; a Free area keeps each widget where you put it, anchored to a corner, an edge or the centre. <b>Tabs</b> has a
+    page a tab: click a tab on the screen (or its page in the tree) to work on it, <i>+ Add a tab</i> in Attributes for
+    another, and say which one the app opens on. A <b>Picture button</b> is a picture to tap: it darkens while pressed.</p></li>
   <li><p><b>Set them up</b> in Attributes. Sizes that fill or fit their content move with the screen; pixel sizes do not.
     Colours by name follow the light and dark theme on the device.</p></li>
   <li><p><b>Style them</b> (Attributes › Style): background and its opacity, text colour, border, corners, shadow,
     opacity and padding - for the normal look and, on its own tab, while the widget is <b>pressed</b>, <b>checked</b> or
     <b>disabled</b>. A dot on a tab says that look is set; <i>Clear the look</i> takes it back to the theme's.</p></li>
   <li><p><b>Say what happens</b> (Attributes › Events): a widget can have several events, each <i>when</i> it is
-    tapped, held, pressed, let go or its value changes, and <i>do</i> one thing - show a message, open a screen, go back,
+    tapped, held, pressed, let go or its value changes, and <i>do</i> one thing - show a message, show a dialog (a box
+    with a title, a text and OK), open a screen, go back,
     play a sound, call a function of yours, set another widget's text or value, show or hide it, enable or disable it,
     check or uncheck it, or play its animation. In a text, <code>{value}</code> is the widget's own value: a slider's
     number, a switch's On / Off, a dropdown's choice, what was typed - so <i>Brightness {value}%</i> on a label follows
-    a slider without a line of code. A screen's events run each time it is shown (select the screen, then Events). A
+    a slider without a line of code. A tab view's value is its tab: <i>Set a value</i> on it switches the tab (the
+    first is 0). A screen's events run each time it is shown (select the screen, then Events). A
     screen can come in fading or sliding (Screen › Comes in), and play a sound as it does (Screen › Plays); the way back
     is the way in, reversed.</p></li>
   <li><p><b>Animate</b> (Attributes › Animation): a widget fades in, slides in from a side, blinks, floats or shakes -
     its time, a wait before it, once, a few times or for ever, when the screen opens or when an event plays it.
     <i>Play</i> shows it on the screen.</p></li>
+  <li><p><b>The app's own colours and text size:</b> select the app (top of Project). <i>Colours of the app</i> are
+    yours by name - every colour list offers them, and changing one there changes every widget that uses it;
+    <i>Font size</i> is the size of every text that does not say its own.</p></li>
+  <li><p><b>My components:</b> right click a widget (a card with all that is in it, say) › <i>Save as a component</i>.
+    It appears in the Palette under My components; dragging it out makes a copy with ids of its own. Components are
+    kept with the design.</p></li>
   <li><p><b>Edit fast:</b> a right click on the screen or in the tree has cut, copy, paste, duplicate, delete, move up and
     down, wrap in a column / row / card and unwrap, hide and lock. Shift or Cmd / Ctrl and a click picks several:
     line them up by an edge or the middle, spread them evenly, move them together. In a Free area a widget being
@@ -80,7 +92,7 @@
     board you picked: copy it into <code>apps/</code> on the device's flash drive or SD card and restart the device. A
     compiler error comes back into Problems. Nothing of your app stays on the server.</p></li>
   <li><p><b>Export › Project folder</b> gives a zip of the app's folder instead, for the app kit on your own machine
-    (ESP-IDF 5.5.4) - when you write more of <code>app.c</code> than Studio shows:</p>
+    (ESP-IDF 6.1) - when you write more of <code>app.c</code> than Studio shows:</p>
     <pre class="code"><code class="lang-bash">unzip myapp.zip -d appkit
 cd appkit
 ./build.sh myapp jc         # -> myapp/jc1060p470c/myapp.elf</code></pre></li>
@@ -114,7 +126,12 @@ cd appkit
     <code>BACKSPACE</code>, <code>LEFT</code> ...) shows the symbol. A calendar with no date shows the device's month.</li>
   <li>The calendar, meter, spinbox, LED, keypad, toggle buttons, the screen transitions and the fade, slide and shake
     animations came after firmware 1.4.0: a device on 1.4.0 or older can't open an app that uses them (Settings › About ›
-    Check online). Styles, events, blink and float work on 1.4.0.</li>
+    Check online). Styles, events, blink and float work on 1.4.0, and so do tabs, dialogs, picture buttons and the
+    app's colours and text size - except a tab view that opens on another tab than its first, or whose tab an event
+    sets. Thai text in a design needs the newer firmware too.</li>
+  <li>In the C: the app's colours are <code>UI_C_NAME</code> in <code>ui.h</code>; a dialog is
+    <code>ui_dialog(title, text)</code>, one at a time, closed with the app; a tab's page is <code>ui.&lt;id&gt;</code>
+    like any box.</li>
   <li>In the C an event is a callback, <code>&lt;id&gt;_cb</code> (<code>&lt;id&gt;_long_cb</code> for a hold ...), with its
     actions in order; an animation is <code>anim_&lt;id&gt;()</code>; a screen's events are the last lines of its
     <code>build_&lt;screen&gt;()</code>. A function of yours called from a screen's events gets <code>NULL</code> for the event.</li>
@@ -126,12 +143,13 @@ cd appkit
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.4.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+      <p class="muted">Reload OS 1.5.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
         ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>
 <a href="../en/products.html">Products</a>
 <a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
 <a href="../studio/index.html" aria-current="page">Studio</a>
 <a href="../docs/index.html">Developers</a></div>
   </div>

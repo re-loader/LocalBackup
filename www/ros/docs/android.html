@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coming from Android · Reload OS</title>
+<meta name="description" content="Reload OS for Android developers: Studio, layouts, activities, APKs and the SDK you know from Android, and what each is called on Reload OS.">
+<link rel="canonical" href="https://server.re-loader.com/ros/docs/android.html">
+<meta property="og:title" content="Coming from Android · Reload OS">
+<meta property="og:description" content="Reload OS for Android developers: Studio, layouts, activities, APKs and the SDK you know from Android, and what each is called on Reload OS.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html" aria-current="page">Developers</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html">Overview &amp; download</a></li><li><a href="android.html" aria-current=page>Coming from Android</a></li><li><a href="studio.html">Studio</a></li><li><a href="guide.html">App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav></aside><article class="docs-main"><h1>Coming from Android</h1>
+<p class="lead">Reload OS follows the model you know from Android: a system with a launcher and Settings, apps that are
+  files you install, a Studio with a layout editor and an emulator, and an SDK. The device is an ESP32 touch screen
+  instead of a phone, and the language is C. This page says what each thing you know is called here.</p>
+<p><a class="btn primary" href="../studio/index.html">Open Studio</a> <a class="btn" href="index.html">Get the app kit</a></p>
+
+<h2 id="first-app">Your first app, step by step</h2>
+<ol class="steps">
+  <li><p><b>New project.</b> In <a href="../studio/index.html">Studio</a>: <i>New</i>, a template (Starter, Dashboard,
+    Form or Empty) and your board in the toolbar. Nothing to install - Studio runs in the browser.</p></li>
+  <li><p><b>Lay out the screen.</b> Drag widgets from the Palette, as in the layout editor. A Column or a Row is a
+    <code>LinearLayout</code>; a Free area places each widget by an anchor and an offset.</p></li>
+  <li><p><b>Wire it up.</b> Where you would write a click listener, pick an event in Attributes › Events: when it is
+    tapped, open a screen, set another widget's text, show a dialog. For logic of your own choose <i>Call a function</i>
+    and write it in <code>app.c</code>.</p></li>
+  <li><p><b>Run.</b> <i>Run</i> is the emulator: the device's real interface code in the browser, the mouse as a finger,
+    Esc as the back gesture.</p></li>
+  <li><p><b>Build.</b> Sign in and choose Export › ELF - the app is built on our server and comes back as one
+    <code>.elf</code> file, your APK. Or Export › Project folder and build it yourself with the
+    <a href="index.html">app kit</a>: <code>./build.sh myapp</code>.</p></li>
+  <li><p><b>Install.</b> Copy the file into <code>apps/</code> on the device: open <code>http://&lt;device&gt;/files</code>
+    in a browser (Settings › Remote desktop on the device shows the address and the login), or plug the device into a PC
+    as a USB drive, or use an SD card. Restart the device and tap the new tile.</p></li>
+</ol>
+
+<h2 id="map">What you know, and its name here</h2>
+
+<h3 id="tools">The tools</h3>
+<div class="table map"><table>
+  <tr><th>Android</th><th>Reload OS</th><th>Good to know</th></tr>
+  <tr><td>Android Studio</td><td><a href="studio.html">Reload OS Studio</a></td><td>In the browser</td></tr>
+  <tr><td>Layout editor, XML layouts</td><td>Studio's Design view; the design is a <code>.design</code> file</td>
+    <td>Exported as C (<code>ui.c</code>): built when the app is compiled, not inflated on the device</td></tr>
+  <tr><td>Emulator, layout preview</td><td>Studio › Run, and the <a href="../en/try.html">Try it</a> page</td>
+    <td>The real interface, compiled to WebAssembly</td></tr>
+  <tr><td>Lint</td><td>Studio › Problems</td><td>Checks the screen on every board, both ways round</td></tr>
+  <tr><td>Android SDK, Gradle</td><td>The <a href="index.html">app kit</a>: <code>build.sh</code>, <code>ros.h</code>,
+    <code>api.txt</code></td><td>ESP-IDF 6.1 underneath</td></tr>
+  <tr><td><code>./gradlew assemble</code></td><td><code>./build.sh myapp</code>, or Studio › Export › ELF</td><td></td></tr>
+  <tr><td><code>adb install</code></td><td>Copy the file into <code>apps/</code>, then restart the device</td>
+    <td>From a browser, a PC or an SD card</td></tr>
+  <tr><td>Logcat</td><td><code>ESP_LOGI()</code> into the device's log, on its USB serial port (115200)</td>
+    <td>Settings › About keeps the record of a crash</td></tr>
+  <tr><td>developer.android.com</td><td>The <a href="guide.html">app kit guide</a> and the
+    <a href="api.html">API reference</a></td><td></td></tr>
+</table></div>
+
+<h3 id="app">An app</h3>
+<div class="table map"><table>
+  <tr><th>Android</th><th>Reload OS</th><th>Good to know</th></tr>
+  <tr><td>APK</td><td>An <code>.elf</code> file</td><td>One file: the code, the pictures and the sounds</td></tr>
+  <tr><td><code>AndroidManifest.xml</code>: label and icon</td><td><code>ROS_ELFAPP_META(name, icon, colour)</code></td>
+    <td>The launcher reads it without loading the app</td></tr>
+  <tr><td>Permissions</td><td>None</td><td>An app runs with the firmware's full rights</td></tr>
+  <tr><td>Activity</td><td>A screen</td><td><code>ui_show(UI_DETAILS)</code> opens one and <code>ui_back()</code> goes
+    back: a back stack</td></tr>
+  <tr><td><code>onCreate()</code>, <code>onDestroy()</code></td><td><code>create(body)</code>, <code>destroy()</code></td>
+    <td><code>back()</code> is the back gesture</td></tr>
+  <tr><td>Service, background work</td><td>A task of your own while the app is open</td>
+    <td>It ends when the app closes</td></tr>
+  <tr><td>Google Play</td><td>-</td><td>You hand out the file</td></tr>
+</table></div>
+
+<h3 id="layouts">Layouts</h3>
+<div class="table map"><table>
+  <tr><th>Android</th><th>Reload OS</th><th>Good to know</th></tr>
+  <tr><td><code>LinearLayout</code>, vertical or horizontal</td><td>Column, Row</td><td>Gap, along, across, wrap</td></tr>
+  <tr><td><code>FrameLayout</code>, <code>ConstraintLayout</code></td><td>Free area</td>
+    <td>A widget is anchored to a corner, an edge or the centre, with an offset</td></tr>
+  <tr><td><code>CardView</code></td><td>Card</td><td></td></tr>
+  <tr><td><code>TabLayout</code> with a <code>ViewPager</code></td><td>Tabs</td><td>A page a tab</td></tr>
+  <tr><td><code>match_parent</code>, <code>wrap_content</code></td><td>Fill, Fit content</td><td>Or pixels, or percent</td></tr>
+  <tr><td><code>dp</code>, density buckets</td><td>Pixels</td>
+    <td>A board has one screen: design at its real size, and Problems checks the other boards</td></tr>
+  <tr><td><code>ScrollView</code></td><td>Any box</td><td>It scrolls when its contents don't fit</td></tr>
+  <tr><td><code>View.GONE</code>, <code>isEnabled</code></td><td>Hidden, Disabled</td><td>An event can change them</td></tr>
+</table></div>
+
+<h3 id="widgets">Widgets</h3>
+<div class="table map"><table>
+  <tr><th>Android</th><th>Reload OS</th><th>Good to know</th></tr>
+  <tr><td><code>TextView</code>, <code>EditText</code></td><td>Label, Text field</td><td>The system's keyboard comes up by itself</td></tr>
+  <tr><td><code>Button</code>, <code>ImageButton</code>, <code>ToggleButton</code></td>
+    <td>Button, Picture button, a Button with Toggle</td><td></td></tr>
+  <tr><td><code>CheckBox</code>, <code>Switch</code>, <code>SeekBar</code>, <code>ProgressBar</code></td>
+    <td>Checkbox, Switch, Slider, Progress bar</td><td>Also Arc, Meter, Spinner</td></tr>
+  <tr><td><code>Spinner</code>, <code>NumberPicker</code></td><td>Dropdown, Roller, Spinbox</td><td></td></tr>
+  <tr><td><code>ImageView</code></td><td>Picture, Icon</td><td></td></tr>
+  <tr><td><code>RecyclerView</code>, <code>TableLayout</code></td><td>List, Table</td><td></td></tr>
+  <tr><td><code>AlertDialog</code></td><td>The event <i>Show a dialog</i>, or <code>ui_dialog(title, text)</code></td><td></td></tr>
+  <tr><td><code>Toast</code></td><td>The event <i>Show a message</i>, or <code>ros_toast()</code></td><td></td></tr>
+  <tr><td>-</td><td>QR code, Chart, Keypad, LED</td><td>Made for kiosks and machines</td></tr>
+</table></div>
+
+<h3 id="resources">Resources</h3>
+<div class="table map"><table>
+  <tr><th>Android</th><th>Reload OS</th><th>Good to know</th></tr>
+  <tr><td><code>res/drawable</code>, <code>res/raw</code></td><td>Assets: pictures and sounds</td>
+    <td>Inside the <code>.elf</code>; <code>ui_picture()</code>, <code>ui_sound()</code></td></tr>
+  <tr><td><code>colors.xml</code></td><td>Colours of the app</td>
+    <td><code>UI_C_NAME</code> in <code>ui.h</code>; change one and every widget that uses it follows</td></tr>
+  <tr><td>Theme colours, night mode</td><td><code>ROS_C_TEXT</code>, <code>ROS_C_ACCENT</code> ...</td>
+    <td>They follow the device's light and dark theme</td></tr>
+  <tr><td>Styles, state lists (<code>selector</code>)</td><td>Attributes › Style</td>
+    <td>Normal, pressed, checked, disabled</td></tr>
+  <tr><td>Animations, transitions</td><td>Attributes › Animation; Screen › Comes in</td><td></td></tr>
+  <tr><td><code>strings.xml</code></td><td>-</td><td>Texts are in the design</td></tr>
+</table></div>
+
+<h3 id="code">Code</h3>
+<div class="table map"><table>
+  <tr><th>Android</th><th>Reload OS</th><th>Good to know</th></tr>
+  <tr><td>Kotlin, Java</td><td>C</td><td>With LVGL 9.2 for the interface</td></tr>
+  <tr><td><code>findViewById(R.id.title)</code></td><td><code>ui.title</code></td><td>The widget's Id in Studio</td></tr>
+  <tr><td><code>setOnClickListener { }</code></td><td>Attributes › Events - or <i>Call a function</i></td>
+    <td><code>void on_save(lv_event_t *e)</code> in <code>app.c</code></td></tr>
+  <tr><td><code>startActivity()</code></td><td><code>ui_show(UI_DETAILS)</code></td><td></td></tr>
+  <tr><td><code>Handler.postDelayed()</code>, <code>Timer</code></td><td><code>lv_timer_create()</code></td>
+    <td>Runs on the interface's task</td></tr>
+  <tr><td>Threads, coroutines, <code>runOnUiThread</code></td>
+    <td>A FreeRTOS task, with <a href="api.html#ros_lock"><code>ros_lock()</code></a> / <code>ros_unlock()</code> around
+      its interface calls</td><td></td></tr>
+  <tr><td><code>SharedPreferences</code></td><td>NVS, in a namespace of your own</td><td><code>nvs_get_*</code>, <code>nvs_set_*</code></td></tr>
+  <tr><td><code>File</code></td><td><code>fopen()</code></td><td>The flash drive and the SD card</td></tr>
+  <tr><td><code>MediaPlayer</code>, <code>SoundPool</code></td><td><code>ros_audio_*</code>, <code>ui_sound()</code></td><td></td></tr>
+  <tr><td><code>Log.d()</code></td><td><code>ESP_LOGI()</code></td><td></td></tr>
+</table></div>
+
+<h2 id="code-twice">The same screen, twice</h2>
+<p>A button that changes a text. On Android:</p>
+<pre class="code"><code class="lang-kotlin">class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.main)
+        findViewById&lt;Button&gt;(R.id.save).setOnClickListener {
+            findViewById&lt;TextView&gt;(R.id.status).text = "Saved"
+        }
+    }
+}</code></pre>
+<p>On Reload OS the layout is Studio's <code>ui.c</code>, and this is all of your <code>app.c</code> besides the lines
+  Studio writes for the launcher's tile. In Studio the button's event is <i>Call a function</i>, <code>on_save</code> -
+  or, with no code at all, <i>Set a text</i>.</p>
+<pre class="code"><code class="lang-c">#include "ui.h"
+
+void on_save(lv_event_t *e)              /* the button's event */
+{
+    lv_label_set_text(ui.status, "Saved");
+}
+
+static void create(lv_obj_t *body)       /* onCreate(): the first screen */
+{
+    ui_start(body);
+}
+
+static void destroy(void)                /* onDestroy() */
+{
+    ui_stop();
+}</code></pre>
+
+<h2 id="different">What is different</h2>
+<div class="callout"><p style="margin:0">The device is a microcontroller, not a phone. These are the habits to change;
+  the <a href="guide.html#rules-the-ones-that-restart-the-device-when-broken">guide's rules</a> have the details.</p></div>
+<ul class="ticks">
+  <li><b>One process, no sandbox.</b> An app runs inside the firmware with its full rights. There are no permissions to
+    ask for, and a crash in an app restarts the device.</li>
+  <li><b>The main-thread rule is stricter.</b> As on Android, nothing slow on the interface's task: no network, files or
+    serial lines there. Android says the app isn't responding; here a screen that does not respond for 60 s restarts
+    the device.</li>
+  <li><b>Memory is counted in megabytes.</b> About 100 KB of the fast internal RAM is free; big buffers come from
+    PSRAM.</li>
+  <li><b>Nothing runs in the background.</b> When the app closes, its tasks end: count them, and end each with
+    <a href="api.html#ros_task_end"><code>ros_task_end()</code></a>.</li>
+  <li><b>The screen is the board's.</b> One size a board, from 320×480 to 1280×800, mounted either way round:
+    <code>ROS_SCR_W</code>, <code>ROS_SCR_H</code> and <code>ROS_PORTRAIT</code> say which.</li>
+  <li><b>Turning the screen or changing the theme closes the app</b> and builds its screen again - an activity
+    recreated, without a saved state.</li>
+  <li><b>Only what the firmware exports.</b> <code>api.txt</code> is the whole SDK; <code>double</code> is not in it -
+    use <code>float</code> or integers.</li>
+</ul>
+
+<h2 id="not-yet">What Android has and Reload OS does not yet</h2>
+<p>Installing on the device from Studio in one step, a log window, string resources for several languages, an app
+  store, and signed apps. If you miss one of them, tell <a href="https://www.re-loader.com">Reloader</a>.</p>
+</article></div>
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.5.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>
