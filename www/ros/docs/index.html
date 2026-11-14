@@ -38,7 +38,7 @@
   launcher shows it as a tile; a tap reads it into memory, links it against the firmware and runs it. The app kit builds
   one without the firmware's source.</p>
 
-<div class="download" id="download"><div><h3>App kit 1.5.0</h3><p class="muted" style="margin:0">For Reload OS 1.5.0, and later firmware with app interface 2 · zip, 73 KB</p></div><a class="btn primary" href="../downloads/ReloadOS-1.5.0-appkit.zip" download>Download</a><div class="sha">SHA-256 6bffdffa6ea70c124cc70271914f3be7819be585aebd2436b803e4ca3702ca06</div></div>
+<div class="download" id="download"><div><h3>App kit 1.5.1</h3><p class="muted" style="margin:0">For Reload OS 1.5.1, and later firmware with app interface 2 · zip, 74 KB</p></div><a class="btn primary" href="../downloads/ReloadOS-1.5.1-appkit.zip" download>Download</a><div class="sha">SHA-256 780c8c08428086ff6d8c45768c6616821ed8376c7c7c7cf80ae31e0420686d76</div></div><p class="muted">A device on older firmware needs the kit of its version: <a href="../downloads/ReloadOS-1.5.0-appkit.zip" download>1.5.0</a>.</p>
 <p class="muted">In it: <code>build.sh</code> and <code>new.sh</code>, the <code>hello</code> example, and
   <code>reloados/</code> - the firmware's <code>ros.h</code>, its configuration and <code>api.txt</code>, the list of
   everything an app may call. A kit belongs to one firmware version (<code>reloados/VERSION</code>); the apps it builds
@@ -51,7 +51,7 @@
     <code>export.sh</code> in the terminal you build from. macOS or Linux. An app built with the 1.4.0 kit (ESP-IDF
     v5.5.4) keeps working on 1.5.0.</p></li>
   <li><p><b>Unpack the kit and build the example</b> - the first build downloads LVGL and the ELF loader.</p>
-    <pre class="code"><code class="lang-bash">unzip ReloadOS-1.5.0-appkit.zip
+    <pre class="code"><code class="lang-bash">unzip ReloadOS-1.5.1-appkit.zip
 cd appkit
 ./build.sh hello            # -> hello/jc1060p470c/hello.elf</code></pre></li>
   <li><p><b>Copy it to the device</b>: open <code>http://&lt;device&gt;/files</code> in a browser (Settings › Remote
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])     /* only hands the app back; the work starts
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.5.0 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+      <p class="muted">Reload OS 1.5.1 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
         ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>
