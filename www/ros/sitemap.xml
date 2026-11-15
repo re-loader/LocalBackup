@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://server.re-loader.com/ros/account.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/boards.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/docs/android.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/docs/api.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/docs/guide.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/docs/</loc></url>
   <url><loc>https://server.re-loader.com/ros/docs/studio.html</loc></url>
+  <url><loc>https://server.re-loader.com/ros/en/account.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/en/boards.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/en/features.html</loc></url>
   <url><loc>https://server.re-loader.com/ros/en/</loc></url>

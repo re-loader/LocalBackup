@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>บัญชี · Reload OS</title>
+<meta name="description" content="บัญชี Reload OS ของคุณ: ลงชื่อเข้าใช้ เพิ่มเครื่องด้วยรหัสบนหน้าจอ ดูว่าแต่ละเครื่องใช้เวอร์ชันใด และรับอีเมลเมื่อมีอัปเดต เป็นบัญชีเดียวกับ Reload OS Studio">
+<link rel="canonical" href="https://server.re-loader.com/ros/account.html">
+<meta property="og:title" content="บัญชี · Reload OS">
+<meta property="og:description" content="บัญชี Reload OS ของคุณ: ลงชื่อเข้าใช้ เพิ่มเครื่องด้วยรหัสบนหน้าจอ ดูว่าแต่ละเครื่องใช้เวอร์ชันใด และรับอีเมลเมื่อมีอัปเดต เป็นบัญชีเดียวกับ Reload OS Studio">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="features.html">ฟีเจอร์</a>
+<a href="boards.html">บอร์ด</a>
+<a href="products.html">ผลิตภัณฑ์</a>
+<a href="try.html">ลองใช้</a>
+<a href="install.html">ติดตั้ง</a>
+<a href="studio/index.html">Studio</a>
+<a href="docs/index.html">นักพัฒนา</a>
+<a href="account.html" aria-current="page">บัญชี</a>
+<a class="lang" href="en/account.html" hreflang="en" lang="en">EN</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">บัญชี</p>
+    <h1>บัญชี Reload OS</h1>
+    <p class="lead">บัญชีเดียวสำหรับเครื่องของคุณและ Studio เพิ่มเครื่องด้วยรหัสบนหน้าจอ ดูว่าแต่ละเครื่องใช้เวอร์ชันใด
+      และรับอีเมลเมื่อมีอัปเดต ไม่บังคับ: เครื่องใช้งาน อัปเดต และ activate ได้โดยไม่ต้องมีบัญชี</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap acct" id="account" data-root="" data-api="https://reloados.re-loader.com/api/studio" data-lang="th">
+    <noscript><p class="callout">หน้านี้ต้องใช้ JavaScript</p></noscript>
+    <p class="muted" id="acct-wait" role="status">กำลังโหลด…</p>
+
+    <div class="acct-box" id="acct-sign" hidden>
+      <p class="callout teal" id="acct-code-note" hidden></p>
+      <form id="acct-form" novalidate>
+        <h2 id="acct-title">ลงชื่อเข้าใช้</h2>
+        <p class="muted" id="acct-note"></p>
+        <label id="f-name" hidden>ชื่อของคุณ <input id="acct-name" autocomplete="name" maxlength="80"></label>
+        <label id="f-email">อีเมล <input id="acct-email" type="email" autocomplete="email" maxlength="254"></label>
+        <label id="f-pass">รหัสผ่าน <input id="acct-pass" type="password" autocomplete="current-password" maxlength="200"></label>
+        <p class="acct-err" id="acct-err" role="alert"></p>
+        <div class="acct-row">
+          <button type="submit" class="btn primary" id="acct-go">ลงชื่อเข้าใช้</button>
+          <button type="button" class="acct-link" id="acct-switch"></button>
+          <button type="button" class="acct-link" id="acct-forgot">ลืมรหัสผ่าน?</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="acct-in" hidden>
+      <div class="acct-head">
+        <p><span class="muted">ลงชื่อเข้าใช้ในชื่อ</span> <strong id="acct-who"></strong></p>
+        <button type="button" class="btn" id="acct-out">ออกจากระบบ</button>
+      </div>
+
+      <div class="card acct-add" id="acct-link" hidden>
+        <h3>เพิ่มเครื่องนี้หรือไม่?</h3>
+        <p id="acct-link-what"></p>
+        <label>ชื่อเครื่องในบัญชีของคุณ <input id="acct-link-name" maxlength="60" placeholder="เคาน์เตอร์หน้า"></label>
+        <p class="acct-err" id="acct-link-err" role="alert"></p>
+        <div class="acct-row">
+          <button type="button" class="btn primary" id="acct-link-yes">เพิ่มเครื่อง</button>
+          <button type="button" class="btn" id="acct-link-no">ยังก่อน</button>
+        </div>
+      </div>
+      <p class="callout teal" id="acct-done" role="status" hidden></p>
+
+      <h2>เครื่องของฉัน</h2>
+      <p class="muted" id="acct-empty" hidden>ยังไม่มีเครื่อง ที่เครื่อง: Settings › Account › Sign in <span class="badge accent next">รุ่นถัดไป</span>
+        แล้วสแกนรหัสด้วยมือถือ หรือพิมพ์รหัสด้านล่าง</p>
+      <div class="acct-devices" id="acct-devices"></div>
+
+      <form class="acct-code" id="acct-code-form" novalidate>
+        <label for="acct-code">เพิ่มเครื่อง: รหัสบนหน้าจอเครื่อง</label>
+        <div class="acct-row">
+          <input id="acct-code" maxlength="12" placeholder="ABCD-2345" autocomplete="off" autocapitalize="characters" spellcheck="false">
+          <button type="submit" class="btn">ค้นหา</button>
+        </div>
+        <p class="acct-err" id="acct-code-err" role="alert"></p>
+      </form>
+
+      <div class="acct-prefs">
+        <label class="acct-check"><input type="checkbox" id="acct-notify"> ส่งอีเมลถึงฉันเมื่อมีอัปเดตสำหรับเครื่องของฉัน</label>
+        <label class="acct-inline">ภาษาของอีเมล <select id="acct-lang"><option value="th">ไทย</option><option value="en">English</option></select></label>
+      </div>
+      <p class="muted">งานออกแบบของคุณอยู่ใน <a href="studio/index.html">Studio</a> ด้วยบัญชีเดียวกัน
+        เครื่องออกจากบัญชีเมื่อคุณลบที่นี่ หรือกด Settings › Account › Sign out ที่เครื่อง</p>
+    </div>
+  </div>
+</section>
+<script type="application/json" id="acct-texts">
+{
+ "offline": "บริการบัญชีไม่ตอบในขณะนี้ ลองใหม่อีกครั้งในอีกสักครู่",
+ "titles": { "in": "ลงชื่อเข้าใช้", "up": "สร้างบัญชี", "forgot": "ตั้งรหัสผ่านใหม่", "reset": "ตั้งรหัสผ่านของคุณ" },
+ "go": { "in": "ลงชื่อเข้าใช้", "up": "สร้างบัญชี", "forgot": "ส่งลิงก์ให้ฉัน", "reset": "ตั้งรหัสผ่าน" },
+ "notes": {
+  "in": "บัญชีเดียวกับใน Reload OS Studio",
+  "inClosed": "บัญชีเดียวกับใน Reload OS Studio ขณะนี้ Reloader เป็นผู้สร้างบัญชีให้",
+  "up": "เราจะส่งอีเมลเพื่อยืนยันที่อยู่ รหัสผ่านอย่างน้อย 8 ตัวอักษร",
+  "forgot": "เราจะส่งอีเมลพร้อมลิงก์สำหรับตั้งรหัสผ่านใหม่",
+  "reset": "รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร"
+ },
+ "toUp": "สร้างบัญชี", "toIn": "ลงชื่อเข้าใช้",
+ "resend": "ส่งอีเมลอีกครั้ง",
+ "sent": "ส่งอีเมลไปที่ %s แล้ว กดลิงก์ในอีเมลเพื่อยืนยันที่อยู่ แล้วกลับมาลงชื่อเข้าใช้ที่นี่",
+ "sentIf": "หาก %s มีบัญชี อีเมลพร้อมลิงก์กำลังไปถึง",
+ "resent": "หาก %s ยังรอการยืนยัน อีเมลฉบับใหม่กำลังไปถึง",
+ "verified": "ยืนยันอีเมลแล้ว ลงชื่อเข้าใช้ได้เลย",
+ "resetDone": "ตั้งรหัสผ่านใหม่แล้ว ลงชื่อเข้าใช้ได้เลย",
+ "codeNote": "รหัสเครื่อง %s: ลงชื่อเข้าใช้เพื่อเพิ่มเครื่องนี้เข้าบัญชีของคุณ",
+ "what": "%b · %p · Reload OS %v · %l",
+ "id": "เครื่อง %s",
+ "mine": "เครื่องนี้อยู่ในบัญชีของคุณแล้วในชื่อ “%s” การเพิ่มอีกครั้งคือการให้เครื่องลงชื่อเข้าใช้ใหม่",
+ "added": "เพิ่ม “%s” แล้ว เครื่องจะดำเนินการต่อเองภายในไม่กี่วินาที",
+ "licensed": "activate แล้ว", "free": "ยังไม่ activate",
+ "update": "อัปเดต: %s", "current": "เป็นเวอร์ชันล่าสุด",
+ "howto": "ที่เครื่อง: Settings › About › Check online",
+ "seen": "ติดต่อล่าสุด %s", "now": "เมื่อสักครู่", "min": "%s นาทีที่แล้ว", "hour": "%s ชั่วโมงที่แล้ว", "day": "%s วันที่แล้ว",
+ "rename": "เปลี่ยนชื่อ", "remove": "ลบ",
+ "renameAsk": "ชื่อของเครื่องนี้:",
+ "removeAsk": "ลบ “%s” ออกจากบัญชีของคุณหรือไม่? เครื่องจะออกจากบัญชีเองเมื่อติดต่อเซิร์ฟเวอร์ครั้งถัดไป",
+ "errors": {
+  "Wrong email or password": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+  "Confirm your email first: the link is in the mail we sent": "ยืนยันอีเมลก่อน: ลิงก์อยู่ในอีเมลที่เราส่งให้",
+  "An email address, please": "กรุณาใส่อีเมล",
+  "A password of 8 characters or more": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+  "Too many tries: wait a few minutes": "ลองหลายครั้งเกินไป รอสักครู่แล้วลองใหม่",
+  "Too many requests: wait a few minutes": "มีคำขอมากเกินไป รอสักครู่แล้วลองใหม่",
+  "This code is not known or too old: tap Sign in on the device again for a new one": "ไม่พบรหัสนี้ หรือรหัสหมดอายุแล้ว กด Sign in ที่เครื่องอีกครั้งเพื่อรับรหัสใหม่",
+  "A code is 8 letters and digits, as on the device: ABCD-2345": "รหัสมีตัวอักษรและตัวเลข 8 ตัว ตามที่แสดงบนเครื่อง เช่น ABCD-2345",
+  "This device is in another account: remove it there first, or ask Reloader": "เครื่องนี้อยู่ในบัญชีอื่น ลบออกจากบัญชีนั้นก่อน หรือติดต่อ Reloader",
+  "Sign in first": "กรุณาลงชื่อเข้าใช้ก่อน",
+  "This link has been used or is too old: sign up again for a new one": "ลิงก์นี้ถูกใช้แล้วหรือหมดอายุ สมัครใหม่อีกครั้งเพื่อรับลิงก์ใหม่",
+  "This link has been used or is too old: ask for a new one": "ลิงก์นี้ถูกใช้แล้วหรือหมดอายุ ขอลิงก์ใหม่อีกครั้ง",
+  "Sign-up is closed on this server for now: ask Reloader for an account": "ขณะนี้ยังไม่เปิดให้สมัครเอง ติดต่อ Reloader เพื่อขอบัญชี",
+  "A name for the device": "กรุณาตั้งชื่อเครื่อง",
+  "No such device of yours": "ไม่พบเครื่องนี้ในบัญชีของคุณ",
+  "The server does not answer": "เซิร์ฟเวอร์ไม่ตอบ",
+  "Something went wrong on the server": "เกิดข้อผิดพลาดที่เซิร์ฟเวอร์"
+ }
+}
+</script>
+<script src="assets/account.js"></script>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="index.html"><img src="assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.5.1 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
+    <div class="foot-links"><a href="features.html">ฟีเจอร์</a>
+<a href="boards.html">บอร์ด</a>
+<a href="products.html">ผลิตภัณฑ์</a>
+<a href="try.html">ลองใช้</a>
+<a href="install.html">ติดตั้ง</a>
+<a href="studio/index.html">Studio</a>
+<a href="docs/index.html">นักพัฒนา</a>
+<a href="account.html" aria-current="page">บัญชี</a>
+<a class="lang" href="en/account.html" hreflang="en" lang="en">EN</a></div>
+  </div>
+</footer>
+<script src="assets/site.js"></script>
+</body>
+</html>

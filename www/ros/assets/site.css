@@ -46,11 +46,12 @@ p { margin: 0 0 1em; }
 .top { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
 .top-in { display: flex; align-items: center; gap: 16px; height: 60px; }
-.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 1.12rem; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 1.12rem;
+  white-space: nowrap; }
 .brand:hover { text-decoration: none; }
 .brand.small { font-size: 1rem; gap: 8px; }
 .site-nav { margin-left: auto; display: flex; align-items: center; gap: 4px; }
-.site-nav a { color: var(--muted); padding: 8px 12px; border-radius: 9px; font-weight: 500; }
+.site-nav a { color: var(--muted); padding: 8px 12px; border-radius: 9px; font-weight: 500; white-space: nowrap; }
 .site-nav a:hover { color: var(--text); background: var(--surface); text-decoration: none; }
 .site-nav a[aria-current] { color: var(--text); background: var(--surface2); }
 .site-nav a.lang { border: 1px solid var(--border); padding: 5px 10px; margin-left: 6px; font-size: .9rem; }
@@ -59,7 +60,9 @@ p { margin: 0 0 1em; }
 .theme-btn:hover { color: var(--text); }
 .menu-btn { display: none; margin-left: auto; gap: 4px; padding: 9px 9px; }
 .menu-btn span { display: block; height: 2px; width: 16px; background: currentColor; border-radius: 2px; }
-@media (max-width: 760px) {
+/* the menu behind its button where its entries do not fit on one line: the English one needs 946 px (the Thai one 853)
+ * since "Account" joined it (2026-11-15) - narrower, the words of an entry broke onto two lines */
+@media (max-width: 980px) {
   .menu-btn { display: grid; }
   .site-nav { display: none; position: absolute; left: 0; right: 0; top: 60px; flex-direction: column; align-items: stretch;
     background: var(--bg); border-bottom: 1px solid var(--border); padding: 8px 16px 14px; }
@@ -300,3 +303,39 @@ kbd { font-family: var(--mono); font-size: .85em; padding: 1px 6px; border: 1px 
 .install-info { font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
 .install-info code { font-size: .8rem; }
 esp-web-install-button[hidden] { display: none; }
+
+/* the account page (pages/<lang>/account.html, assets/account.js) */
+#acct-in { max-width: 760px; }
+.acct [hidden] { display: none !important; }       /* the rules below set display: they would show what is hidden */
+.acct-box { max-width: 460px; }
+.acct label { display: block; font-weight: 500; margin: 0 0 14px; }
+.acct input:not([type="checkbox"]), .acct select { display: block; width: 100%; margin-top: 6px; font: inherit; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+.acct select { display: inline-block; width: auto; margin: 0 0 0 6px; padding: 6px 10px; }
+.acct input:focus, .acct select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.acct button { font: inherit; cursor: pointer; }
+.acct button:disabled { opacity: .6; cursor: default; }
+.acct .btn.small { padding: 7px 14px; border-radius: 9px; font-size: .92rem; }
+.acct-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.acct-link { background: none; border: 0; padding: 0; color: var(--accent); }
+.acct-link:hover { text-decoration: underline; }
+.acct-err { color: var(--err); min-height: 1.2em; margin: 0 0 12px; }
+.acct-err:empty { min-height: 0; margin: 0; }
+.acct-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+.acct-head p { margin: 0; overflow-wrap: anywhere; }
+.acct-add { margin-bottom: 20px; border-color: var(--accent); }
+.acct-add h3 { margin-top: 0; }
+.acct h2 { margin-top: 8px; }
+.acct-devices { display: grid; gap: 10px; margin-bottom: 24px; }
+.acct-dev { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; }
+.acct-dev-main { min-width: 0; flex: 1 1 280px; }
+.acct-dev-main p { margin: 0; overflow-wrap: anywhere; }
+.acct-dev-name strong { font-size: 1.08rem; }
+.acct-dev-id { font-family: var(--mono); font-size: .82rem; color: var(--muted); }
+.acct-dev-acts { display: flex; gap: 8px; }
+.acct-code { margin-bottom: 20px; }
+.acct-code .acct-row input { flex: 1 1 180px; width: auto; margin: 0; max-width: 240px; text-transform: uppercase; font-family: var(--mono); letter-spacing: .08em; }
+.acct-prefs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-bottom: 16px; }
+.acct-prefs label { margin: 0; font-weight: 400; }
+.acct-check input { margin-right: 6px; }

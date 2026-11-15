@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account · Reload OS</title>
+<meta name="description" content="Your Reload OS Account: sign in, add a device by the code on its screen, see what each device runs and get a mail when an update is out. The same account as Reload OS Studio.">
+<link rel="canonical" href="https://server.re-loader.com/ros/en/account.html">
+<meta property="og:title" content="Account · Reload OS">
+<meta property="og:description" content="Your Reload OS Account: sign in, add a device by the code on its screen, see what each device runs and get a mail when an update is out. The same account as Reload OS Studio.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a href="../en/account.html" aria-current="page">Account</a>
+<a class="lang" href="../account.html" hreflang="th" lang="th">ไทย</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Account</p>
+    <h1>Reload OS Account</h1>
+    <p class="lead">One account for your devices and for Studio. Add a device by the code on its screen, see what each
+      one runs, and get a mail when an update is out. It is optional: a device works, updates and activates without
+      an account.</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap acct" id="account" data-root="../" data-api="https://reloados.re-loader.com/api/studio" data-lang="en">
+    <noscript><p class="callout">This page needs JavaScript.</p></noscript>
+    <p class="muted" id="acct-wait" role="status">Loading…</p>
+
+    <div class="acct-box" id="acct-sign" hidden>
+      <p class="callout teal" id="acct-code-note" hidden></p>
+      <form id="acct-form" novalidate>
+        <h2 id="acct-title">Sign in</h2>
+        <p class="muted" id="acct-note"></p>
+        <label id="f-name" hidden>Your name <input id="acct-name" autocomplete="name" maxlength="80"></label>
+        <label id="f-email">Email <input id="acct-email" type="email" autocomplete="email" maxlength="254"></label>
+        <label id="f-pass">Password <input id="acct-pass" type="password" autocomplete="current-password" maxlength="200"></label>
+        <p class="acct-err" id="acct-err" role="alert"></p>
+        <div class="acct-row">
+          <button type="submit" class="btn primary" id="acct-go">Sign in</button>
+          <button type="button" class="acct-link" id="acct-switch"></button>
+          <button type="button" class="acct-link" id="acct-forgot">Forgot the password?</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="acct-in" hidden>
+      <div class="acct-head">
+        <p><span class="muted">Signed in as</span> <strong id="acct-who"></strong></p>
+        <button type="button" class="btn" id="acct-out">Sign out</button>
+      </div>
+
+      <div class="card acct-add" id="acct-link" hidden>
+        <h3>Add this device?</h3>
+        <p id="acct-link-what"></p>
+        <label>Its name in your account <input id="acct-link-name" maxlength="60" placeholder="Front desk"></label>
+        <p class="acct-err" id="acct-link-err" role="alert"></p>
+        <div class="acct-row">
+          <button type="button" class="btn primary" id="acct-link-yes">Add the device</button>
+          <button type="button" class="btn" id="acct-link-no">Not now</button>
+        </div>
+      </div>
+      <p class="callout teal" id="acct-done" role="status" hidden></p>
+
+      <h2>My devices</h2>
+      <p class="muted" id="acct-empty" hidden>No device yet. On the device: Settings › Account › Sign in <span class="badge accent next">Next release</span> -
+        then scan its code with a phone, or type it below.</p>
+      <div class="acct-devices" id="acct-devices"></div>
+
+      <form class="acct-code" id="acct-code-form" novalidate>
+        <label for="acct-code">Add a device: the code on its screen</label>
+        <div class="acct-row">
+          <input id="acct-code" maxlength="12" placeholder="ABCD-2345" autocomplete="off" autocapitalize="characters" spellcheck="false">
+          <button type="submit" class="btn">Find it</button>
+        </div>
+        <p class="acct-err" id="acct-code-err" role="alert"></p>
+      </form>
+
+      <div class="acct-prefs">
+        <label class="acct-check"><input type="checkbox" id="acct-notify"> Mail me when an update is out for my devices</label>
+        <label class="acct-inline">Mails in <select id="acct-lang"><option value="en">English</option><option value="th">ไทย</option></select></label>
+      </div>
+      <p class="muted">Your designs are in <a href="../studio/index.html">Studio</a>, with the same account. A device
+        leaves the account when you remove it here, or with Settings › Account › Sign out on the device.</p>
+    </div>
+  </div>
+</section>
+<script type="application/json" id="acct-texts">
+{
+ "offline": "The account service does not answer just now. Try again in a moment.",
+ "titles": { "in": "Sign in", "up": "Create an account", "forgot": "A new password", "reset": "Set your password" },
+ "go": { "in": "Sign in", "up": "Create the account", "forgot": "Send me a link", "reset": "Set the password" },
+ "notes": {
+  "in": "The same account as in Reload OS Studio.",
+  "inClosed": "The same account as in Reload OS Studio. Accounts are made by Reloader for now.",
+  "up": "We send a mail to confirm the address. The password: 8 characters or more.",
+  "forgot": "We send a mail with a link to set a new password.",
+  "reset": "A new password: 8 characters or more."
+ },
+ "toUp": "Create an account", "toIn": "Sign in instead",
+ "resend": "Send the mail again",
+ "sent": "A mail is on its way to %s: its link confirms the address. Then sign in here.",
+ "sentIf": "If %s has an account, a mail with a link is on its way.",
+ "resent": "If %s waits for its confirmation, a new mail is on its way.",
+ "verified": "Your email is confirmed: sign in.",
+ "resetDone": "Your new password is set: sign in.",
+ "codeNote": "Device code %s: sign in to add that device to your account.",
+ "what": "%b · %p · Reload OS %v · %l",
+ "id": "Device %s",
+ "mine": "It is in your account already as “%s”: adding it again gives the device a new sign-in.",
+ "added": "“%s” is added. The device finishes by itself in a few seconds.",
+ "licensed": "activated", "free": "not activated",
+ "update": "Update: %s", "current": "Up to date",
+ "howto": "On the device: Settings › About › Check online.",
+ "seen": "seen %s", "now": "just now", "min": "%s min ago", "hour": "%s h ago", "day": "%s d ago",
+ "rename": "Rename", "remove": "Remove",
+ "renameAsk": "A name for this device:",
+ "removeAsk": "Remove “%s” from your account? The device signs itself out at its next contact.",
+ "errors": {
+  "Wrong email or password": "Wrong email or password",
+  "The server does not answer": "The server does not answer"
+ }
+}
+</script>
+<script src="../assets/account.js"></script>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.5.1 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a href="../en/account.html" aria-current="page">Account</a>
+<a class="lang" href="../account.html" hreflang="th" lang="th">ไทย</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js"></script>
+</body>
+</html>
