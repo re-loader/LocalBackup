@@ -29,7 +29,9 @@
         screenX: e.screenX, screenY: e.screenY, buttons: e.buttons, bubbles: true, cancelable: true, view: window }));
     }, true);
   });
-  var base = stage.dataset.base;
+  /* ver: the renderer's files by the address of this build (website/build.py, version_assets) - the server lets a
+   * browser keep them for a day, and a kept script with a new .wasm, or the other way round, can fail to start */
+  var base = stage.dataset.base, ver = stage.dataset.v ? '?v=' + stage.dataset.v : '';
   var light = (document.documentElement.dataset.theme ||
                (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')) === 'light';
   function fail(msg) { load.textContent = msg; load.classList.add('err'); }
@@ -37,13 +39,13 @@
   /* the UI's tasks run on threads: SharedArrayBuffer, which a browser gives a cross-origin isolated page only */
   if (!window.crossOriginIsolated) { fail(stage.dataset.isolation); return; }
   var js = document.createElement('script');
-  js.src = base + s.file + '.js';
+  js.src = base + s.file + '.js' + ver;
   js.onerror = function () { fail(stage.dataset.missing); };
   js.onload = function () {
     window.RosSim({
       canvas: canvas,
       arguments: [s.w + 'x' + s.h].concat(location.hash === '#log' ? ['log', '1'] : [], ['theme', light ? '1' : '0', 'free', '0', 'wifi', 'connected']).concat(s.args || [], ['live']),
-      locateFile: function (p) { return base + p; },
+      locateFile: function (p) { return base + p + ver; },
       print: function () {},
       printErr: function (t) { if (window.console) console.log('[Reload OS] ' + t); },
       onAbort: function () { fail(stage.dataset.crashed); }
