@@ -96,7 +96,7 @@
         var again = el('button', 'acct-link', T.resend);
         again.type = 'button';
         again.addEventListener('click', function () {
-          api('POST', '/resend', { email: email, page: 'account' }).then(function () { form('in', fill(T.resent, email)); }, err);
+          api('POST', '/resend', { email: email, page: 'account', lang: LANG }).then(function () { form('in', fill(T.resent, email)); }, err);
         });
         $('acct-err').append(' ', again);
       }
@@ -112,9 +112,19 @@
       p = api('POST', '/signup', { email: email, password: pass, name: name, lang: LANG, page: 'account' })
         .then(function () { form('in', fill(T.sent, email)); });
     } else if (mode === 'forgot') {
-      p = api('POST', '/forgot', { email: email, page: 'account' }).then(function () { form('in', fill(T.sentIf, email)); });
+      p = api('POST', '/forgot', { email: email, page: 'account', lang: LANG }).then(function () { form('in', fill(T.sentIf, email)); });
     } else {
-      p = api('POST', '/reset', { token: resetToken, password: pass }).then(function () { resetToken = null; form('in', T.resetDone); });
+      /* the new password set: signed in with it (the server's answer has the session) - asked to sign in again, a
+       * browser fills in the password it has saved, the old one */
+      p = api('POST', '/reset', { token: resetToken, password: pass }).then(function (r) {
+        resetToken = null;
+        mode = 'in';
+        if (!r.token) { form('in', T.resetDone); return; }      /* a closed account: its sign-in says so */
+        setAccount({ token: r.token, email: r.user.email, name: r.user.name });
+        show();
+        $('acct-done').textContent = T.resetIn;
+        $('acct-done').hidden = false;
+      });
     }
     p.catch(err).then(function () { go.disabled = false; });
   });
@@ -218,6 +228,7 @@
     clearInterval(timer);
     if (!account) {
       $('acct-in').hidden = true;
+      $('acct-done').hidden = true;           /* what the last person here was told */
       $('acct-sign').hidden = false;
       $('acct-code-note').hidden = !pending;
       if (pending) $('acct-code-note').textContent = fill(T.codeNote, codeText(pending));
