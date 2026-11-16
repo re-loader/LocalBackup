@@ -11,7 +11,7 @@
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/site.css?v=985f3e1aa8">
+<link rel="stylesheet" href="../assets/site.css?v=87a6c81b03">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -54,7 +54,9 @@
   <li><p><b>Build.</b> Sign in and choose Export › ELF - the app is built on our server and comes back as one
     <code>.elf</code> file, your APK. Or Export › Project folder and build it yourself with the
     <a href="index.html">app kit</a>: <code>./build.sh myapp</code>.</p></li>
-  <li><p><b>Install.</b> Copy the file into <code>apps/</code> on the device: open <code>http://&lt;device&gt;/files</code>
+  <li><p><b>Install.</b> Over the USB cable from Studio (Export › Onto a board over USB) or from
+    <a href="../en/install-app.html">Install an app</a> - switch on Settings › USB › Install apps over USB at the
+    device first, as USB debugging on a phone. Or copy the file into <code>apps/</code> on the device yourself: open <code>http://&lt;device&gt;/files</code>
     in a browser (Settings › Remote desktop on the device shows the address and the login), or plug the device into a PC
     as a USB drive, or use an SD card. Restart the device and tap the new tile.</p></li>
 </ol>
@@ -73,8 +75,9 @@
   <tr><td>Android SDK, Gradle</td><td>The <a href="index.html">app kit</a>: <code>build.sh</code>, <code>ros.h</code>,
     <code>api.txt</code></td><td>ESP-IDF 6.1 underneath</td></tr>
   <tr><td><code>./gradlew assemble</code></td><td><code>./build.sh myapp</code>, or Studio › Export › ELF</td><td></td></tr>
-  <tr><td><code>adb install</code></td><td>Copy the file into <code>apps/</code>, then restart the device</td>
-    <td>From a browser, a PC or an SD card</td></tr>
+  <tr><td><code>adb install</code>, USB debugging</td><td><a href="../en/install-app.html">Install an app</a> over the
+    USB cable, or Studio › Export › Onto a board over USB; Settings › USB › Install apps over USB allows it</td>
+    <td>Or copy the file into <code>apps/</code> (a browser, a PC, an SD card) and restart</td></tr>
   <tr><td>Logcat</td><td><code>ESP_LOGI()</code> into the device's log, on its USB serial port (115200)</td>
     <td>Settings › About keeps the record of a crash</td></tr>
   <tr><td>developer.android.com</td><td>The <a href="guide.html">app kit guide</a> and the
@@ -218,7 +221,7 @@ static void destroy(void)                /* onDestroy() */
 </ul>
 
 <h2 id="not-yet">What Android has and Reload OS does not yet</h2>
-<p>Installing on the device from Studio in one step, a log window, string resources for several languages, an app
+<p>A log window, string resources for several languages, an app
   store, and signed apps. If you miss one of them, tell <a href="https://www.re-loader.com">Reloader</a>.</p>
 </article></div>
 </main>

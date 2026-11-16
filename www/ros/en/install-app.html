@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install an app · Reload OS</title>
+<meta name="description" content="Put an app onto a Reload OS device over its USB cable from the browser: switch it on at the device, pick the .elf file, press Install. Chrome or Edge on a computer.">
+<link rel="canonical" href="https://server.re-loader.com/ros/en/install-app.html">
+<meta property="og:title" content="Install an app · Reload OS">
+<meta property="og:description" content="Put an app onto a Reload OS device over its USB cable from the browser: switch it on at the device, pick the .elf file, press Install. Chrome or Edge on a computer.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css?v=87a6c81b03">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html" aria-current="page">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a href="../en/account.html">Account</a>
+<a class="lang" href="../install-app.html" hreflang="th" lang="th">ไทย</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Install</p>
+    <h1>Install an app over USB</h1>
+    <p class="lead">An app is one <code>.elf</code> file, from <a href="../studio/index.html">Studio</a> or the
+      <a href="../docs/index.html">app kit</a>. This page copies it onto a device on a USB cable - no SD card, no
+      network. It needs Chrome or Edge on a computer.</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap" id="appinstall"
+       data-connect="Waiting for the device to answer… (it may restart first)"
+       data-copy="Copying: %s"
+       data-check="The device checks the app…"
+       data-done="%a is on the %b. The device restarts; the app is on its home screen."
+       data-silent="The device does not answer. Switch on Settings › USB › Install apps over USB at the device, and pick the port of the socket named in step 2. Reload OS 1.5.1 and older cannot do this: update it first."
+       data-cut="The copy stopped. The device keeps the apps it had: check the cable and press Install again."
+       data-refused="Not installed - the device keeps the apps it had."
+       data-port="The port could not be opened: close other programs that use it.">
+    <p class="callout" id="app-unsupported" hidden>This browser cannot reach a USB serial port. Open this page in Chrome
+      or Edge on a computer.</p>
+    <ol class="steps">
+      <li><h3>Allow it at the device</h3>
+        <p>Settings › USB › <strong>Install apps over USB</strong>: on. It is off on every device until its owner
+          switches it on, and can be switched off again afterwards.</p></li>
+      <li><h3>Connect it</h3>
+        <p>Use the socket Reload OS was installed through: the <strong>USB Type-C socket of the chip itself</strong>
+          ("USB JTAG/serial debug unit" in the browser's list), or the <strong>UART socket</strong> on a board that
+          has a USB-serial chip ("USB Serial"). <a href="install.html">Install</a> names it for each board.</p></li>
+      <li><h3>Pick the app and install</h3>
+        <p><input type="file" id="app-file" accept=".elf"></p>
+        <p><button class="btn primary" id="app-go" type="button" disabled>Install on the device</button></p>
+        <p><progress id="app-bar" hidden></progress></p>
+        <p class="app-status" id="app-status" role="status"></p></li>
+    </ol>
+
+    <div class="cards">
+      <div class="card"><h3>What the device does</h3>
+        <ul>
+          <li>It checks the whole file before it keeps it: an app built for another board, a damaged file or a copy
+            that was cut short is refused, and the apps it had stay as they were</li>
+          <li>The app goes to <code>apps/</code> on its flash drive; one of the same name is replaced</li>
+          <li>It restarts by itself, and the app is on the home screen</li>
+        </ul></div>
+      <div class="card"><h3>Good to know</h3>
+        <ul>
+          <li>Needs a Reload OS newer than 1.5.1; no account and no network needed</li>
+          <li>Opening the port restarts some boards: the page waits for them</li>
+          <li>Through a USB-serial chip (the UART socket) a large app takes minutes</li>
+          <li>Other ways to install: the <a href="../docs/guide.html">app kit guide</a></li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+<script src="../assets/usbinstall.js?v=2233abc415"></script>
+<script src="../assets/installapp.js?v=667d99887d"></script>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.5.1 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html" aria-current="page">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a href="../en/account.html">Account</a>
+<a class="lang" href="../install-app.html" hreflang="th" lang="th">ไทย</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js?v=a93c961965"></script>
+</body>
+</html>

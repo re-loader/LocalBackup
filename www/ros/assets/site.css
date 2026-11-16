@@ -339,3 +339,9 @@ esp-web-install-button[hidden] { display: none; }
 .acct-prefs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-bottom: 16px; }
 .acct-prefs label { margin: 0; font-weight: 400; }
 .acct-check input { margin-right: 6px; }
+
+/* Install an app (pages/*/install-app.html) */
+#appinstall progress { width: 100%; max-width: 420px; height: 10px; accent-color: var(--accent); }
+.app-status { min-height: 1.5em; overflow-wrap: anywhere; }
+.app-status.ok { color: var(--accent2); font-weight: 600; }
+.app-status.bad { border-left: 3px solid #d9534f; padding-left: 12px; }

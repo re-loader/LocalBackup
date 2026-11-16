@@ -11,7 +11,7 @@
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/site.css?v=985f3e1aa8">
+<link rel="stylesheet" href="../assets/site.css?v=87a6c81b03">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -92,6 +92,11 @@
   <li><p><b>Export › ELF</b> builds the app on our server with the app kit and gives you the <code>.elf</code> for the
     board you picked: copy it into <code>apps/</code> on the device's flash drive or SD card and restart the device. A
     compiler error comes back into Problems. Nothing of your app stays on the server.</p></li>
+  <li><p><b>Export › Onto a board over USB</b> builds the same <code>.elf</code> and copies it straight onto a device
+    on a USB cable (Chrome or Edge; a Reload OS newer than 1.5.1): switch on Settings › USB › Install apps over USB at
+    the device, connect the socket Reload OS was installed through, and pick its port when the browser asks. The
+    device checks the app, keeps it and restarts with it on the home screen. An <code>.elf</code> you already have
+    goes the same way from <a href="../en/install-app.html">Install an app</a>.</p></li>
   <li><p><b>Export › Project folder</b> gives a zip of the app's folder instead, for the app kit on your own machine
     (ESP-IDF 6.1) - when you write more of <code>app.c</code> than Studio shows:</p>
     <pre class="code"><code class="lang-bash">unzip myapp.zip -d appkit
