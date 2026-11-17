@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buy a product key · Reload OS</title>
+<meta name="description" content="Buy a Reload OS product key online: pay by PromptPay QR and get the key by email in a minute. One key activates one device, for good.">
+<link rel="canonical" href="https://server.re-loader.com/ros/en/buy.html">
+<meta property="og:title" content="Buy a product key · Reload OS">
+<meta property="og:description" content="Buy a Reload OS product key online: pay by PromptPay QR and get the key by email in a minute. One key activates one device, for good.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css?v=5e8c6fdef3">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a href="../en/account.html">Account</a>
+<a class="lang" href="../buy.html" hreflang="th" lang="th">ไทย</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Buy</p>
+    <h1>Buy a product key</h1>
+    <p class="lead">A product key activates one Reload OS device, for good. Pay by PromptPay QR and the key comes by
+      email in about a minute - no account needed.</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap acct buy" id="buy" data-root="../" data-api="" data-lang="en">
+    <noscript><p class="callout">This page needs JavaScript.</p></noscript>
+    <p class="muted" id="buy-wait" role="status">Loading…</p>
+
+    <div id="buy-closed" hidden>
+      <p class="callout">Product keys are not sold online just now. To buy one, write to
+        <a href="https://www.re-loader.com">Reloader</a>.</p>
+    </div>
+
+    <div class="acct-box" id="buy-form" hidden>
+      <form id="buy-order" novalidate>
+        <p class="buy-price" id="buy-price"></p>
+        <label>How many keys <span class="muted" id="buy-max"></span>
+          <input id="buy-qty" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
+        <label>Email - the keys are sent here <input id="buy-email" type="email" autocomplete="email" maxlength="254"></label>
+        <label>Email again <input id="buy-email2" type="email" autocomplete="off" maxlength="254"></label>
+        <label class="acct-check"><input type="checkbox" id="buy-tax"> I need a tax invoice</label>
+        <div id="buy-tax-fields" hidden>
+          <label>Name on the invoice <input id="buy-tax-name" maxlength="120" autocomplete="organization"></label>
+          <label>Address <input id="buy-tax-addr" maxlength="300" autocomplete="street-address"></label>
+          <label>Tax ID <input id="buy-tax-id" maxlength="20" inputmode="numeric" placeholder="13 digits"></label>
+          <p class="muted">We send the tax invoice to the same email within a few working days.</p>
+        </div>
+        <p class="buy-total" id="buy-total"></p>
+        <p class="acct-err" id="buy-err" role="alert"></p>
+        <div class="acct-row">
+          <button type="submit" class="btn primary" id="buy-go">Pay by PromptPay QR</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="buy-pay" id="buy-pay" hidden>
+      <div class="buy-qr" id="buy-qr"></div>
+      <div class="buy-pay-info">
+        <h2 id="buy-amount"></h2>
+        <p id="buy-what"></p>
+        <p>Scan the code with your banking app. This page shows the keys by itself once the payment is confirmed -
+          keep it open.</p>
+        <p class="muted" id="buy-left" role="timer"></p>
+        <p class="muted buy-no" id="buy-no"></p>
+        <button type="button" class="btn" id="buy-cancel">Change the order</button>
+      </div>
+    </div>
+
+    <div id="buy-paid" hidden>
+      <p class="callout teal" id="buy-thanks" role="status"></p>
+      <p id="buy-keys-note"></p>
+      <ol class="buy-keys" id="buy-keys"></ol>
+      <div class="acct-row">
+        <button type="button" class="btn" id="buy-copy" hidden>Copy the keys</button>
+      </div>
+      <p id="buy-mailed" role="status"></p>
+      <div class="acct-row">
+        <button type="button" class="acct-link" id="buy-resend">Send the mail again</button>
+        <span class="muted" id="buy-resend-note" role="status"></span>
+      </div>
+      <h3>Activate a device</h3>
+      <ul>
+        <li>On the device, online: Settings › About › License › <strong>Product key</strong> - type a key.</li>
+        <li>Or on your <a href="account.html">Reload OS Account</a> page, for a device in your account: the device ›
+          <strong>Activate</strong>.</li>
+        <li>One key, one device. Keep the mail: the same key activates the same device again after its settings were
+          erased.</li>
+      </ul>
+      <button type="button" class="btn" id="buy-more">Buy more keys</button>
+    </div>
+
+    <div id="buy-expired" hidden>
+      <p class="callout">This QR code is no longer valid, and no payment was confirmed for it. If you did pay, the
+        keys still come by email once the payment is confirmed - otherwise start again.</p>
+      <button type="button" class="btn primary" id="buy-new">Start again</button>
+    </div>
+
+    <form class="acct-code buy-lost" id="buy-lost" novalidate hidden>
+      <label for="buy-lost-email">Bought keys and lost the mail? We send it again to the address you bought with</label>
+      <div class="acct-row">
+        <input id="buy-lost-email" type="email" maxlength="254" placeholder="you@example.com" autocomplete="email">
+        <button type="submit" class="btn" id="buy-lost-go">Send it again</button>
+      </div>
+      <p class="muted" id="buy-lost-note" role="status"></p>
+    </form>
+
+    <p class="muted">Every device is a full trial for 30 days of use before it needs a key. A key that is not used
+      yet is worth an activation: keep it to yourself. Questions about an order: answer the mail the keys came in.</p>
+  </div>
+</section>
+<script type="application/json" id="buy-texts">
+{
+ "price": "%s baht a key",
+ "max": "(up to %s in one order)",
+ "total": "Total: %s baht",
+ "emailTwice": "The two email addresses differ",
+ "qrLabel": "PromptPay QR code",
+ "amount": "%s baht",
+ "what": "Product keys: %s",
+ "orderNo": "Order %s",
+ "left": "The code is good for %s",
+ "thanks": "Paid - thank you. Order %s",
+ "keysHere": "Your product keys:",
+ "keysMail": "Your product keys are in the mail we sent.",
+ "copied": "Copied",
+ "mailing": "A mail with the keys is on its way to %s.",
+ "mailed": "A mail with the keys was sent to %s.",
+ "resent": "If %s bought keys, the mail is on its way again.",
+ "errors": {
+  "bad_email": "An email address, please",
+  "bad_quantity": "The number of keys is not one this shop sells in one order",
+  "bad_tax": "For a tax invoice: the name, the address and the tax ID (10 to 20 digits)",
+  "rate_limited": "Too many tries: wait a while and try again",
+  "payment_unavailable": "The payment service does not answer just now: try again in a moment",
+  "shop_closed": "Product keys are not sold online just now",
+  "offline": "The server does not answer: check the connection and try again",
+  "other": "That did not work: try again in a moment"
+ }
+}
+</script>
+<script src="../assets/qr.js?v=72bc42e637"></script>
+<script src="../assets/buy.js?v=c12e091b95"></script>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.5.3 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a href="../en/account.html">Account</a>
+<a class="lang" href="../buy.html" hreflang="th" lang="th">ไทย</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js?v=a93c961965"></script>
+</body>
+</html>

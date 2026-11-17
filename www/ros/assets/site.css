@@ -345,3 +345,23 @@ esp-web-install-button[hidden] { display: none; }
 .app-status { min-height: 1.5em; overflow-wrap: anywhere; }
 .app-status.ok { color: var(--accent2); font-weight: 600; }
 .app-status.bad { border-left: 3px solid #d9534f; padding-left: 12px; }
+
+/* the Buy page (pages/<lang>/buy.html, assets/buy.js): a product key bought online; it uses the account page's form rules */
+.buy-price { font-size: 1.25rem; font-weight: 600; margin: 0 0 18px; }
+.buy-total { font-size: 1.1rem; font-weight: 600; margin: 4px 0 14px; }
+.buy input[type="number"] { max-width: 120px; }
+.buy-pay { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; margin-bottom: 28px; }
+.buy-qr { flex: 0 1 300px; min-width: 220px; background: #fff; border-radius: 14px; padding: 6px; border: 1px solid var(--border); }
+.buy-qr svg { display: block; width: 100%; height: auto; }
+.buy-pay-info { flex: 1 1 280px; min-width: 0; }
+.buy-pay-info h2 { margin: 0 0 6px; font-size: 2rem; }
+.buy-pay-info p { overflow-wrap: anywhere; }
+.buy-no { font-family: var(--mono); font-size: .82rem; }
+.buy-keys { list-style: decimal inside; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; max-width: 460px; }
+.buy-keys li { font-family: var(--mono); font-size: 1.15rem; letter-spacing: .06em; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; user-select: all; overflow-wrap: anywhere; }
+#buy-paid { max-width: 760px; }
+#buy-paid h3 { margin-top: 28px; }
+#buy-paid .acct-row { margin-bottom: 14px; }
+.buy-lost { margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border); max-width: 760px; }
+.buy-lost .acct-row input { max-width: 320px; text-transform: none; font-family: inherit; letter-spacing: 0; }

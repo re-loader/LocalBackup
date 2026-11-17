@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ซื้อ product key · Reload OS</title>
+<meta name="description" content="ซื้อ product key ของ Reload OS ออนไลน์: จ่ายด้วย PromptPay QR แล้วรับคีย์ทางอีเมลภายในหนึ่งนาที หนึ่งคีย์ activate ได้หนึ่งเครื่อง ใช้ได้ตลอดไป">
+<link rel="canonical" href="https://server.re-loader.com/ros/buy.html">
+<meta property="og:title" content="ซื้อ product key · Reload OS">
+<meta property="og:description" content="ซื้อ product key ของ Reload OS ออนไลน์: จ่ายด้วย PromptPay QR แล้วรับคีย์ทางอีเมลภายในหนึ่งนาที หนึ่งคีย์ activate ได้หนึ่งเครื่อง ใช้ได้ตลอดไป">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/site.css?v=5e8c6fdef3">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="features.html">ฟีเจอร์</a>
+<a href="boards.html">บอร์ด</a>
+<a href="products.html">ผลิตภัณฑ์</a>
+<a href="try.html">ลองใช้</a>
+<a href="install.html">ติดตั้ง</a>
+<a href="studio/index.html">Studio</a>
+<a href="docs/index.html">นักพัฒนา</a>
+<a href="account.html">บัญชี</a>
+<a class="lang" href="en/buy.html" hreflang="en" lang="en">EN</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">ซื้อ</p>
+    <h1>ซื้อ product key</h1>
+    <p class="lead">product key หนึ่งคีย์ activate เครื่อง Reload OS ได้หนึ่งเครื่อง ใช้ได้ตลอดไป จ่ายด้วย PromptPay QR
+      แล้วคีย์จะมาทางอีเมลภายในประมาณหนึ่งนาที ไม่ต้องมีบัญชี</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap acct buy" id="buy" data-root="" data-api="" data-lang="th">
+    <noscript><p class="callout">หน้านี้ต้องใช้ JavaScript</p></noscript>
+    <p class="muted" id="buy-wait" role="status">กำลังโหลด…</p>
+
+    <div id="buy-closed" hidden>
+      <p class="callout">ขณะนี้ยังไม่เปิดขาย product key ออนไลน์ หากต้องการซื้อ โปรดติดต่อ
+        <a href="https://www.re-loader.com">Reloader</a></p>
+    </div>
+
+    <div class="acct-box" id="buy-form" hidden>
+      <form id="buy-order" novalidate>
+        <p class="buy-price" id="buy-price"></p>
+        <label>จำนวนคีย์ <span class="muted" id="buy-max"></span>
+          <input id="buy-qty" type="number" min="1" max="20" value="1" inputmode="numeric"></label>
+        <label>อีเมล - คีย์จะส่งไปที่นี่ <input id="buy-email" type="email" autocomplete="email" maxlength="254"></label>
+        <label>อีเมลอีกครั้ง <input id="buy-email2" type="email" autocomplete="off" maxlength="254"></label>
+        <label class="acct-check"><input type="checkbox" id="buy-tax"> ต้องการใบกำกับภาษี</label>
+        <div id="buy-tax-fields" hidden>
+          <label>ชื่อในใบกำกับภาษี <input id="buy-tax-name" maxlength="120" autocomplete="organization"></label>
+          <label>ที่อยู่ <input id="buy-tax-addr" maxlength="300" autocomplete="street-address"></label>
+          <label>เลขประจำตัวผู้เสียภาษี <input id="buy-tax-id" maxlength="20" inputmode="numeric" placeholder="13 หลัก"></label>
+          <p class="muted">เราจะส่งใบกำกับภาษีไปที่อีเมลเดียวกันภายในไม่กี่วันทำการ</p>
+        </div>
+        <p class="buy-total" id="buy-total"></p>
+        <p class="acct-err" id="buy-err" role="alert"></p>
+        <div class="acct-row">
+          <button type="submit" class="btn primary" id="buy-go">จ่ายด้วย PromptPay QR</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="buy-pay" id="buy-pay" hidden>
+      <div class="buy-qr" id="buy-qr"></div>
+      <div class="buy-pay-info">
+        <h2 id="buy-amount"></h2>
+        <p id="buy-what"></p>
+        <p>สแกน QR ด้วยแอปธนาคารของคุณ เมื่อยืนยันการชำระเงินแล้ว หน้านี้จะแสดงคีย์เอง - เปิดหน้านี้ค้างไว้</p>
+        <p class="muted" id="buy-left" role="timer"></p>
+        <p class="muted buy-no" id="buy-no"></p>
+        <button type="button" class="btn" id="buy-cancel">แก้ไขคำสั่งซื้อ</button>
+      </div>
+    </div>
+
+    <div id="buy-paid" hidden>
+      <p class="callout teal" id="buy-thanks" role="status"></p>
+      <p id="buy-keys-note"></p>
+      <ol class="buy-keys" id="buy-keys"></ol>
+      <div class="acct-row">
+        <button type="button" class="btn" id="buy-copy" hidden>คัดลอกคีย์</button>
+      </div>
+      <p id="buy-mailed" role="status"></p>
+      <div class="acct-row">
+        <button type="button" class="acct-link" id="buy-resend">ส่งอีเมลอีกครั้ง</button>
+        <span class="muted" id="buy-resend-note" role="status"></span>
+      </div>
+      <h3>วิธี activate เครื่อง</h3>
+      <ul>
+        <li>ที่เครื่อง (ต้องออนไลน์): Settings › About › License › <strong>Product key</strong> แล้วพิมพ์คีย์</li>
+        <li>หรือที่หน้า<a href="account.html">บัญชี Reload OS</a> สำหรับเครื่องที่อยู่ในบัญชีของคุณ: เลือกเครื่อง ›
+          <strong>Activate</strong></li>
+        <li>หนึ่งคีย์ต่อหนึ่งเครื่อง โปรดเก็บอีเมลไว้: คีย์เดิมใช้ activate เครื่องเดิมได้อีกหลังจากล้างการตั้งค่าเครื่อง</li>
+      </ul>
+      <button type="button" class="btn" id="buy-more">ซื้อคีย์เพิ่ม</button>
+    </div>
+
+    <div id="buy-expired" hidden>
+      <p class="callout">QR นี้หมดอายุแล้ว และยังไม่มีการยืนยันการชำระเงิน หากคุณจ่ายไปแล้ว
+        คีย์จะยังส่งมาทางอีเมลเมื่อยืนยันการชำระเงินได้ - ถ้ายังไม่ได้จ่าย เริ่มใหม่ได้เลย</p>
+      <button type="button" class="btn primary" id="buy-new">เริ่มใหม่</button>
+    </div>
+
+    <form class="acct-code buy-lost" id="buy-lost" novalidate hidden>
+      <label for="buy-lost-email">ซื้อคีย์แล้วหาอีเมลไม่เจอ? เราส่งให้อีกครั้งไปยังอีเมลที่ใช้ซื้อ</label>
+      <div class="acct-row">
+        <input id="buy-lost-email" type="email" maxlength="254" placeholder="you@example.com" autocomplete="email">
+        <button type="submit" class="btn" id="buy-lost-go">ส่งอีกครั้ง</button>
+      </div>
+      <p class="muted" id="buy-lost-note" role="status"></p>
+    </form>
+
+    <p class="muted">ทุกเครื่องทดลองใช้ได้เต็มรูปแบบ 30 วันของการใช้งานก่อนต้องใช้คีย์ คีย์ที่ยังไม่ได้ใช้มีมูลค่าเท่ากับการ activate
+      หนึ่งครั้ง: โปรดเก็บไว้กับตัว มีคำถามเกี่ยวกับคำสั่งซื้อ ตอบกลับอีเมลที่ส่งคีย์ไปได้เลย</p>
+  </div>
+</section>
+<script type="application/json" id="buy-texts">
+{
+ "price": "คีย์ละ %s บาท",
+ "max": "(สูงสุด %s คีย์ต่อคำสั่งซื้อ)",
+ "total": "รวม %s บาท",
+ "emailTwice": "อีเมลสองช่องไม่ตรงกัน",
+ "qrLabel": "PromptPay QR",
+ "amount": "%s บาท",
+ "what": "Product key %s คีย์",
+ "orderNo": "คำสั่งซื้อ %s",
+ "left": "QR ใช้ได้อีก %s นาที",
+ "thanks": "ชำระเงินแล้ว ขอบคุณ - คำสั่งซื้อ %s",
+ "keysHere": "product key ของคุณ:",
+ "keysMail": "product key ของคุณอยู่ในอีเมลที่เราส่งให้",
+ "copied": "คัดลอกแล้ว",
+ "mailing": "กำลังส่งอีเมลพร้อมคีย์ไปที่ %s",
+ "mailed": "ส่งอีเมลพร้อมคีย์ไปที่ %s แล้ว",
+ "resent": "หาก %s เคยซื้อคีย์ อีเมลกำลังส่งไปอีกครั้ง",
+ "errors": {
+  "bad_email": "โปรดกรอกอีเมลให้ถูกต้อง",
+  "bad_quantity": "จำนวนคีย์เกินที่ซื้อได้ในหนึ่งคำสั่งซื้อ",
+  "bad_tax": "ใบกำกับภาษีต้องมีชื่อ ที่อยู่ และเลขประจำตัวผู้เสียภาษี (10 ถึง 20 หลัก)",
+  "rate_limited": "ลองบ่อยเกินไป: รอสักครู่แล้วลองใหม่",
+  "payment_unavailable": "ระบบชำระเงินไม่ตอบในขณะนี้: ลองใหม่อีกครั้งในอีกสักครู่",
+  "shop_closed": "ขณะนี้ยังไม่เปิดขาย product key ออนไลน์",
+  "offline": "เซิร์ฟเวอร์ไม่ตอบ: ตรวจการเชื่อมต่อแล้วลองใหม่",
+  "other": "ไม่สำเร็จ: ลองใหม่อีกครั้งในอีกสักครู่"
+ }
+}
+</script>
+<script src="assets/qr.js?v=72bc42e637"></script>
+<script src="assets/buy.js?v=c12e091b95"></script>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="index.html"><img src="assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.5.3 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
+    <div class="foot-links"><a href="features.html">ฟีเจอร์</a>
+<a href="boards.html">บอร์ด</a>
+<a href="products.html">ผลิตภัณฑ์</a>
+<a href="try.html">ลองใช้</a>
+<a href="install.html">ติดตั้ง</a>
+<a href="studio/index.html">Studio</a>
+<a href="docs/index.html">นักพัฒนา</a>
+<a href="account.html">บัญชี</a>
+<a class="lang" href="en/buy.html" hreflang="en" lang="en">EN</a></div>
+  </div>
+</footer>
+<script src="assets/site.js?v=a93c961965"></script>
+</body>
+</html>
