@@ -158,7 +158,10 @@
         main.append(head, el('p', 'muted', what(d) + ' · ' + fill(T.seen, ago(d.seen))), el('p', 'acct-dev-id', d.device));
         // the apps from files it has and their own versions, as it said them at its last check-in
         if (d.apps && d.apps.length) {
-          main.append(el('p', 'muted', T.apps + ' ' + d.apps.map(function (a) { return a.name + ' ' + (a.ver || T.noVer); }).join(' · ')));
+          // ... and, where the update server has a newer one of an app for this board, that version
+          main.append(el('p', 'muted', T.apps + ' ' + d.apps.map(function (a) {
+            return a.name + ' ' + (a.ver || T.noVer) + (a.update ? ' ' + fill(T.appNew, a.latest) : '');
+          }).join(' · ')));
         }
         if (d.update) main.append(el('p', 'muted', T.howto));
         var ren = el('button', 'btn small', T.rename), rem = el('button', 'btn small', T.remove);
