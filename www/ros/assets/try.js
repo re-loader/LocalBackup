@@ -4,9 +4,9 @@
   var stage = document.getElementById('sim-stage');
   if (!stage) return;
   var SCREENS = {
-    h:   { file: 'sim_jc_dev', w: 1024, h: 600 },
-    v:   { file: 'sim_jc_dev', w: 600, h: 1024 },
-    pad: { file: 'sim_jc3248_pad', w: 320, h: 480, args: ['app', 'PAD'] }
+    h:   { file: 'sim_jc', w: 1024, h: 600 },
+    v:   { file: 'sim_jc', w: 600, h: 1024 },
+    pad: { file: 'sim_jc3248', w: 320, h: 480, args: ['app', 'PAD'] }
   };
   var key = new URLSearchParams(location.search).get('screen');
   if (!SCREENS[key]) key = 'h';

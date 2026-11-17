@@ -141,7 +141,7 @@
     return new Date(t * 1000).toLocaleDateString();
   }
   function what(d) {
-    return T.what.replace('%b', boardName(d.board)).replace('%p', d.product).replace('%v', d.fw || '?')
+    return T.what.replace('%b', boardName(d.board)).replace('%p · ', d.product && d.product !== 'os' ? d.product + ' · ' : '')  /* "os": one image per board, nothing to say */.replace('%v', d.fw || '?')
       .replace('%l', d.licensed ? T.licensed : d.activating ? T.activating : d.trial > 0 ? fill(T.trial, d.trial)
         : d.trial === 0 ? T.freeLocked : T.free);
   }
