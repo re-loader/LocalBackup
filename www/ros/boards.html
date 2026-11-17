@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>บอร์ดที่รองรับ · Reload OS</title>
-<meta name="description" content="บอร์ดที่ Reload OS ทำงานได้: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC4848S040 และ JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1 และ Espressif ESP32-P4-Function-EV-Board">
+<meta name="description" content="บอร์ดที่ Reload OS ทำงานได้: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC1060F570C, JC4848S040 และ JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1, Espressif ESP32-P4-Function-EV-Board และ ESP32-S31-Korvo-1">
 <link rel="canonical" href="https://server.re-loader.com/ros/boards.html">
 <meta property="og:title" content="บอร์ดที่รองรับ · Reload OS">
-<meta property="og:description" content="บอร์ดที่ Reload OS ทำงานได้: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC4848S040 และ JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1 และ Espressif ESP32-P4-Function-EV-Board">
+<meta property="og:description" content="บอร์ดที่ Reload OS ทำงานได้: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC1060F570C, JC4848S040 และ JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1, Espressif ESP32-P4-Function-EV-Board และ ESP32-S31-Korvo-1">
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
@@ -39,7 +39,7 @@
   <div class="wrap">
     <p class="eyebrow">บอร์ด</p>
     <h1>บอร์ดที่รองรับ</h1>
-    <p class="lead">แปดบอร์ดจากซอร์สโค้ดชุดเดียว: หกบอร์ดเป็น ESP32-P4 กับจอ MIPI-DSI และสองบอร์ดเป็น ESP32-S3
+    <p class="lead">สิบบอร์ดจากซอร์สโค้ดชุดเดียว: หกบอร์ดเป็น ESP32-P4 กับจอ MIPI-DSI สองบอร์ดเป็น ESP32-S31 และสองบอร์ดเป็น ESP32-S3
       ระบบดูว่าบอร์ดมีอะไร - Ethernet, ชิปนาฬิกา, ช่องเสียบบัตร, กล้อง - แล้วแสดงเฉพาะสิ่งที่มีจริง</p>
     <div class="legend">
       <span><span class="badge ok">ใช้งานจริง</span> ตู้ที่ Reloader ส่งมอบ</span>
@@ -104,6 +104,27 @@
         <p class="note">ใช้ชิป ESP32-P4 v3 - ตัวแรกใน Reload OS
           <span class="badge warn">กำลังพัฒนา</span> บอร์ดเดียวกันที่ใช้ตัวแปลง LT8912B แทนจอ:
           ต่อจอมอนิเตอร์ผ่าน HDMI ที่ 1280 × 720 ใช้เมาส์ USB</p></article>
+    </div>
+
+    <h2 style="margin-top:56px">ESP32-S31</h2>
+    <p class="muted">Wi-Fi 6 และ Bluetooth LE ของชิปเอง ไม่ต้องมีชิปร่วม; RISC-V สองคอร์ 320 MHz, PSRAM 16 MB, ตัวเข้ารหัส JPEG
+      ของชิปเอง; ลำโพง; microSD แอปจากไฟล์ยังไม่ได้สร้างสำหรับ S31</p>
+    <div class="boards">
+      <article class="board"><header><h3>JC1060F570C</h3><span class="badge teal">ออกแล้ว</span></header>
+        <p class="maker">Guition · บอร์ด 7"</p>
+        <dl><dt>จอ</dt><dd>7" 1024 × 600 บน RGB bus - แนวนอนหรือแนวตั้ง</dd>
+          <dt>ทัช</dt><dd>GT911</dd>
+          <dt>เครือข่าย</dt><dd>Ethernet, Wi-Fi 6, Bluetooth LE</dd>
+          <dt>อื่น ๆ</dt><dd>ชิปนาฬิกา RX8025T, เสียง ES8389, ไมโครโฟนสองตัว, USB (host หรือเชื่อมต่อ PC เลือกใน Settings)</dd></dl>
+        <p class="note">บอร์ด ESP32-S31 ตัวแรกของ Reload OS ใช้รัน self-test และ benchmark ไม่มีกล้อง</p></article>
+
+      <article class="board"><header><h3>ESP32-S31-Korvo-1</h3><span class="badge teal">ออกแล้ว</span></header>
+        <p class="maker">Espressif · บอร์ดมัลติมีเดียกับจอเสริม 4.3"</p>
+        <dl><dt>จอ</dt><dd>4.3" 800 × 480, ST7262 บน RGB bus - แนวนอนหรือแนวตั้ง</dd>
+          <dt>ทัช</dt><dd>GT1151</dd>
+          <dt>เครือข่าย</dt><dd>Wi-Fi 6, Bluetooth LE (ไม่มี Ethernet)</dd>
+          <dt>อื่น ๆ</dt><dd>เสียง ES8389 กับลำโพงสองตัว, USB host</dd></dl>
+        <p class="note">ไม่มีนาฬิกาแบตเตอรี่: เวลามาจากเครือข่าย ไมโครโฟนและโมดูลกล้องยังไม่ได้ใช้ ความสว่างเปิดหรือปิดได้เท่านั้น</p></article>
     </div>
 
     <h2 style="margin-top:56px">ESP32-S3</h2>

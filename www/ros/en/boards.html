@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Boards · Reload OS</title>
-<meta name="description" content="The boards Reload OS runs on: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC4848S040 and JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1 and the Espressif ESP32-P4-Function-EV-Board.">
+<meta name="description" content="The boards Reload OS runs on: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC1060F570C, JC4848S040 and JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1, and the Espressif ESP32-P4-Function-EV-Board and ESP32-S31-Korvo-1.">
 <link rel="canonical" href="https://server.re-loader.com/ros/en/boards.html">
 <meta property="og:title" content="Boards · Reload OS">
-<meta property="og:description" content="The boards Reload OS runs on: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC4848S040 and JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1 and the Espressif ESP32-P4-Function-EV-Board.">
+<meta property="og:description" content="The boards Reload OS runs on: Guition JC1060P470C, JC4880P443, JC8012P4A1, JC1060F570C, JC4848S040 and JC3248W535, Makerfabs MaTouch, Waveshare ESP32-P4-WIFI6-Touch-LCD-10.1, and the Espressif ESP32-P4-Function-EV-Board and ESP32-S31-Korvo-1.">
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
@@ -39,7 +39,8 @@
   <div class="wrap">
     <p class="eyebrow">Boards</p>
     <h1>The boards it runs on</h1>
-    <p class="lead">Eight boards from one source tree: six with the ESP32-P4 and a MIPI-DSI panel, two with the ESP32-S3.
+    <p class="lead">Ten boards from one source tree: six with the ESP32-P4 and a MIPI-DSI panel, two with the ESP32-S31, two with
+      the ESP32-S3.
       The system asks what a board has - Ethernet, a clock chip, a card socket, a camera - and shows only what is
       there.</p>
     <div class="legend">
@@ -105,6 +106,28 @@
         <p class="note">With an ESP32-P4 v3 chip - the first in Reload OS.
           <span class="badge warn">In development</span> the same board with an LT8912B converter instead of the panel:
           HDMI to a monitor at 1280 × 720, a USB mouse.</p></article>
+    </div>
+
+    <h2 style="margin-top:56px">ESP32-S31</h2>
+    <p class="muted">Wi-Fi 6 and Bluetooth LE of the chip itself - no co-processor; two RISC-V cores at 320 MHz, 16 MB PSRAM,
+      the chip's own JPEG codec; speaker; microSD. Apps from files are not built for the S31 yet.</p>
+    <div class="boards">
+      <article class="board"><header><h3>JC1060F570C</h3><span class="badge teal">Released</span></header>
+        <p class="maker">Guition · 7" board</p>
+        <dl><dt>Screen</dt><dd>7" 1024 × 600 on an RGB bus - horizontal or vertical</dd>
+          <dt>Touch</dt><dd>GT911</dd>
+          <dt>Network</dt><dd>Ethernet, Wi-Fi 6, Bluetooth LE</dd>
+          <dt>Also</dt><dd>RX8025T clock chip, ES8389 sound, two microphones, USB (host or PC link, chosen in Settings)</dd></dl>
+        <p class="note">The first ESP32-S31 board in Reload OS; the self-test and the benchmark are run on it. No camera.</p></article>
+
+      <article class="board"><header><h3>ESP32-S31-Korvo-1</h3><span class="badge teal">Released</span></header>
+        <p class="maker">Espressif · multimedia board with the 4.3" LCD subboard</p>
+        <dl><dt>Screen</dt><dd>4.3" 800 × 480, ST7262 on an RGB bus - horizontal or vertical</dd>
+          <dt>Touch</dt><dd>GT1151</dd>
+          <dt>Network</dt><dd>Wi-Fi 6, Bluetooth LE (no Ethernet)</dd>
+          <dt>Also</dt><dd>ES8389 sound with two speakers, USB host</dd></dl>
+        <p class="note">No battery clock: the time comes from the network. Its microphones and camera module are not
+          used yet; the brightness is on or off only.</p></article>
     </div>
 
     <h2 style="margin-top:56px">ESP32-S3</h2>
