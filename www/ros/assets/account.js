@@ -142,7 +142,8 @@
   }
   function what(d) {
     return T.what.replace('%b', boardName(d.board)).replace('%p', d.product).replace('%v', d.fw || '?')
-      .replace('%l', d.licensed ? T.licensed : T.free);
+      .replace('%l', d.licensed ? T.licensed : d.activating ? T.activating : d.trial > 0 ? fill(T.trial, d.trial)
+        : d.trial === 0 ? T.freeLocked : T.free);
   }
   function devices() {
     return api('GET', '/devices').then(function (r) {
@@ -168,6 +169,18 @@
           api('DELETE', '/devices/' + d.id).then(devices, function (e) { alert(e.message); });
         });
         acts.append(ren, rem);
+        if (!d.licensed && !d.activating) {             // a product key typed here: the device takes its license at its next contact
+          var act = el('button', 'btn small primary', T.activate);
+          act.type = 'button';
+          act.addEventListener('click', function () {
+            var k = prompt(fill(T.keyAsk, d.name || d.device));
+            if (k == null || !k.trim()) return;
+            api('POST', '/devices/' + d.id + '/activate', { key: k.trim() })
+              .then(function () { alert(T.keyDone); return devices(); }, function (e) { alert(e.message); });
+          });
+          acts.prepend(act);
+        }
+        if (d.activating) main.append(el('p', 'muted', T.keyDone));
         row.append(main, acts);
         list.append(row);
       });
