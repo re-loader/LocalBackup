@@ -156,6 +156,10 @@
         head.append(el('strong', '', d.name || boardName(d.board)), ' ',
           d.update ? el('span', 'badge accent', fill(T.update, d.latest)) : d.latest ? el('span', 'badge ok', T.current) : '');
         main.append(head, el('p', 'muted', what(d) + ' · ' + fill(T.seen, ago(d.seen))), el('p', 'acct-dev-id', d.device));
+        // the apps from files it has and their own versions, as it said them at its last check-in
+        if (d.apps && d.apps.length) {
+          main.append(el('p', 'muted', T.apps + ' ' + d.apps.map(function (a) { return a.name + ' ' + (a.ver || T.noVer); }).join(' · ')));
+        }
         if (d.update) main.append(el('p', 'muted', T.howto));
         var ren = el('button', 'btn small', T.rename), rem = el('button', 'btn small', T.remove);
         ren.type = rem.type = 'button';
