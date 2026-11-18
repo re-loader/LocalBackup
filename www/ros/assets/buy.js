@@ -30,6 +30,12 @@
         });
       }, function () { var e = new Error(say('offline')); e.status = 0; throw e; });
   }
+  /* '' for an address, else the error to say: a keyboard left on Thai puts a vowel mark in front of the first letter,
+   * next to invisible in the field - told here, before anyone pays for a mail that cannot be sent */
+  function badEmail(e) {
+    if (/[^\x00-\x7f]/.test(e)) return 'email_letters';
+    return /^[A-Za-z0-9.!#$%&*+\/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/.test(e) ? '' : 'bad_email';
+  }
   function keep(o) {
     order = o;
     try { if (o) localStorage.setItem(KEY, JSON.stringify(o)); else localStorage.removeItem(KEY); } catch (e) { /* this page only */ }
@@ -59,7 +65,7 @@
     e.preventDefault();
     var email = $('buy-email').value.trim(), again = $('buy-email2').value.trim(), qty = total(), go = $('buy-go');
     var err = function (m) { $('buy-err').textContent = m; };
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return err(say('bad_email'));
+    if (badEmail(email)) return err(say(badEmail(email)));
     if (email.toLowerCase() !== again.toLowerCase()) return err(T.emailTwice);
     var body = { email: email, qty: qty, lang: LANG };
     if ($('buy-tax').checked) body.tax = { name: $('buy-tax-name').value, address: $('buy-tax-addr').value, id: $('buy-tax-id').value };
@@ -143,7 +149,7 @@
   $('buy-lost').addEventListener('submit', function (e) {
     e.preventDefault();
     var email = $('buy-lost-email').value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { $('buy-lost-note').textContent = say('bad_email'); return; }
+    if (badEmail(email)) { $('buy-lost-note').textContent = say(badEmail(email)); return; }
     resend(email, $('buy-lost-note'), $('buy-lost-go'));
   });
 
