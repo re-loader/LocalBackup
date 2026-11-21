@@ -428,6 +428,10 @@ esp-web-install-button[hidden] { display: none; }
 .desk h2 { margin-top: 36px; }
 .desk-key, .desk-dev { font-family: var(--mono); font-size: .85rem; white-space: nowrap; }
 .desk-notecell { min-width: 180px; }
+.desk-table td.desk-appcell { white-space: normal; }
+.desk-app { display: inline-flex; align-items: center; gap: 4px; margin: 0 6px 4px 0; padding: 1px 4px 1px 8px; border: 1px solid var(--border);
+  border-radius: 999px; font-family: var(--mono); font-size: .85rem; background: var(--surface); }
+.desk-app .acct-link { padding: 0 4px; line-height: 1.2; }
 .desk-unused { color: var(--accent2); } .desk-used { color: var(--ok); } .desk-revoked { color: var(--err); }
 .table-wrap { overflow-x: auto; margin-bottom: 8px; }
 

@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Key desk · Reload OS</title>
-<meta name="description" content="Reloader's key desk: make, list and revoke Reload OS product keys.">
+<meta name="description" content="Reloader's key desk: make, list and revoke Reload OS product keys; give apps to accounts.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="canonical" href="https://server.re-loader.com/ros/admin/">
 <meta property="og:title" content="Key desk · Reload OS">
-<meta property="og:description" content="Reloader's key desk: make, list and revoke Reload OS product keys.">
+<meta property="og:description" content="Reloader's key desk: make, list and revoke Reload OS product keys; give apps to accounts.">
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/site.css?v=72f375df95">
+<link rel="stylesheet" href="../assets/site.css?v=276c40d9c7">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -39,7 +39,8 @@
   <div class="wrap">
     <p class="eyebrow">Reloader</p>
     <h1>Key desk</h1>
-    <p class="lead">Make product keys for a customer, see every key and who used it, and the keys bought online. For
+    <p class="lead">Make product keys for a customer, see every key and who used it, the keys bought online, and the
+      apps given to accounts. For
       people at Reloader: sign in with a Reload OS Account that is on the desk's list.</p>
   </div>
 </section>
@@ -101,11 +102,33 @@
           <tbody></tbody>
         </table></div>
       </div>
+      <div id="desk-apps" hidden>
+        <h2>Apps of accounts <span class="muted desk-count" id="desk-apps-count"></span></h2>
+        <p class="muted">An app given to an account shows in Settings › Apps › Get apps on its devices, beside the public
+          ones. It must be published on the update server for the device's board.</p>
+        <form class="desk-new" id="desk-give" novalidate>
+          <label class="desk-note">Account's email <input id="desk-give-email" type="email" maxlength="254" list="desk-emails" placeholder="someone@example.com"></label>
+          <label>App id <input id="desk-give-app" maxlength="15" placeholder="apgar" autocapitalize="off" spellcheck="false"></label>
+          <button type="submit" class="btn primary" id="desk-give-go">Give</button>
+        </form>
+        <datalist id="desk-emails"></datalist>
+        <p class="acct-err" id="desk-give-err" role="alert"></p>
+        <div class="acct-row desk-tools">
+          <input id="desk-apps-find" type="search" placeholder="Find: email, name, app" aria-label="Find an account">
+          <label class="acct-check"><input type="checkbox" id="desk-apps-all"> Accounts without apps too</label>
+          <button type="button" class="btn small" id="desk-apps-reload">Reload</button>
+        </div>
+        <div class="table-wrap"><table class="desk-table" id="desk-accounts">
+          <thead><tr><th>Account</th><th>Name</th><th>Devices</th><th>Apps</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <p class="muted" id="desk-apps-more"></p>
+      </div>
       <p class="acct-err" id="desk-err" role="alert"></p>
     </div>
   </div>
 </section>
-<script src="../assets/keydesk.js?v=1cd0ec0c01"></script>
+<script src="../assets/keydesk.js?v=10fa1fd926"></script>
 
 </main>
 <footer class="foot">

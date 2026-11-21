@@ -1,7 +1,8 @@
 /* The key desk (admin/index.html): product keys made, listed and revoked by people at Reloader. The sign-in is the
  * Reload OS Account's (the same one in this browser as the account page and Studio: one key in localStorage); whether
  * that account may use the desk is the server's word (its list of admins). The keys come only in the answers to the
- * signed-in admin and stay hidden on the page until "Show the keys" is ticked. */
+ * signed-in admin and stay hidden on the page until "Show the keys" is ticked. Apps given to accounts are the account
+ * server's (api/account/admin/apps, its own ADMIN_EMAILS): the section shows only to someone on that list. */
 (function () {
   var box = document.getElementById('desk');
   if (!box) return;
@@ -54,6 +55,7 @@
       $('desk-shop').hidden = !r.shop;
       view('desk-in');
       load();
+      loadAccounts();
     }, function (x) {
       if (x.status === 401) { setAccount(null); return view('desk-sign'); }
       if (x.status === 403) { $('desk-sign-err').textContent = x.message + ' (' + account.email + ')'; setAccount(null); return view('desk-sign'); }
@@ -74,8 +76,10 @@
   $('desk-out').addEventListener('click', function () {
     api(ACCOUNT, 'POST', '/logout').catch(function () { /* signed out here anyway */ }).then(function () {
       setAccount(null);
-      keys = made = [];
+      keys = made = accounts = [];
       $('desk-keys').tBodies[0].replaceChildren();
+      $('desk-accounts').tBodies[0].replaceChildren();
+      $('desk-apps').hidden = true;
       $('desk-made').hidden = true;
       view('desk-sign');
     });
@@ -181,6 +185,81 @@
     }, function (x) { if (x.status === 401 || x.status === 403) return start(); $('desk-err').textContent = x.message; });
     if (!$('desk-shop').hidden) api(DESK, 'GET', '/orders').then(function (r) { drawOrders(r.orders); }, function () { /* the keys' error says it */ });
   }
+  // ---------------------------------------------------------------- apps given to accounts (the account server's)
+
+  var accounts = [];
+  function drawAccounts() {
+    var find = $('desk-apps-find').value.trim().toLowerCase(), all = $('desk-apps-all').checked;
+    var rows = accounts.filter(function (a) {
+      if (!all && !a.apps.length && !find) return false;
+      return !find || a.email.toLowerCase().indexOf(find) >= 0 || (a.name || '').toLowerCase().indexOf(find) >= 0 ||
+        a.apps.some(function (x) { return x.indexOf(find) >= 0; });
+    });
+    var body = $('desk-accounts').tBodies[0];
+    body.replaceChildren();
+    rows.slice(0, MAX_ROWS).forEach(function (a) {
+      var tr = el('tr');
+      tr.appendChild(el('td', 'desk-wrap', a.email + (a.disabled ? ' (disabled)' : !a.verified ? ' (not confirmed)' : '')));
+      tr.appendChild(el('td', null, a.name));
+      tr.appendChild(el('td', null, String(a.devices)));
+      var td = el('td', 'desk-appcell');
+      a.apps.forEach(function (id) {
+        var chip = el('span', 'desk-app', id), x = el('button', 'acct-link', '×');
+        x.type = 'button';
+        x.title = 'Take ' + id + ' from ' + a.email;
+        x.setAttribute('aria-label', x.title);
+        x.addEventListener('click', function () {
+          if (!confirm('Take ' + id + ' from ' + a.email + '? Its devices no longer list it in Get apps (one that has it keeps it).')) return;
+          give(a.email, id, false);
+        });
+        chip.appendChild(x);
+        td.appendChild(chip);
+      });
+      var add = el('button', 'acct-link', '+ app');
+      add.type = 'button';
+      add.addEventListener('click', function () { $('desk-give-email').value = a.email; $('desk-give-app').focus(); });
+      td.appendChild(add);
+      tr.appendChild(td);
+      body.appendChild(tr);
+    });
+    var given = accounts.filter(function (a) { return a.apps.length; }).length;
+    $('desk-apps-count').textContent = given + ' of ' + accounts.length + ' accounts have apps';
+    $('desk-apps-more').textContent = rows.length > MAX_ROWS ? 'The first ' + MAX_ROWS + ' of ' + rows.length + ': narrow it down with Find.'
+      : rows.length ? '' : all || find ? 'No account here.' : 'No account has an app of its own yet.';
+    var list = $('desk-emails');
+    list.replaceChildren();
+    accounts.forEach(function (a) { var o = el('option'); o.value = a.email; list.appendChild(o); });
+  }
+  function loadAccounts() {
+    api(ACCOUNT, 'GET', '/admin/apps').then(function (r) {
+      accounts = r.accounts;
+      $('desk-apps').hidden = false;
+      drawAccounts();
+    }, function (x) {
+      if (x.status === 404 || x.status === 403) { $('desk-apps').hidden = true; return; }   // not on the account server's list
+      $('desk-apps').hidden = false;
+      $('desk-give-err').textContent = x.message;
+    });
+  }
+  function give(email, app, yes) {
+    $('desk-give-err').textContent = '';
+    return api(ACCOUNT, 'POST', '/admin/apps', { email: email, app: app, give: yes }).then(function (r) {
+      accounts.forEach(function (a) { if (a.email === r.email) a.apps = r.apps; });
+      drawAccounts();
+      return r;
+    }, function (x) { $('desk-give-err').textContent = x.message; throw x; });
+  }
+  $('desk-give').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var go = $('desk-give-go'), email = $('desk-give-email').value.trim(), app = $('desk-give-app').value.trim().toLowerCase();
+    if (!email || !app) { $('desk-give-err').textContent = 'The account\'s email and the app\'s id'; return; }
+    go.disabled = true;
+    give(email, app, true).then(function () { $('desk-give-app').value = ''; }, function () { /* said */ })
+      .then(function () { go.disabled = false; });
+  });
+  ['desk-apps-find', 'desk-apps-all'].forEach(function (id) { $(id).addEventListener('input', drawAccounts); });
+  $('desk-apps-reload').addEventListener('click', loadAccounts);
+
   ['desk-find', 'desk-state', 'desk-show'].forEach(function (id) { $(id).addEventListener('input', drawKeys); });
   $('desk-reload').addEventListener('click', load);
 
