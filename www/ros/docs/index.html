@@ -11,7 +11,7 @@
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/site.css?v=4a80b6c59f">
+<link rel="stylesheet" href="../assets/site.css?v=a3f828490e">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -39,7 +39,7 @@
   launcher shows it as a tile; a tap reads it into memory, links it against the firmware and runs it. The app kit builds
   one without the firmware's source.</p>
 
-<div class="download" id="download"><div><h3>App kit 1.5.5</h3><p class="muted" style="margin:0">For Reload OS 1.5.5, and later firmware with app interface 2 · zip, 96 KB</p></div><a class="btn primary" href="../downloads/ReloadOS-1.5.5-appkit.zip" download>Download</a><div class="sha">SHA-256 ceb8f96606a74449d4a25935c11be55a91f12358ee767d1a94a92e66818cddf5</div></div><p class="muted">A device on older firmware needs the kit of its version: <a href="../downloads/ReloadOS-1.5.4-appkit.zip" download>1.5.4</a>, <a href="../downloads/ReloadOS-1.5.3-appkit.zip" download>1.5.3</a>.</p>
+<div class="download" id="download"><div><h3>App kit 1.5.6</h3><p class="muted" style="margin:0">For Reload OS 1.5.6, and later firmware with app interface 2 · zip, 97 KB</p></div><a class="btn primary" href="../downloads/ReloadOS-1.5.6-appkit.zip" download>Download</a><div class="sha">SHA-256 394424466b2e7596189bee9c9ad1cef837ccc4e9a76dd42a426e2591d0f4650c</div></div><p class="muted">A device on older firmware needs the kit of its version: <a href="../downloads/ReloadOS-1.5.5-appkit.zip" download>1.5.5</a>, <a href="../downloads/ReloadOS-1.5.4-appkit.zip" download>1.5.4</a>, <a href="../downloads/ReloadOS-1.5.3-appkit.zip" download>1.5.3</a>.</p>
 <p class="muted">In it: <code>build.sh</code> and <code>new.sh</code>, the <code>hello</code> example, and
   <code>reloados/</code> - the firmware's <code>ros.h</code>, its configuration and <code>api.txt</code>, the list of
   everything an app may call. A kit belongs to one firmware version (<code>reloados/VERSION</code>); the apps it builds
@@ -52,7 +52,7 @@
     <code>export.sh</code> in the terminal you build from. macOS or Linux. An app built with the 1.4.0 kit (ESP-IDF
     v5.5.4) keeps working on 1.5.0.</p></li>
   <li><p><b>Unpack the kit and build the example</b> - the first build downloads LVGL and the ELF loader.</p>
-    <pre class="code"><code class="lang-bash">unzip ReloadOS-1.5.5-appkit.zip
+    <pre class="code"><code class="lang-bash">unzip ReloadOS-1.5.6-appkit.zip
 cd appkit
 ./build.sh hello            # -> hello/jc1060p470c/hello.elf</code></pre></li>
   <li><p><b>Copy it to the device</b>: open <code>http://&lt;device&gt;/files</code> in a browser (Settings › Remote
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])     /* only hands the app back; the work starts
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.5.5 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+      <p class="muted">Reload OS 1.5.6 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
         ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>
