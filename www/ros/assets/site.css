@@ -353,6 +353,12 @@ esp-web-install-button[hidden] { display: none; }
 .buy-pay { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; margin-bottom: 28px; }
 .buy-qr { flex: 0 1 300px; min-width: 220px; background: #fff; border-radius: 14px; padding: 6px; border: 1px solid var(--border); }
 .buy-qr svg { display: block; width: 100%; height: auto; }
+.buy-qr img { display: block; width: 100%; height: auto; }
+.buy-channels { border: 0; padding: 0; margin: 4px 0 10px; }
+.buy-channels legend { padding: 0; margin-bottom: 6px; }
+.buy-channels div { display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.buy .buy-channels label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; }
+.buy .buy-channels input[type="radio"] { display: inline-block; width: auto; margin: 0; padding: 0; }
 .buy-pay-info { flex: 1 1 280px; min-width: 0; }
 .buy-pay-info h2 { margin: 0 0 6px; font-size: 2rem; }
 .buy-pay-info p { overflow-wrap: anywhere; }

@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ซื้อ product key · Reload OS</title>
-<meta name="description" content="ซื้อ product key ของ Reload OS ออนไลน์: จ่ายด้วย PromptPay QR แล้วรับคีย์ทางอีเมลภายในหนึ่งนาที หนึ่งคีย์ activate ได้หนึ่งเครื่อง ใช้ได้ตลอดไป">
+<meta name="description" content="ซื้อ product key ของ Reload OS ออนไลน์: จ่ายด้วย QR แล้วรับคีย์ทางอีเมลภายในหนึ่งนาที หนึ่งคีย์ activate ได้หนึ่งเครื่อง ใช้ได้ตลอดไป">
 <link rel="canonical" href="https://server.re-loader.com/ros/buy.html">
 <meta property="og:title" content="ซื้อ product key · Reload OS">
-<meta property="og:description" content="ซื้อ product key ของ Reload OS ออนไลน์: จ่ายด้วย PromptPay QR แล้วรับคีย์ทางอีเมลภายในหนึ่งนาที หนึ่งคีย์ activate ได้หนึ่งเครื่อง ใช้ได้ตลอดไป">
+<meta property="og:description" content="ซื้อ product key ของ Reload OS ออนไลน์: จ่ายด้วย QR แล้วรับคีย์ทางอีเมลภายในหนึ่งนาที หนึ่งคีย์ activate ได้หนึ่งเครื่อง ใช้ได้ตลอดไป">
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/site.css?v=4a80b6c59f">
+<link rel="stylesheet" href="assets/site.css?v=a3f828490e">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -39,7 +39,7 @@
   <div class="wrap">
     <p class="eyebrow">ซื้อ</p>
     <h1>ซื้อ product key</h1>
-    <p class="lead">product key หนึ่งคีย์ activate เครื่อง Reload OS ได้หนึ่งเครื่อง ใช้ได้ตลอดไป จ่ายด้วย PromptPay QR
+    <p class="lead">product key หนึ่งคีย์ activate เครื่อง Reload OS ได้หนึ่งเครื่อง ใช้ได้ตลอดไป จ่ายด้วย QR
       แล้วคีย์จะมาทางอีเมลภายในประมาณหนึ่งนาที ไม่ต้องมีบัญชี</p>
   </div>
 </section>
@@ -68,10 +68,14 @@
           <label>เลขประจำตัวผู้เสียภาษี <input id="buy-tax-id" maxlength="20" inputmode="numeric" placeholder="13 หลัก"></label>
           <p class="muted">เราจะส่งใบกำกับภาษีไปที่อีเมลเดียวกันภายในไม่กี่วันทำการ</p>
         </div>
+        <fieldset class="buy-channels" id="buy-channels" hidden>
+          <legend>ชำระด้วย</legend>
+          <div id="buy-channel-list"></div>
+        </fieldset>
         <p class="buy-total" id="buy-total"></p>
         <p class="acct-err" id="buy-err" role="alert"></p>
         <div class="acct-row">
-          <button type="submit" class="btn primary" id="buy-go">จ่ายด้วย PromptPay QR</button>
+          <button type="submit" class="btn primary" id="buy-go">จ่ายด้วย QR</button>
         </div>
       </form>
     </div>
@@ -81,7 +85,7 @@
       <div class="buy-pay-info">
         <h2 id="buy-amount"></h2>
         <p id="buy-what"></p>
-        <p>สแกน QR ด้วยแอปธนาคารของคุณ เมื่อยืนยันการชำระเงินแล้ว หน้านี้จะแสดงคีย์เอง - เปิดหน้านี้ค้างไว้</p>
+        <p><span id="buy-scan">สแกน QR ด้วยแอปธนาคารของคุณ</span> เมื่อยืนยันการชำระเงินแล้ว หน้านี้จะแสดงคีย์เอง - เปิดหน้านี้ค้างไว้</p>
         <p class="muted" id="buy-left" role="timer"></p>
         <p class="muted buy-no" id="buy-no"></p>
         <button type="button" class="btn" id="buy-cancel">แก้ไขคำสั่งซื้อ</button>
@@ -135,7 +139,15 @@
  "max": "(สูงสุด %s คีย์ต่อคำสั่งซื้อ)",
  "total": "รวม %s บาท (รวม VAT แล้ว)",
  "emailTwice": "อีเมลสองช่องไม่ตรงกัน",
- "qrLabel": "PromptPay QR",
+ "qrLabel": "%s QR",
+ "go": "จ่ายด้วย %s",
+ "scan": {
+  "promptpay": "สแกน QR ด้วยแอปธนาคารของคุณ",
+  "wechat": "สแกน QR ด้วย WeChat (Scan ในเมนู +)",
+  "alipay": "สแกน QR ด้วยแอป Alipay",
+  "truemoney": "สแกน QR ด้วยแอป TrueMoney Wallet",
+  "airpay": "สแกน QR ด้วยแอป Shopee (ShopeePay)"
+ },
  "amount": "%s บาท",
  "what": "Product key %s คีย์",
  "orderNo": "คำสั่งซื้อ %s",
@@ -151,6 +163,7 @@
   "bad_email": "โปรดกรอกอีเมลให้ถูกต้อง",
   "email_letters": "พิมพ์อีเมลด้วยตัวอักษรอังกฤษ: แป้นพิมพ์อยู่ที่ภาษาไทย เปลี่ยนเป็นภาษาอังกฤษแล้วพิมพ์ใหม่",
   "bad_quantity": "จำนวนคีย์เกินที่ซื้อได้ในหนึ่งคำสั่งซื้อ",
+  "bad_channel": "ช่องทางชำระนี้ยังไม่เปิดในขณะนี้: เลือกช่องทางอื่น",
   "bad_tax": "ใบกำกับภาษีต้องมีชื่อ ที่อยู่ และเลขประจำตัวผู้เสียภาษี (10 ถึง 20 หลัก)",
   "rate_limited": "ลองบ่อยเกินไป: รอสักครู่แล้วลองใหม่",
   "payment_unavailable": "ระบบชำระเงินไม่ตอบในขณะนี้: ลองใหม่อีกครั้งในอีกสักครู่",
@@ -161,7 +174,7 @@
 }
 </script>
 <script src="assets/qr.js?v=72bc42e637"></script>
-<script src="assets/buy.js?v=7b2df300ca"></script>
+<script src="assets/buy.js?v=ef865f9f82"></script>
 
 </main>
 <footer class="foot">

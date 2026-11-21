@@ -1,5 +1,6 @@
-/* The Buy page (pages/<lang>/buy.html): a product key bought online - an email address, how many, a PromptPay QR
- * code (qr.js draws it), and the keys once the payment is confirmed: on this page and in a mail. The page only
+/* The Buy page (pages/<lang>/buy.html): a product key bought online - an email address, how many, the way to pay
+ * (the server's channels: PromptPay, WeChat Pay, Alipay, ...), its QR code (qr.js draws it from the server's text;
+ * ShopeePay's comes as a picture), and the keys once the payment is confirmed: on this page and in a mail. The page only
  * asks; whether an order is paid is the server's word, which asks the payment service itself. The order's number and
  * the secret this browser asks with are kept in localStorage, so the page can be reloaded while the code is up.
  * The texts are the page's (its "buy-texts" block). */
@@ -15,6 +16,16 @@
   function show(id) { VIEWS.forEach(function (v) { $(v).hidden = v !== id; }); }
   function fill(t, v) { return t.replace('%s', v); }
   function say(code) { return (T.errors && T.errors[code]) || T.errors.other; }
+  /* the ways to pay the server offers; a server from before the channels: PromptPay */
+  function channels() { return info && info.channels && info.channels.length ? info.channels : [{ id: 'promptpay', name: 'PromptPay' }]; }
+  function chosen() {
+    var on = document.querySelector('input[name="buy-channel"]:checked');
+    return on ? on.value : channels()[0].id;
+  }
+  function nameOf(id) {
+    var c = channels().filter(function (x) { return x.id === id; })[0];
+    return c ? c.name : 'PromptPay';
+  }
   function money(v) { return Number(v).toLocaleString(LANG === 'th' ? 'th-TH' : 'en-US', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }); }
 
   function api(method, p, body, token) {
@@ -56,9 +67,25 @@
     $('buy-qty').max = info.max;
     $('buy-max').textContent = fill(T.max, info.max);
     total();
+    var list = $('buy-channel-list'), was = chosen();
+    list.replaceChildren();
+    channels().forEach(function (c, i) {
+      var label = document.createElement('label'), input = document.createElement('input');
+      label.className = 'acct-check';
+      input.type = 'radio';
+      input.name = 'buy-channel';
+      input.value = c.id;
+      input.checked = c.id === was || (i === 0 && !channels().some(function (x) { return x.id === was; }));
+      input.addEventListener('change', goText);
+      label.append(input, ' ' + c.name);
+      list.appendChild(label);
+    });
+    $('buy-channels').hidden = channels().length < 2;
+    goText();
     $('buy-err').textContent = '';
     show('buy-form');
   }
+  function goText() { $('buy-go').textContent = fill(T.go, nameOf(chosen())); }
   $('buy-qty').addEventListener('input', total);
   $('buy-tax').addEventListener('change', function () { $('buy-tax-fields').hidden = !this.checked; });
   $('buy-order').addEventListener('submit', function (e) {
@@ -68,6 +95,7 @@
     if (badEmail(email)) return err(say(badEmail(email)));
     if (email.toLowerCase() !== again.toLowerCase()) return err(T.emailTwice);
     var body = { email: email, qty: qty, lang: LANG };
+    if (info.channels && info.channels.length) body.channel = chosen();
     if ($('buy-tax').checked) body.tax = { name: $('buy-tax-name').value, address: $('buy-tax-addr').value, id: $('buy-tax-id').value };
     err('');
     go.disabled = true;
@@ -80,7 +108,18 @@
   // ---------------------------------------------------------------- the QR code, until it is paid
 
   function pending(r) {
-    $('buy-qr').innerHTML = window.rosQr.svg(r.qr, { ecl: 'M', border: 4, label: T.qrLabel });
+    var label = fill(T.qrLabel, nameOf(r.channel || 'promptpay'));
+    if (r.qr) {
+      $('buy-qr').innerHTML = window.rosQr.svg(r.qr, { ecl: 'M', border: 4, label: label });
+    } else if (/^(https:|data:image\/)/.test(r.qr_image || '')) {     /* ShopeePay: Ksher's picture of the code */
+      var img = document.createElement('img');
+      img.src = r.qr_image;
+      img.alt = label;
+      $('buy-qr').replaceChildren(img);
+    } else {
+      $('buy-qr').replaceChildren();
+    }
+    $('buy-scan').textContent = (T.scan && T.scan[r.channel]) || (T.scan && T.scan.promptpay) || $('buy-scan').textContent;
     $('buy-amount').textContent = fill(T.amount, money(Number(r.amount)));
     $('buy-what').textContent = fill(T.what, r.qty) + ' · ' + r.email;
     $('buy-no').textContent = fill(T.orderNo, r.order);

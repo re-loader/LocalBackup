@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Buy a product key · Reload OS</title>
-<meta name="description" content="Buy a Reload OS product key online: pay by PromptPay QR and get the key by email in a minute. One key activates one device, for good.">
+<meta name="description" content="Buy a Reload OS product key online: pay by QR code and get the key by email in a minute. One key activates one device, for good.">
 <link rel="canonical" href="https://server.re-loader.com/ros/en/buy.html">
 <meta property="og:title" content="Buy a product key · Reload OS">
-<meta property="og:description" content="Buy a Reload OS product key online: pay by PromptPay QR and get the key by email in a minute. One key activates one device, for good.">
+<meta property="og:description" content="Buy a Reload OS product key online: pay by QR code and get the key by email in a minute. One key activates one device, for good.">
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/site.css?v=4a80b6c59f">
+<link rel="stylesheet" href="../assets/site.css?v=a3f828490e">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -39,8 +39,8 @@
   <div class="wrap">
     <p class="eyebrow">Buy</p>
     <h1>Buy a product key</h1>
-    <p class="lead">A product key activates one Reload OS device, for good. Pay by PromptPay QR and the key comes by
-      email in about a minute - no account needed.</p>
+    <p class="lead">A product key activates one Reload OS device, for good. Pay by QR code and the key comes by email
+      in about a minute - no account needed.</p>
   </div>
 </section>
 
@@ -68,10 +68,14 @@
           <label>Tax ID <input id="buy-tax-id" maxlength="20" inputmode="numeric" placeholder="13 digits"></label>
           <p class="muted">We send the tax invoice to the same email within a few working days.</p>
         </div>
+        <fieldset class="buy-channels" id="buy-channels" hidden>
+          <legend>Pay with</legend>
+          <div id="buy-channel-list"></div>
+        </fieldset>
         <p class="buy-total" id="buy-total"></p>
         <p class="acct-err" id="buy-err" role="alert"></p>
         <div class="acct-row">
-          <button type="submit" class="btn primary" id="buy-go">Pay by PromptPay QR</button>
+          <button type="submit" class="btn primary" id="buy-go">Pay by QR code</button>
         </div>
       </form>
     </div>
@@ -81,8 +85,8 @@
       <div class="buy-pay-info">
         <h2 id="buy-amount"></h2>
         <p id="buy-what"></p>
-        <p>Scan the code with your banking app. This page shows the keys by itself once the payment is confirmed -
-          keep it open.</p>
+        <p><span id="buy-scan">Scan the code with your banking app.</span> This page shows the keys by itself once the
+          payment is confirmed - keep it open.</p>
         <p class="muted" id="buy-left" role="timer"></p>
         <p class="muted buy-no" id="buy-no"></p>
         <button type="button" class="btn" id="buy-cancel">Change the order</button>
@@ -137,7 +141,15 @@
  "max": "(up to %s in one order)",
  "total": "Total: %s baht, VAT included",
  "emailTwice": "The two email addresses differ",
- "qrLabel": "PromptPay QR code",
+ "qrLabel": "%s QR code",
+ "go": "Pay by %s",
+ "scan": {
+  "promptpay": "Scan the code with your banking app.",
+  "wechat": "Scan the code with WeChat (Scan in the + menu).",
+  "alipay": "Scan the code with the Alipay app.",
+  "truemoney": "Scan the code with the TrueMoney Wallet app.",
+  "airpay": "Scan the code with the Shopee app (ShopeePay)."
+ },
  "amount": "%s baht",
  "what": "Product keys: %s",
  "orderNo": "Order %s",
@@ -153,6 +165,7 @@
   "bad_email": "An email address, please",
   "email_letters": "Type the email address in English letters: the keyboard is on another language",
   "bad_quantity": "The number of keys is not one this shop sells in one order",
+  "bad_channel": "That way to pay is not offered just now: choose another",
   "bad_tax": "For a tax invoice: the name, the address and the tax ID (10 to 20 digits)",
   "rate_limited": "Too many tries: wait a while and try again",
   "payment_unavailable": "The payment service does not answer just now: try again in a moment",
@@ -163,7 +176,7 @@
 }
 </script>
 <script src="../assets/qr.js?v=72bc42e637"></script>
-<script src="../assets/buy.js?v=7b2df300ca"></script>
+<script src="../assets/buy.js?v=ef865f9f82"></script>
 
 </main>
 <footer class="foot">
