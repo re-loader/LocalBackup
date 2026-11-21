@@ -356,8 +356,12 @@ esp-web-install-button[hidden] { display: none; }
 .buy-qr img { display: block; width: 100%; height: auto; }
 .buy-channels { border: 0; padding: 0; margin: 4px 0 10px; }
 .buy-channels legend { padding: 0; margin-bottom: 6px; }
-.buy-channels div { display: flex; flex-wrap: wrap; gap: 6px 20px; }
-.buy .buy-channels label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 400; }
+.buy-channels div { display: flex; flex-wrap: wrap; gap: 8px; }
+.buy .buy-channels label { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 400; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 10px; padding: 6px 12px 6px 10px; background: var(--surface); }
+.buy .buy-channels label:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.buy-ch-icon { display: inline-flex; flex: none; }
+.buy-ch-icon svg { display: block; border-radius: 6px; }
 .buy .buy-channels input[type="radio"] { display: inline-block; width: auto; margin: 0; padding: 0; }
 .buy-pay-info { flex: 1 1 280px; min-width: 0; }
 .buy-pay-info h2 { margin: 0 0 6px; font-size: 2rem; }

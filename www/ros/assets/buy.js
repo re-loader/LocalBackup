@@ -77,13 +77,31 @@
       input.value = c.id;
       input.checked = c.id === was || (i === 0 && !channels().some(function (x) { return x.id === was; }));
       input.addEventListener('change', goText);
-      label.append(input, ' ' + c.name);
+      var name = document.createElement('span');
+      name.textContent = c.name;
+      label.append(input, icon(c.id), name);
       list.appendChild(label);
     });
     $('buy-channels').hidden = channels().length < 2;
     goText();
     $('buy-err').textContent = '';
     show('buy-form');
+  }
+  /* a small mark per way to pay, in its colour: drawn here, not the brands' own logos */
+  var ICONS = {
+    promptpay: ['#1a4b8c', '<path d="M7 7h4v4H7zM13 7h4v4h-4zM7 13h4v4H7z" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M14 14h1.5v1.5H14zM16 16h1.5v1.5H16z" fill="#fff"/>'],
+    wechat: ['#07c160', '<ellipse cx="10" cy="10.5" rx="5" ry="4.2" fill="#fff"/><ellipse cx="14.8" cy="14" rx="4.2" ry="3.5" fill="#fff" stroke="#07c160" stroke-width="1"/><circle cx="8.3" cy="9.6" r=".8" fill="#07c160"/><circle cx="11.7" cy="9.6" r=".8" fill="#07c160"/>'],
+    alipay: ['#1677ff', '<path d="M6.5 8.5h11M12 6v4.5M8 11.5h8c-.8 3.2-3.6 5.6-8 6.5M10 12.5c1.6 2.4 4.2 4.3 7.5 5" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
+    truemoney: ['#ff6a00', '<rect x="5.5" y="8" width="13" height="9.5" rx="2" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M7.5 8l7-2.5.8 2.5" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><circle cx="15.5" cy="12.8" r="1.2" fill="#fff"/>'],
+    airpay: ['#ee4d2d', '<path d="M7 9.5h10l-.8 8.5H7.8z" fill="#fff"/><path d="M9.5 9.5V8.3a2.5 2.5 0 0 1 5 0v1.2" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M13.4 12.2c-.5-.5-2.8-.6-2.8.6 0 1.3 2.9.7 2.9 2 0 1.2-2.4 1.1-3 .5" fill="none" stroke="#ee4d2d" stroke-width="1.1" stroke-linecap="round"/>']
+  };
+  function icon(id) {
+    var i = ICONS[id] || ['#6b7280', '<rect x="6" y="8" width="12" height="8.5" rx="1.5" fill="none" stroke="#fff" stroke-width="1.7"/><path d="M6 11h12" stroke="#fff" stroke-width="1.7"/>'];
+    var box = document.createElement('span');
+    box.className = 'buy-ch-icon';
+    box.setAttribute('aria-hidden', 'true');
+    box.innerHTML = '<svg viewBox="0 0 24 24" width="28" height="28"><rect width="24" height="24" rx="6" fill="' + i[0] + '"/>' + i[1] + '</svg>';
+    return box;
   }
   function goText() { $('buy-go').textContent = fill(T.go, nameOf(chosen())); }
   $('buy-qty').addEventListener('input', total);
