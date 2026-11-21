@@ -188,10 +188,68 @@
           acts.prepend(act);
         }
         if (d.activating) main.append(el('p', 'muted', T.keyDone));
+        if (d.store) main.append(store(d));
         row.append(main, acts);
         list.append(row);
       });
     });
+  }
+
+  /* The device's store - the apps its own Settings > Apps > Get apps offers (the public ones and those given to the
+   * account): Install / Update here, and the device takes it at its next contact (within minutes), then says how it
+   * went. Folded while nothing is under way. */
+  function store(d) {
+    var box = el('details', 'acct-store'), list = el('div', 'acct-store-list');
+    var busy = d.store.some(function (a) { return a.install && a.install.state === 'waiting'; });
+    box.open = busy || !!open[d.device];
+    box.addEventListener('toggle', function () { open[d.device] = box.open; });
+    box.append(el('summary', '', T.store + ' (' + d.store.length + ')'));
+    var locked = !d.licensed && d.trial === 0;
+    if (!d.remote) list.append(el('p', 'muted', T.storeOld));
+    else if (locked) list.append(el('p', 'muted', T.storeFree));
+    if (!d.store.length) list.append(el('p', 'muted', T.storeEmpty));
+    d.store.forEach(function (a) {
+      var line = el('div', 'acct-store-app'), txt = el('p', '');
+      txt.append(el('strong', '', a.name), ' ' + a.version + ' · ' + fill(T.size, (a.size / 1e6).toFixed(1)));
+      if (a.have != null) txt.append(' · ', el('span', 'muted', fill(T.installedAs, a.have || T.noVer)));
+      var st = a.install, note = null, btn = null;
+      if (st && st.state === 'waiting') note = el('span', 'muted', T.waiting);
+      else if (st && st.state === 'failed') note = el('span', 'acct-err', fill(T.instFail, st.msg === 'no_answer' ? T.noAnswer : st.msg || '?'));
+      else if (st && st.state === 'done' && a.have != null) note = null;
+      else if (st && st.state === 'done') note = el('span', 'muted', fill(T.instDone, st.ver));
+      if (note) txt.append(el('br'), note);
+      if (st && st.state === 'waiting') {
+        btn = el('button', 'btn small', T.cancel);
+        btn.addEventListener('click', function () {
+          btn.disabled = true;
+          api('POST', '/devices/' + d.id + '/install', { app: a.id, cancel: true }).then(devices, function (e) { alert(e.message); btn.disabled = false; });
+        });
+      } else if (d.remote && !locked && (a.have == null || a.update)) {
+        btn = el('button', 'btn small primary', a.have == null ? T.install : T.updateApp);
+        btn.addEventListener('click', function () {
+          if (a.have == null && !confirm(T.instAsk.replace('%a', a.name).replace('%d', d.name || d.device))) return;
+          btn.disabled = true;
+          open[d.device] = true;
+          api('POST', '/devices/' + d.id + '/install', { app: a.id }).then(devices, function (e) { alert(e.message); btn.disabled = false; });
+        });
+      }
+      line.append(txt);
+      if (btn) { btn.type = 'button'; line.append(btn); }
+      list.append(line);
+    });
+    box.append(list);
+    if (busy) watch();
+    return box;
+  }
+  var open = {}, quick = null;
+  /* while an install waits: the list again every 15 s for a few minutes */
+  function watch() {
+    if (quick) return;
+    var n = 0;
+    quick = setInterval(function () {
+      if (!account || ++n > 40) { clearInterval(quick); quick = null; return; }
+      if (document.visibilityState === 'visible') devices().catch(function () {});
+    }, 15000);
   }
 
   /* the device a code belongs to: asked for a yes */

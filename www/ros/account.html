@@ -11,7 +11,7 @@
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/site.css?v=de1edf0a9a">
+<link rel="stylesheet" href="assets/site.css?v=72f375df95">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -134,6 +134,11 @@
  "added": "เพิ่ม “%s” แล้ว เครื่องจะดำเนินการต่อเองภายในไม่กี่วินาที",
  "licensed": "activate แล้ว", "free": "ยังไม่ activate",
  "trial": "ทดลองใช้ เหลือ %s วัน", "apps": "แอป:", "noVer": "ไม่ทราบรุ่น", "appNew": "(มีรุ่น %s แล้ว)", "freeLocked": "รุ่นฟรี", "activating": "กำลัง activate",
+ "store": "แอปสำหรับเครื่องนี้", "install": "ติดตั้ง", "updateApp": "อัปเดต", "installedAs": "ติดตั้งแล้ว %s", "size": "%s MB",
+ "waiting": "รอเครื่อง - เครื่องจะติดตั้งภายในไม่กี่นาที", "cancel": "ยกเลิก", "instDone": "ติดตั้งแล้ว %s", "instFail": "ติดตั้งไม่ได้: %s",
+ "noAnswer": "เครื่องไม่ตอบ", "storeOld": "ถ้าจะติดตั้งแอปจากหน้านี้ อัปเดตเครื่องเป็น Reload OS 1.5.7 ขึ้นไปก่อน",
+ "storeFree": "Activate เครื่องนี้ก่อนจึงจะติดตั้งแอปได้", "storeEmpty": "ยังไม่มีแอปสำหรับเครื่องนี้",
+ "instAsk": "ติดตั้ง %a ที่ “%d”? แอปใหม่จะรีสตาร์ตเครื่องเมื่อไม่มีใครแตะจอครบ 2 นาที",
  "activate": "Activate",
  "keyAsk": "Product key ของ “%s” (XXXX-XXXX-XXXX-XXXX):",
  "keyDone": "เครื่องจะ activate เองเมื่อติดต่อเซิร์ฟเวอร์ครั้งถัดไป: เปิด Settings › Account ที่เครื่อง หรือรีสตาร์ตเครื่อง",
@@ -144,6 +149,10 @@
  "renameAsk": "ชื่อของเครื่องนี้:",
  "removeAsk": "ลบ “%s” ออกจากบัญชีของคุณหรือไม่? เครื่องจะออกจากบัญชีเองเมื่อติดต่อเซิร์ฟเวอร์ครั้งถัดไป",
  "errors": {
+ "old_firmware": "อัปเดตเครื่องเป็น Reload OS 1.5.7 ขึ้นไปก่อน",
+  "not_activated": "Activate เครื่องก่อน",
+  "not_in_store": "แอปนี้ไม่ได้เปิดให้เครื่องนี้",
+  "no_update_server": "เซิร์ฟเวอร์แอปไม่ตอบ ลองใหม่ภายหลัง",
   "bad_key": "ไม่ใช่ product key: ตรวจตัวสะกดอีกครั้ง",
   "key_unknown": "ไม่พบ product key นี้",
   "key_used": "product key นี้ถูกใช้กับเครื่องอื่นแล้ว",
@@ -171,7 +180,7 @@
  }
 }
 </script>
-<script src="assets/account.js?v=12d1de5ba0"></script>
+<script src="assets/account.js?v=b9f93e0678"></script>
 
 </main>
 <footer class="foot">

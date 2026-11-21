@@ -363,6 +363,12 @@ esp-web-install-button[hidden] { display: none; }
 .acct-dev-name strong { font-size: 1.08rem; }
 .acct-dev-id { font-family: var(--mono); font-size: .82rem; color: var(--muted); }
 .acct-dev-acts { display: flex; gap: 8px; }
+.acct-store { margin-top: 8px; }
+.acct-store summary { cursor: pointer; color: var(--accent); font-size: .95rem; }
+.acct-store-list { margin-top: 6px; display: grid; gap: 6px; }
+.acct-store-app { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 6px 0; border-top: 1px solid var(--border); }
+.acct-store-app p { flex: 1 1 200px; }
 .acct-code { margin-bottom: 20px; }
 .acct-code .acct-row input { flex: 1 1 180px; width: auto; margin: 0; max-width: 240px; text-transform: uppercase; font-family: var(--mono); letter-spacing: .08em; }
 .acct-prefs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-bottom: 16px; }
