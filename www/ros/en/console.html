@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>USB console · Reload OS</title>
+<meta name="description" content="Commands and files on a Reload OS device over its USB cable, from the browser: its settings, its Wi-Fi, its drives - copy files both ways. Chrome or Edge on a computer.">
+<link rel="canonical" href="https://server.re-loader.com/ros/en/console.html">
+<meta property="og:title" content="USB console · Reload OS">
+<meta property="og:description" content="Commands and files on a Reload OS device over its USB cable, from the browser: its settings, its Wi-Fi, its drives - copy files both ways. Chrome or Edge on a computer.">
+<meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
+<meta name="theme-color" content="#0A0E17">
+<link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css?v=4a80b6c59f">
+<script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="28" height="28"><span>Reload OS</span></a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
+    <nav id="site-nav" class="site-nav" aria-label="Site">
+<a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html" aria-current="page">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a href="../en/account.html">Account</a>
+<a class="lang" href="../console.html" hreflang="th" lang="th">ไทย</a>
+      <button class="theme-btn" type="button" aria-label="Light or dark"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg></button>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Install</p>
+    <h1>Commands and files over USB <span class="badge accent next">Next release</span></h1>
+    <p class="lead">A terminal and a file manager for a device on a USB cable: see how it is, change its settings, join a Wi-Fi
+      network, and copy files to and from its SD card and flash drive - no network, no app on the computer. It needs
+      Chrome or Edge on a computer, and Reload OS newer than 1.5.5.</p>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:8px">
+  <div class="wrap" id="usbcon"
+       data-connect="Waiting for the device to answer… (it may restart first)"
+       data-silent="The device does not answer. Switch on Settings › USB › Commands over USB at the device, and pick the port of the socket Reload OS was installed through."
+       data-gone="The USB link closed."
+       data-port="The port could not be opened: close other programs that use it (the Install page&#x27;s Logs, a terminal)."
+       data-cut="The copy stopped - try again. A file being sent keeps its old content."
+       data-connect-btn="Connect"
+       data-disconnect="Disconnect"
+       data-drives="Drives"
+       data-open="Open"
+       data-download="Download"
+       data-del="Delete"
+       data-empty="Empty"
+       data-down="Downloading"
+       data-up="Sending"
+       data-got="%s downloaded."
+       data-sent="%s is on the device."
+       data-removed="%s deleted."
+       data-sure="Delete %s on the device? It cannot be undone."
+       data-newdir="Name of the new folder"
+       data-badname="%s: a file name with spaces or letters other than English ones cannot be sent - rename it first."
+       data-usefiles="get and put are the file manager&#x27;s: use its buttons.">
+    <p class="callout" id="con-unsupported" hidden>This browser cannot reach a USB serial port. Open this page in Chrome or Edge on a computer.</p>
+    <ol class="steps">
+      <li><h3>Allow it at the device</h3>
+        <p>Settings › USB › <strong>Commands over USB</strong>: on. It is off on every device until its owner switches it on, and can be switched off again afterwards (or with <code>set usb_console false</code> from here).</p></li>
+      <li><h3>Connect it</h3>
+        <p>The socket Reload OS was installed through: the chip's own USB Type-C ("USB JTAG/serial debug unit" in the browser's list) or the UART socket ("USB Serial"). <a href="install.html">Install</a> names it for each board.</p>
+        <div class="con-top" style="margin:12px 0 0">
+          <button class="btn primary" id="con-go" type="button">Connect</button>
+          <span class="con-device" id="con-device"></span>
+        </div>
+        <p class="app-status" id="con-status" role="status" style="margin-top:8px"></p></li>
+    </ol>
+
+    <div class="con-grid">
+      <div class="con-pane">
+        <h3>Commands</h3>
+        <div class="con-out" id="con-out" aria-live="polite"></div>
+        <input class="con-in" id="con-in" type="text" placeholder="a command - help lists them" autocomplete="off" spellcheck="false" disabled>
+        <div class="con-quick">
+          <button class="btn small" type="button" data-cmd="status">status</button>
+          <button class="btn small" type="button" data-cmd="settings">settings</button>
+          <button class="btn small" type="button" data-cmd="apps">apps</button>
+          <button class="btn small" type="button" data-cmd="df">df</button>
+          <button class="btn small" type="button" data-cmd="help">help</button>
+          <label style="margin:0 0 0 auto;font-weight:400"><input type="checkbox" id="con-log"> the log</label>
+          <button class="btn small" type="button" id="con-clear">Clear</button>
+        </div>
+      </div>
+      <div class="con-pane">
+        <h3>Files</h3>
+        <div class="con-path" id="con-path"></div>
+        <div class="con-files-wrap"><table class="con-files"><tbody id="con-files"></tbody></table></div>
+        <div class="con-file-acts">
+          <label class="btn small" id="con-upload-l" hidden>Send files here<input type="file" id="con-upload" multiple></label>
+          <button class="btn small" type="button" id="con-mkdir" hidden>New folder</button>
+        </div>
+        <progress id="con-bar" hidden></progress>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card"><h3>Commands</h3>
+        <ul>
+          <li><code>status</code>, <code>version</code>, <code>ip</code>, <code>apps</code>, <code>df</code></li>
+          <li><code>settings</code> - every setting; <code>settings brightness</code> - one</li>
+          <li><code>set brightness 60</code>, <code>set autostart Clock</code>, <code>set kiosk_lock true</code></li>
+          <li><code>wifi join "Shop WiFi" PASSWORD</code>, <code>wifi leave</code></li>
+          <li><code>log off</code>, <code>restart</code>, <code>ls</code>, <code>rm</code>, <code>mkdir</code>, <code>mv</code></li>
+        </ul></div>
+      <div class="card"><h3>Good to know</h3>
+        <ul>
+          <li>Passwords and keys can be set, never shown</li>
+          <li>Opening the port restarts some boards: the page waits for them</li>
+          <li>A file is checked when it arrives and gets its name only then</li>
+          <li>Through a USB-serial chip (the UART socket) copies are slower</li>
+          <li>On the command line: <code>tools/usbfile.py</code> in the app kit's source tree does the same</li>
+        </ul></div>
+    </div>
+  </div>
+</section>
+<script src="../assets/usbconsole.js?v=0cddd99991"></script>
+
+</main>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
+      <p class="muted">Reload OS 1.5.5 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+        ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
+    <div class="foot-links"><a href="../en/features.html">Features</a>
+<a href="../en/boards.html">Boards</a>
+<a href="../en/products.html">Products</a>
+<a href="../en/try.html">Try it</a>
+<a href="../en/install.html" aria-current="page">Install</a>
+<a href="../studio/index.html">Studio</a>
+<a href="../docs/index.html">Developers</a>
+<a href="../en/account.html">Account</a>
+<a class="lang" href="../console.html" hreflang="th" lang="th">ไทย</a></div>
+  </div>
+</footer>
+<script src="../assets/site.js?v=a93c961965"></script>
+</body>
+</html>

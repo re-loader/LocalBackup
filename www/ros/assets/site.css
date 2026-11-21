@@ -385,3 +385,31 @@ esp-web-install-button[hidden] { display: none; }
 .desk-notecell { min-width: 180px; }
 .desk-unused { color: var(--accent2); } .desk-used { color: var(--ok); } .desk-revoked { color: var(--err); }
 .table-wrap { overflow-x: auto; margin-bottom: 8px; }
+
+/* the USB console (pages/*/console.html, assets/usbconsole.js): commands and files over the USB cable */
+.con-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-bottom: 12px; }
+.con-device { font-family: var(--mono); font-size: .84rem; color: var(--muted); overflow-wrap: anywhere; min-width: 0; }
+.con-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; margin-bottom: 1.6em; }
+@media (max-width: 860px) { .con-grid { grid-template-columns: minmax(0, 1fr); } }
+.con-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; min-width: 0; }
+.con-pane h3 { margin: 0 0 8px; font-size: 1rem; }
+.con-out { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; height: 360px; overflow: auto;
+  padding: 8px 10px; font-family: var(--mono); font-size: .8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.con-out .cmd { color: var(--accent); font-weight: 600; margin-top: 6px; }
+.con-out .err { color: #d9534f; }
+.con-out .log { color: var(--dim); }
+.con-in { width: 100%; margin: 8px 0 0; font-family: var(--mono); font-size: .86rem; }
+.con-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+.btn.small { padding: 5px 10px; font-size: .82rem; border-radius: 8px; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-align: left; overflow-wrap: anywhere; }
+.linkish:hover { text-decoration: underline; }
+.con-path { font-size: .9rem; margin-bottom: 8px; overflow-wrap: anywhere; }
+.con-files-wrap { max-height: 330px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+.con-files td { padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.con-files td.num { text-align: right; white-space: nowrap; color: var(--muted); font-size: .84rem; }
+.con-files td:last-child { width: 1%; white-space: nowrap; }
+.con-file-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.con-file-acts input[type=file] { display: none; }
+#usbcon progress { width: 100%; height: 10px; accent-color: var(--accent); margin-top: 8px; }
+#usbcon:not(.on) .con-grid { opacity: .55; pointer-events: none; }
+#usbcon [hidden] { display: none !important; }
