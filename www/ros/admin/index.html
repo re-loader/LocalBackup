@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Key desk · Reload OS</title>
-<meta name="description" content="Reloader's key desk: make, list and revoke Reload OS product keys; give apps to accounts.">
+<meta name="description" content="Reloader's key desk: make, list and revoke Reload OS product keys; manage apps.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="canonical" href="https://server.re-loader.com/ros/admin/">
 <meta property="og:title" content="Key desk · Reload OS">
-<meta property="og:description" content="Reloader's key desk: make, list and revoke Reload OS product keys; give apps to accounts.">
+<meta property="og:description" content="Reloader's key desk: make, list and revoke Reload OS product keys; manage apps.">
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/site.css?v=276c40d9c7">
+<link rel="stylesheet" href="../assets/site.css?v=cd28b59d00">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -39,8 +39,8 @@
   <div class="wrap">
     <p class="eyebrow">Reloader</p>
     <h1>Key desk</h1>
-    <p class="lead">Make product keys for a customer, see every key and who used it, the keys bought online, and the
-      apps given to accounts. For
+    <p class="lead">Make product keys for a customer, see every key and who used it, the keys bought online, and
+      manage the apps devices can get. For
       people at Reloader: sign in with a Reload OS Account that is on the desk's list.</p>
   </div>
 </section>
@@ -65,6 +65,14 @@
         <button type="button" class="btn" id="desk-out">Sign out</button>
       </div>
 
+      <div class="tabs" id="desk-tabs" role="tablist" aria-label="Key desk">
+        <button type="button" data-tab="tab-keys">Keys</button>
+        <button type="button" data-tab="tab-orders" data-needs="desk-shop">Bought online</button>
+        <button type="button" data-tab="tab-store" data-needs="desk-store">Apps</button>
+        <button type="button" data-tab="tab-accounts" data-needs="desk-apps">Accounts</button>
+      </div>
+
+      <div class="tab-pane" id="tab-keys">
       <h2>Make keys</h2>
       <form class="desk-new" id="desk-new" novalidate>
         <label>How many <input id="desk-count" type="number" min="1" max="100" value="1" inputmode="numeric"></label>
@@ -95,6 +103,8 @@
       </table></div>
       <p class="muted" id="desk-keys-more"></p>
 
+      </div>
+      <div class="tab-pane" id="tab-orders" hidden>
       <div id="desk-shop" hidden>
         <h2>Bought online</h2>
         <div class="table-wrap"><table class="desk-table" id="desk-orders">
@@ -102,6 +112,35 @@
           <tbody></tbody>
         </table></div>
       </div>
+      </div>
+      <div class="tab-pane" id="tab-store" hidden>
+      <div id="desk-store" hidden>
+        <h2>Apps on the update server <span class="muted desk-count" id="desk-store-count"></span></h2>
+        <p class="muted">Public: in Settings › Apps › Get apps on every device of that board. Not public: only on the
+          devices of accounts it is given to (Accounts).</p>
+        <div class="acct-row desk-tools store-bar">
+          <input id="desk-store-find" type="search" placeholder="Search apps and boards" aria-label="Find an app">
+          <label class="btn primary store-add" id="desk-up" hidden>+ New app or version
+            <input id="desk-up-file" type="file" accept=".elf" hidden></label>
+          <button type="button" class="btn small" id="desk-store-reload">Reload</button>
+        </div>
+        <p class="muted" id="desk-up-off" hidden>Publishing here is off on this server.</p>
+        <p class="acct-err" id="desk-store-err" role="alert"></p>
+        <div class="store-card store-new" id="desk-up-card" hidden>
+          <div class="store-head">
+            <div class="store-icon" id="desk-up-icon" aria-hidden="true"></div>
+            <div class="store-title"><h3 id="desk-up-name"></h3><p class="muted" id="desk-up-what"></p></div>
+          </div>
+          <label class="acct-check"><input type="checkbox" id="desk-up-public"> Public - on every device of that board</label>
+          <label class="acct-check"><input type="checkbox" id="desk-up-tested"> This file ran on that board</label>
+          <div class="acct-row"><button type="button" class="btn primary" id="desk-up-go" disabled>Publish</button>
+            <button type="button" class="btn" id="desk-up-cancel">Cancel</button></div>
+        </div>
+        <div class="store-grid" id="desk-store-list"></div>
+        <p class="muted" id="desk-store-more"></p>
+      </div>
+      </div>
+      <div class="tab-pane" id="tab-accounts" hidden>
       <div id="desk-apps" hidden>
         <h2>Apps of accounts <span class="muted desk-count" id="desk-apps-count"></span></h2>
         <p class="muted">An app given to an account shows in Settings › Apps › Get apps on its devices, beside the public
@@ -124,11 +163,12 @@
         </table></div>
         <p class="muted" id="desk-apps-more"></p>
       </div>
+      </div>
       <p class="acct-err" id="desk-err" role="alert"></p>
     </div>
   </div>
 </section>
-<script src="../assets/keydesk.js?v=10fa1fd926"></script>
+<script src="../assets/keydesk.js?v=8fa16e30bb"></script>
 
 </main>
 <footer class="foot">
@@ -146,6 +186,6 @@
 <a href="../en/account.html">Account</a></div>
   </div>
 </footer>
-<script src="../assets/site.js?v=a93c961965"></script>
+<script src="../assets/site.js?v=23e3142f98"></script>
 </body>
 </html>

@@ -63,3 +63,49 @@
     filter.addEventListener('input', run);
   }
 })();
+
+/* Tabs (the account page, the key desk): <div class="tabs" role="tablist"> of buttons with data-tab="<pane's id>", the
+ * panes .tab-pane. The tab last chosen is kept for the visit. A button with data-needs="<id>" shows only while that
+ * element is not hidden - its pane's content comes and goes with what the server allows. */
+(function () {
+  document.querySelectorAll('.tabs').forEach(function (bar) {
+    var tabs = Array.prototype.slice.call(bar.querySelectorAll('[data-tab]')), key = 'ros-tab-' + (bar.id || location.pathname);
+    function show(tab) {
+      tabs.forEach(function (b) {
+        var on = b === tab, pane = document.getElementById(b.dataset.tab);
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+        if (pane) pane.hidden = !on;
+      });
+    }
+    function open() { return tabs.filter(function (b) { return !b.hidden; }); }
+    tabs.forEach(function (b, i) {
+      var pane = document.getElementById(b.dataset.tab), needs = b.dataset.needs && document.getElementById(b.dataset.needs);
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-controls', b.dataset.tab);
+      if (pane) { pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-label', b.textContent.trim()); }
+      b.addEventListener('click', function () {
+        show(b);
+        try { sessionStorage.setItem(key, b.dataset.tab); } catch (e) { /* this visit only */ }
+      });
+      b.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        var all = open(), to = all[(all.indexOf(b) + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length];
+        to.focus();
+        to.click();
+      });
+      if (needs) {
+        var sync = function () {
+          b.hidden = needs.hidden;
+          if (b.hidden && b.classList.contains('on') && open()[0]) show(open()[0]);
+        };
+        new MutationObserver(sync).observe(needs, { attributes: true, attributeFilter: ['hidden'] });
+        sync();
+      }
+    });
+    var kept = null;
+    try { kept = sessionStorage.getItem(key); } catch (e) { /* none */ }
+    show(tabs.filter(function (b) { return b.dataset.tab === kept && !b.hidden; })[0] || open()[0] || tabs[0]);
+  });
+})();

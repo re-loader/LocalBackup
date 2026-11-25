@@ -12,7 +12,8 @@
   var SAY = { sign_in: 'Sign in again', not_admin: 'This account is not on the key desk\'s list', bad_note: 'Say who the keys are for',
     bad_count: '1 to 100 keys at a time', rate_limited: 'Too many for today: ask for a higher limit, or wait', bad_key: 'Not a product key',
     key_unknown: 'Not a key of this server', no_account_server: 'The account service does not answer: try again in a moment',
-    not_found: 'Not found', shop_closed: 'The shop is off on this server', 'Wrong email or password': 'Wrong email or password' };
+    not_found: 'Not found', upload_off: 'Publishing here is off on this server', not_newer: 'Not newer than the version on the server',
+    not_tested: 'Only a file that ran on that board', too_large: 'The file is too large', bad_app: 'Not an app file', shop_closed: 'The shop is off on this server', 'Wrong email or password': 'Wrong email or password' };
   try { account = JSON.parse(localStorage.getItem(KEY)); } catch (e) { account = null; }
 
   function el(tag, cls, text) {
@@ -23,12 +24,12 @@
   }
   function api(base, method, p, body) {
     return fetch(base + p, { method: method, cache: 'no-store',
-      headers: Object.assign({ 'Content-Type': 'application/json' }, account ? { Authorization: 'Bearer ' + account.token } : {}),
-      body: body == null ? undefined : JSON.stringify(body) })
+      headers: Object.assign({ 'Content-Type': body instanceof Blob ? 'application/octet-stream' : 'application/json' }, account ? { Authorization: 'Bearer ' + account.token } : {}),
+      body: body == null ? undefined : body instanceof Blob ? body : JSON.stringify(body) })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (j) {
           if (r.ok) return j;
-          var e = new Error(SAY[j.error] || j.error || 'The server answered ' + r.status);
+          var e = new Error((j.error === 'bad_app' && j.detail) || SAY[j.error] || j.error || 'The server answered ' + r.status);
           e.status = r.status;
           throw e;
         });
@@ -55,6 +56,7 @@
       $('desk-shop').hidden = !r.shop;
       view('desk-in');
       load();
+      loadStore();
       loadAccounts();
     }, function (x) {
       if (x.status === 401) { setAccount(null); return view('desk-sign'); }
@@ -76,7 +78,9 @@
   $('desk-out').addEventListener('click', function () {
     api(ACCOUNT, 'POST', '/logout').catch(function () { /* signed out here anyway */ }).then(function () {
       setAccount(null);
-      keys = made = accounts = [];
+      keys = made = accounts = storeApps = [];
+      $('desk-store').hidden = true;
+      pickFile(null);
       $('desk-keys').tBodies[0].replaceChildren();
       $('desk-accounts').tBodies[0].replaceChildren();
       $('desk-apps').hidden = true;
@@ -185,6 +189,147 @@
     }, function (x) { if (x.status === 401 || x.status === 403) return start(); $('desk-err').textContent = x.message; });
     if (!$('desk-shop').hidden) api(DESK, 'GET', '/orders').then(function (r) { drawOrders(r.orders); }, function () { /* the keys' error says it */ });
   }
+  // ---------------------------------------------------------------- the apps on the update server
+
+  var storeApps = [], storeTiles = {}, upFile = null, upApp = null;
+  var sizeText = function (n) { return n < 1e5 ? Math.ceil(n / 1000) + ' KB' : (n / 1e6).toFixed(1) + ' MB'; };
+  /* an app's tile as its device shows it: its picture, or its first letter on its colour */
+  function icon(box, a) {
+    box.replaceChildren();
+    box.className = 'store-icon' + (a.white ? ' store-white' : '');
+    box.style.background = a.white ? '' : a.color || '';
+    if (storeTiles[a.id]) {
+      var img = el('img');
+      img.src = storeTiles[a.id];
+      img.alt = '';
+      box.appendChild(img);
+    } else box.textContent = (a.name || a.id).charAt(0).toUpperCase();
+    return box;
+  }
+  function drawStore() {
+    var find = $('desk-store-find').value.trim().toLowerCase(), groups = {}, order = [];
+    storeApps.forEach(function (a) {
+      if (find && (a.id + ' ' + a.name + ' ' + a.board).toLowerCase().indexOf(find) < 0) return;
+      if (!groups[a.id]) { groups[a.id] = []; order.push(a.id); }
+      groups[a.id].push(a);
+    });
+    order.sort(function (x, y) { return groups[x][0].name.localeCompare(groups[y][0].name); });
+    var grid = $('desk-store-list');
+    grid.replaceChildren();
+    order.forEach(function (id) {
+      var list = groups[id], first = list[0], card = el('article', 'store-card'), head = el('div', 'store-head');
+      var pub = list.filter(function (a) { return a.public; }).length;
+      var vers = list.map(function (a) { return a.version; }).filter(function (v, i, all) { return all.indexOf(v) === i; });
+      var title = el('div', 'store-title');
+      title.appendChild(el('h3', null, first.name));
+      title.appendChild(el('p', 'muted', id + ' · ' + (vers.length === 1 ? vers[0] : vers.length + ' versions') + ' · ' +
+        list.length + (list.length === 1 ? ' board' : ' boards')));
+      head.appendChild(icon(el('div'), first));
+      head.appendChild(title);
+      head.appendChild(el('span', 'store-badge' + (pub ? ' on' : ''), pub === list.length ? 'Public' : pub ? pub + ' of ' + list.length + ' public' : 'Private'));
+      card.appendChild(head);
+      var rows = el('ul', 'store-boards');
+      list.forEach(function (a) {
+        var li = el('li'), what = el('div', 'store-board');
+        what.appendChild(el('span', 'desk-dev', a.board));
+        what.appendChild(el('span', 'muted', a.version + ' · ' + sizeText(a.size) + ' · ' + day(a.published)));
+        li.appendChild(what);
+        var sw = el('label', 'store-switch'), tick = el('input');
+        tick.type = 'checkbox';
+        tick.checked = a.public;
+        tick.setAttribute('aria-label', a.name + ' for ' + a.board + ' is public');
+        sw.title = a.public ? 'Public: every device of this board is offered it' : 'Private: only the accounts it is given to';
+        tick.addEventListener('change', function () {
+          var on = tick.checked;
+          if (on && !confirm('Show ' + a.name + ' ' + a.version + ' on every ' + a.board + '?')) { tick.checked = false; return; }
+          tick.disabled = true;
+          storeCall('/public', { board: a.board, id: a.id, public: on });
+        });
+        sw.appendChild(tick);
+        sw.appendChild(el('span'));
+        li.appendChild(sw);
+        var b = el('button', 'acct-link store-off', '×');
+        b.type = 'button';
+        b.title = 'Take ' + a.name + ' off for ' + a.board;
+        b.setAttribute('aria-label', b.title);
+        b.addEventListener('click', function () {
+          if (!confirm('Take ' + a.name + ' off for ' + a.board + '? No device is offered it or an update of it any more; one that has it keeps it.')) return;
+          b.disabled = true;
+          storeCall('/remove', { board: a.board, id: a.id });
+        });
+        li.appendChild(b);
+        rows.appendChild(li);
+      });
+      card.appendChild(rows);
+      grid.appendChild(card);
+    });
+    var ids = storeApps.map(function (a) { return a.id; }).filter(function (v, i, all) { return all.indexOf(v) === i; });
+    $('desk-store-count').textContent = ids.length + (ids.length === 1 ? ' app · ' : ' apps · ') +
+      storeApps.filter(function (a) { return a.public; }).length + ' public releases · ' +
+      storeApps.filter(function (a) { return !a.public; }).length + ' private';
+    $('desk-store-more').textContent = order.length ? '' : find ? 'No app here.' : 'No app on the server yet.';
+  }
+  function storeHas(r) {
+    storeApps = r.apps;
+    storeTiles = r.tiles || {};
+    $('desk-store').hidden = false;
+    $('desk-up').hidden = !r.upload;
+    $('desk-up-off').hidden = r.upload;
+    drawStore();
+  }
+  function storeCall(p, body) {
+    $('desk-store-err').textContent = '';
+    api(DESK, 'POST', '/apps' + p, body).then(storeHas, function (x) { $('desk-store-err').textContent = x.message; drawStore(); });
+  }
+  function loadStore() {
+    $('desk-store-err').textContent = '';
+    api(DESK, 'GET', '/apps').then(storeHas, function (x) {
+      if (x.status === 404 || x.status === 405) { $('desk-store').hidden = true; return; }      // a server from before
+      $('desk-store').hidden = false;
+      $('desk-store-err').textContent = x.message;
+    });
+  }
+  function upReady() { $('desk-up-go').disabled = !(upApp && upApp.newer && $('desk-up-tested').checked); }
+  function pickFile(f) {
+    upFile = f;
+    upApp = null;
+    $('desk-up-card').hidden = true;
+    $('desk-up-tested').checked = $('desk-up-public').checked = false;
+    if (!f) $('desk-up-file').value = '';
+    upReady();
+  }
+  $('desk-up-file').addEventListener('change', function () {
+    var f = this.files[0] || null;
+    pickFile(f);
+    $('desk-store-err').textContent = '';
+    if (!f) return;
+    api(DESK, 'POST', '/apps/check', f).then(function (r) {
+      if (upFile !== f) return;                              // another file was picked meanwhile
+      upApp = r;
+      $('desk-up-name').textContent = r.name + ' ' + r.version;
+      icon($('desk-up-icon'), r);
+      $('desk-up-what').textContent = r.id + ' · ' + sizeText(r.size) + ' · for ' + r.boards.map(function (b) {
+        return b.board + (b.version ? ' - ' + b.version + ' there now' : ' - new there');
+      }).join(', ') + (r.newer ? '' : '. Not newer: raise its version.txt and build it again.');
+      $('desk-up-public').checked = r.boards.some(function (b) { return b.public; });
+      $('desk-up-card').hidden = false;
+      upReady();
+    }, function (x) { if (upFile === f) $('desk-store-err').textContent = x.message; });
+  });
+  $('desk-up-tested').addEventListener('change', upReady);
+  $('desk-up-cancel').addEventListener('click', function () { pickFile(null); });
+  $('desk-up-go').addEventListener('click', function () {
+    var pub = $('desk-up-public').checked, go = this;
+    if (!confirm('Publish ' + upApp.name + ' ' + upApp.version + ' for ' + upApp.boards.map(function (b) { return b.board; }).join(', ') +
+      (pub ? ' - on every device of it?' : ' - for the accounts it is given to?'))) return;
+    go.disabled = true;
+    $('desk-store-err').textContent = '';
+    api(DESK, 'POST', '/apps/publish?tested=1' + (pub ? '&public=1' : ''), upFile).then(function (r) { storeHas(r); pickFile(null); },
+      function (x) { $('desk-store-err').textContent = x.message; upReady(); });
+  });
+  $('desk-store-find').addEventListener('input', drawStore);
+  $('desk-store-reload').addEventListener('click', loadStore);
+
   // ---------------------------------------------------------------- apps given to accounts (the account server's)
 
   var accounts = [];

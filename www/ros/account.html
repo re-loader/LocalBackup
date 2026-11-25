@@ -11,7 +11,7 @@
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/site.css?v=276c40d9c7">
+<link rel="stylesheet" href="assets/site.css?v=cd28b59d00">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -45,7 +45,7 @@
 </section>
 
 <section class="sec" style="padding-top:8px">
-  <div class="wrap acct" id="account" data-root="" data-api="https://reloados.re-loader.com/api/studio" data-lang="th">
+  <div class="wrap acct" id="account" data-root="" data-api="https://os.re-loader.com/api/studio" data-lang="th">
     <noscript><p class="callout">หน้านี้ต้องใช้ JavaScript</p></noscript>
     <p class="muted" id="acct-wait" role="status">กำลังโหลด…</p>
 
@@ -84,11 +84,19 @@
       </div>
       <p class="callout teal" id="acct-done" role="status" hidden></p>
 
-      <h2>เครื่องของฉัน</h2>
+      <div class="tabs" id="acct-tabs" role="tablist" aria-label="บัญชี">
+        <button type="button" data-tab="tab-devices">เครื่องของฉัน</button>
+        <button type="button" data-tab="tab-add">เพิ่มเครื่อง</button>
+        <button type="button" data-tab="tab-prefs">ตั้งค่า</button>
+      </div>
+
+      <div class="tab-pane" id="tab-devices">
       <p class="muted" id="acct-empty" hidden>ยังไม่มีเครื่อง ที่เครื่อง: Settings › Account › Sign in
-        แล้วสแกนรหัสด้วยมือถือ หรือพิมพ์รหัสด้านล่าง</p>
+        แล้วสแกนรหัสด้วยมือถือ หรือพิมพ์รหัสในแท็บ เพิ่มเครื่อง</p>
       <div class="acct-devices" id="acct-devices"></div>
 
+      </div>
+      <div class="tab-pane" id="tab-add" hidden>
       <form class="acct-code" id="acct-code-form" novalidate>
         <label for="acct-code">เพิ่มเครื่อง: รหัสบนหน้าจอเครื่อง</label>
         <div class="acct-row">
@@ -98,12 +106,15 @@
         <p class="acct-err" id="acct-code-err" role="alert"></p>
       </form>
 
+      </div>
+      <div class="tab-pane" id="tab-prefs" hidden>
       <div class="acct-prefs">
         <label class="acct-check"><input type="checkbox" id="acct-notify"> ส่งอีเมลถึงฉันเมื่อมีอัปเดตสำหรับเครื่องของฉัน</label>
         <label class="acct-inline">ภาษาของอีเมล <select id="acct-lang"><option value="th">ไทย</option><option value="en">English</option></select></label>
       </div>
       <p class="muted">ยังไม่มี product key? <a href="buy.html">ซื้อออนไลน์</a> แล้วรับทางอีเมล งานออกแบบของคุณอยู่ใน <a href="studio/index.html">Studio</a> ด้วยบัญชีเดียวกัน
         เครื่องออกจากบัญชีเมื่อคุณลบที่นี่ หรือกด Settings › Account › Sign out ที่เครื่อง</p>
+      </div>
     </div>
   </div>
 </section>
@@ -199,6 +210,6 @@
 <a class="lang" href="en/account.html" hreflang="en" lang="en">EN</a></div>
   </div>
 </footer>
-<script src="assets/site.js?v=a93c961965"></script>
+<script src="assets/site.js?v=23e3142f98"></script>
 </body>
 </html>
