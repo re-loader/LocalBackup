@@ -12,7 +12,7 @@
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/site.css?v=aa02ddfd89">
+<link rel="stylesheet" href="../assets/site.css?v=a6b65c0ece">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -122,6 +122,7 @@
           <input id="desk-store-find" type="search" placeholder="Search apps and boards" aria-label="Find an app">
           <label class="btn primary store-add" id="desk-up" hidden>+ New app or version
             <input id="desk-up-file" type="file" accept=".elf" hidden></label>
+          <button type="button" class="btn small" id="desk-store-fold" hidden>Show all boards</button>
           <button type="button" class="btn small" id="desk-store-reload">Reload</button>
         </div>
         <p class="muted" id="desk-up-off" hidden>Publishing here is off on this server.</p>
@@ -142,7 +143,15 @@
       </div>
       <div class="tab-pane" id="tab-accounts" hidden>
       <div id="desk-apps" hidden>
-        <h2>Apps of accounts <span class="muted desk-count" id="desk-apps-count"></span></h2>
+        <h2>Accounts <span class="muted desk-count" id="desk-apps-count"></span></h2>
+        <form class="desk-new" id="desk-acct-new" novalidate>
+          <label class="desk-note">New account: email <input id="desk-acct-email" type="email" maxlength="254" placeholder="someone@example.com"></label>
+          <label>Name <input id="desk-acct-name" maxlength="80" placeholder="Front desk"></label>
+          <button type="submit" class="btn" id="desk-acct-go">Create</button>
+        </form>
+        <p class="acct-err" id="desk-acct-err" role="alert"></p>
+        <p class="callout teal" id="desk-acct-done" role="status" hidden></p>
+        <h3>Apps of accounts</h3>
         <p class="muted">An app given to an account shows in Settings › Apps › Get apps on its devices, beside the public
           ones. It must be published on the update server for the device's board.</p>
         <form class="desk-new" id="desk-give" novalidate>
@@ -155,11 +164,11 @@
         <p class="acct-err" id="desk-give-err" role="alert"></p>
         <div class="acct-row desk-tools">
           <input id="desk-apps-find" type="search" placeholder="Find: email, name, app" aria-label="Find an account">
-          <label class="acct-check"><input type="checkbox" id="desk-apps-all"> Accounts without apps too</label>
+          <label class="acct-check"><input type="checkbox" id="desk-apps-all" checked> Accounts without apps too</label>
           <button type="button" class="btn small" id="desk-apps-reload">Reload</button>
         </div>
         <div class="table-wrap"><table class="desk-table" id="desk-accounts">
-          <thead><tr><th>Account</th><th>Name</th><th>Devices</th><th>Apps</th></tr></thead>
+          <thead><tr><th>Account</th><th>Name</th><th>Last sign-in</th><th>Devices</th><th>Apps</th><th></th></tr></thead>
           <tbody></tbody>
         </table></div>
         <p class="muted" id="desk-apps-more"></p>
@@ -169,13 +178,13 @@
     </div>
   </div>
 </section>
-<script src="../assets/keydesk.js?v=8c765702ac"></script>
+<script src="../assets/keydesk.js?v=d27029a3aa"></script>
 
 </main>
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.5.9 · © 2026 <a href="https://www.re-loader.com">Reloader Co.,Ltd.</a>
+      <p class="muted">Reload OS 1.5.9 · © 2026 Reloader Co.,Ltd. · <a href="mailto:adisak@re-loader.com">adisak@re-loader.com</a>
         ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>

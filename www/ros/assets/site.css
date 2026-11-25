@@ -451,6 +451,13 @@ esp-web-install-button[hidden] { display: none; }
 .store-new .acct-check { display: block; margin: 10px 0 0; }
 .store-new .acct-row { margin-top: 14px; }
 .store-head { display: flex; align-items: center; gap: 14px; }
+summary.store-head { cursor: pointer; list-style: none; border-radius: 12px; }
+summary.store-head::-webkit-details-marker { display: none; }
+summary.store-head:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.store-fold { flex: none; width: 10px; height: 10px; margin: 0 4px 4px 0; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .15s; }
+details[open] > summary .store-fold { transform: rotate(225deg); margin-bottom: -4px; }
+.store-grid { align-items: start; }
 .store-icon { flex: none; width: 64px; height: 64px; border-radius: 15px; background: var(--surface2); color: #fff; display: grid;
   place-items: center; font-size: 1.9rem; font-weight: 700; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
 /* the devices' symbols (LVGL's LV_SYMBOL_*): Font Awesome 5 Free, SIL OFL 1.1 - the file LVGL makes its fonts from */
@@ -462,8 +469,8 @@ esp-web-install-button[hidden] { display: none; }
 .store-title { flex: 1 1 auto; min-width: 0; }
 .store-title h3 { margin: 0; font-size: 1.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .store-title p { margin: 2px 0 0; font-size: .85rem; overflow-wrap: anywhere; }
-.store-badge { flex: none; align-self: flex-start; font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-  padding: 4px 12px; border-radius: var(--pill); background: var(--surface2); color: var(--muted); }
+.store-badge { flex: none; font-size: .72rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: var(--pill); background: var(--surface2); color: var(--muted); }
 .store-badge.on { background: var(--blue); color: #fff; }
 .store-boards { list-style: none; margin: 14px 0 0; padding: 0; }
 .store-boards li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--border); }
@@ -481,6 +488,9 @@ esp-web-install-button[hidden] { display: none; }
 .store-off { flex: none; font-size: 1.2rem; line-height: 1; padding: 2px 6px; color: var(--muted); }
 .store-off:hover { color: var(--err); }
 @media (max-width: 420px) { .store-grid { grid-template-columns: 1fr; } }
+.acct select.desk-manage { margin: 0; padding: 5px 8px; font-size: .88rem; max-width: 130px; }
+.desk-devrow td { background: var(--surface); white-space: normal; }
+.desk-devline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 4px 0; }
 .desk-unused { color: var(--accent2); } .desk-used { color: var(--ok); } .desk-revoked { color: var(--err); }
 .table-wrap { overflow-x: auto; margin-bottom: 8px; }
 

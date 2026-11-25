@@ -192,6 +192,7 @@
   // ---------------------------------------------------------------- the apps on the update server
 
   var storeApps = [], storeTiles = {}, upFile = null, upApp = null;
+  var unfolded = {};                                // app id -> its boards are shown (a card starts folded)
   var sizeText = function (n) { return n < 1e5 ? Math.ceil(n / 1000) + ' KB' : (n / 1e6).toFixed(1) + ' MB'; };
   /* an app's tile as its device shows it: its picture, or its icon on its colour - a drawn one ("@globe": icons/) or a
    * glyph of the devices' symbol font ("f067"); its first letter when it names neither */
@@ -226,7 +227,9 @@
     var grid = $('desk-store-list');
     grid.replaceChildren();
     order.forEach(function (id) {
-      var list = groups[id], first = list[0], card = el('article', 'store-card'), head = el('div', 'store-head');
+      var list = groups[id], first = list[0], card = el('details', 'store-card'), head = el('summary', 'store-head');
+      card.open = !!unfolded[id];
+      card.addEventListener('toggle', function () { unfolded[id] = card.open; });
       var pub = list.filter(function (a) { return a.public; }).length;
       var vers = list.map(function (a) { return a.version; }).filter(function (v, i, all) { return all.indexOf(v) === i; });
       var title = el('div', 'store-title');
@@ -235,7 +238,8 @@
         list.length + (list.length === 1 ? ' board' : ' boards')));
       head.appendChild(icon(el('div'), first));
       head.appendChild(title);
-      head.appendChild(el('span', 'store-badge' + (pub ? ' on' : ''), pub === list.length ? 'Public' : pub ? pub + ' of ' + list.length + ' public' : 'Private'));
+      head.appendChild(el('span', 'store-badge' + (pub ? ' on' : ''), pub === list.length ? 'Public' : pub ? pub + '/' + list.length + ' public' : 'Private'));
+      head.appendChild(el('span', 'store-fold'));
       card.appendChild(head);
       var rows = el('ul', 'store-boards');
       list.forEach(function (a) {
@@ -277,6 +281,8 @@
       storeApps.filter(function (a) { return a.public; }).length + ' public releases · ' +
       storeApps.filter(function (a) { return !a.public; }).length + ' private';
     $('desk-store-more').textContent = order.length ? '' : find ? 'No app here.' : 'No app on the server yet.';
+    $('desk-store-fold').hidden = !order.length;
+    $('desk-store-fold').textContent = order.every(function (id) { return unfolded[id]; }) ? 'Fold all' : 'Show all boards';
   }
   function storeHas(r) {
     storeApps = r.apps;
@@ -338,6 +344,11 @@
       function (x) { $('desk-store-err').textContent = x.message; upReady(); });
   });
   $('desk-store-find').addEventListener('input', drawStore);
+  $('desk-store-fold').addEventListener('click', function () {
+    var ids = storeApps.map(function (a) { return a.id; }), all = ids.every(function (id) { return unfolded[id]; });
+    ids.forEach(function (id) { unfolded[id] = !all; });
+    drawStore();
+  });
   $('desk-store-reload').addEventListener('click', loadStore);
 
   // ---------------------------------------------------------------- apps given to accounts (the account server's)
@@ -387,7 +398,16 @@
       var tr = el('tr');
       tr.appendChild(el('td', 'desk-wrap', a.email + (a.disabled ? ' (disabled)' : !a.verified ? ' (not confirmed)' : '')));
       tr.appendChild(el('td', null, a.name));
-      tr.appendChild(el('td', null, String(a.devices)));
+      tr.appendChild(el('td', null, a.lastLogin ? day(a.lastLogin) : a.created ? 'never (made ' + day(a.created) + ')' : ''));
+      var dv = el('td');
+      if (a.devices && a.lastLogin !== undefined) {              // a server that manages accounts: its devices on a tap
+        var show = el('button', 'acct-link', a.devices + (shown[a.email] ? ' ▾' : ' ▸'));
+        show.type = 'button';
+        show.setAttribute('aria-expanded', shown[a.email] ? 'true' : 'false');
+        show.addEventListener('click', function () { toggleDevices(a.email); });
+        dv.appendChild(show);
+      } else dv.textContent = String(a.devices);
+      tr.appendChild(dv);
       var td = el('td', 'desk-appcell');
       a.apps.forEach(function (id) {
         var chip = el('span', 'desk-app', id), x = el('button', 'acct-link', '×');
@@ -410,19 +430,105 @@
       });
       td.appendChild(add);
       tr.appendChild(td);
+      tr.appendChild(manage(a));
       body.appendChild(tr);
+      if (shown[a.email]) body.appendChild(devicesRow(a.email, shown[a.email]));
     });
     var given = accounts.filter(function (a) { return a.apps.length; }).length;
-    $('desk-apps-count').textContent = given + ' of ' + accounts.length + ' accounts have apps';
+    $('desk-apps-count').textContent = accounts.length + (accounts.length === 1 ? ' account · ' : ' accounts · ') + given + ' with apps of their own';
     $('desk-apps-more').textContent = rows.length > MAX_ROWS ? 'The first ' + MAX_ROWS + ' of ' + rows.length + ': narrow it down with Find.'
       : rows.length ? '' : all || find ? 'No account here.' : 'No account has an app of its own yet.';
     var list = $('desk-emails');
     list.replaceChildren();
     accounts.forEach(function (a) { var o = el('option'); o.value = a.email; list.appendChild(o); });
   }
+  /* ---- managing an account (the account server's admin calls: a server from before them has no lastLogin) */
+  var shown = {};                                   // email -> its devices, while the row is open
+  function manage(a) {
+    var td = el('td');
+    if (a.lastLogin === undefined) return td;
+    var menu = el('select', 'desk-manage');
+    menu.setAttribute('aria-label', 'Manage ' + a.email);
+    [['', 'Manage…'], !a.verified && ['verify', 'Confirm the address'], !a.disabled && ['reset', 'Send a new-password mail'],
+      !a.admin && (a.disabled ? ['enable', 'Enable'] : ['disable', 'Disable']), !a.admin && ['delete', 'Delete…']].forEach(function (o) {
+      if (!o) return;
+      var opt = el('option', null, o[1]);
+      opt.value = o[0];
+      menu.appendChild(opt);
+    });
+    menu.addEventListener('change', function () {
+      var action = menu.value;
+      menu.value = '';
+      if (!action) return;
+      if (action === 'disable' && !confirm('Disable ' + a.email + '? It is signed out and cannot sign in; its devices stay in it.')) return;
+      if (action === 'reset' && !confirm('Send ' + a.email + ' a mail with a link to set a new password?')) return;
+      if (action === 'delete') {
+        var typed = prompt('Delete ' + a.email + ' with its ' + a.devices + ' device(s), ' + (a.projects || 0) + ' Studio design(s) and its apps? This cannot be undone.\n\nType the address to delete it:');
+        if (typed == null) return;
+        if (typed.trim().toLowerCase() !== a.email.toLowerCase()) { $('desk-give-err').textContent = 'Not deleted: the address typed was another'; return; }
+      }
+      $('desk-give-err').textContent = '';
+      api(ACCOUNT, 'POST', '/admin/account', { email: a.email, action: action }).then(function () {
+        if (action === 'delete') delete shown[a.email];
+        if (action === 'reset') say('A new-password mail is on its way to ' + a.email + '.');
+        loadAccounts();
+      }, function (x) { $('desk-give-err').textContent = x.message; });
+    });
+    td.appendChild(menu);
+    return td;
+  }
+  function say(text, link) {
+    var box = $('desk-acct-done');
+    box.replaceChildren(text);
+    if (link) { box.appendChild(el('br')); box.appendChild(el('code', null, link)); }
+    box.hidden = false;
+  }
+  function devicesRow(email, list) {
+    var tr = el('tr', 'desk-devrow'), td = el('td');
+    td.colSpan = 6;
+    if (!list.length) td.appendChild(el('span', 'muted', 'No device in this account.'));
+    list.forEach(function (d) {
+      var line = el('div', 'desk-devline');
+      line.appendChild(el('span', 'desk-dev', d.device));
+      line.appendChild(el('span', null, (d.name || '') + ' · ' + d.board + ' · Reload OS ' + (d.fw || '?') + ' · ' +
+        (d.licensed ? 'activated' : d.trial > 0 ? 'trial, ' + d.trial + ' days left' : 'not activated') + ' · heard of ' + day(d.seen)));
+      var out = el('button', 'acct-link', 'Remove');
+      out.type = 'button';
+      out.addEventListener('click', function () {
+        if (!confirm('Take ' + d.device + ' out of ' + email + '? The device signs itself out at its next contact.')) return;
+        api(ACCOUNT, 'POST', '/admin/unlink', { device: d.device }).then(function () { delete shown[email]; return loadAccounts(); },
+          function (x) { $('desk-give-err').textContent = x.message; });
+      });
+      line.appendChild(out);
+      td.appendChild(line);
+    });
+    tr.appendChild(td);
+    return tr;
+  }
+  function toggleDevices(email) {
+    if (shown[email]) { delete shown[email]; return drawAccounts(); }
+    api(ACCOUNT, 'GET', '/admin/devices?email=' + encodeURIComponent(email)).then(function (r) { shown[email] = r.devices; drawAccounts(); },
+      function (x) { $('desk-give-err').textContent = x.message; });
+  }
+  $('desk-acct-new').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var go = $('desk-acct-go'), email = $('desk-acct-email').value.trim();
+    $('desk-acct-err').textContent = '';
+    $('desk-acct-done').hidden = true;
+    if (!email) { $('desk-acct-err').textContent = 'The new account\'s email'; return; }
+    go.disabled = true;
+    api(ACCOUNT, 'POST', '/admin/accounts', { email: email, name: $('desk-acct-name').value.trim() }).then(function (r) {
+      $('desk-acct-email').value = $('desk-acct-name').value = '';
+      if (r.mailed) say('Made ' + r.email + '. A mail with a link to set the password is on its way to it (72 hours, once).');
+      else say('Made ' + r.email + '. No mail could be sent: give the person this link to set the password (72 hours, once):', r.link);
+      return loadAccounts();
+    }, function (x) { $('desk-acct-err').textContent = x.message; }).then(function () { go.disabled = false; });
+  });
+
   function loadAccounts() {
-    api(ACCOUNT, 'GET', '/admin/apps').then(function (r) {
+    return api(ACCOUNT, 'GET', '/admin/apps').then(function (r) {
       accounts = r.accounts;
+      $('desk-acct-new').hidden = !accounts.length || accounts[0].lastLogin === undefined;
       $('desk-apps').hidden = false;
       drawAccounts();
     }, function (x) {
