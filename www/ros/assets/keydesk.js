@@ -408,6 +408,16 @@
         dv.appendChild(show);
       } else dv.textContent = String(a.devices);
       tr.appendChild(dv);
+      var pj = el('td');
+      if (a.lastLogin === undefined) pj.textContent = '';
+      else if (a.projects) {                                  // its Studio projects on a tap: what there is, not the designs
+        var showP = el('button', 'acct-link', a.projects + (shownProjects[a.email] ? ' ▾' : ' ▸'));
+        showP.type = 'button';
+        showP.setAttribute('aria-expanded', shownProjects[a.email] ? 'true' : 'false');
+        showP.addEventListener('click', function () { toggleProjects(a.email); });
+        pj.appendChild(showP);
+      } else pj.textContent = '0';
+      tr.appendChild(pj);
       var td = el('td', 'desk-appcell');
       a.apps.forEach(function (id) {
         var chip = el('span', 'desk-app', id), x = el('button', 'acct-link', '×');
@@ -433,6 +443,7 @@
       tr.appendChild(manage(a));
       body.appendChild(tr);
       if (shown[a.email]) body.appendChild(devicesRow(a.email, shown[a.email]));
+      if (shownProjects[a.email]) body.appendChild(projectsRow(a.email, shownProjects[a.email]));
     });
     var given = accounts.filter(function (a) { return a.apps.length; }).length;
     $('desk-apps-count').textContent = accounts.length + (accounts.length === 1 ? ' account · ' : ' accounts · ') + given + ' with apps of their own';
@@ -469,7 +480,7 @@
       }
       $('desk-give-err').textContent = '';
       api(ACCOUNT, 'POST', '/admin/account', { email: a.email, action: action }).then(function () {
-        if (action === 'delete') delete shown[a.email];
+        if (action === 'delete') { delete shown[a.email]; delete shownProjects[a.email]; }
         if (action === 'reset') say('A new-password mail is on its way to ' + a.email + '.');
         loadAccounts();
       }, function (x) { $('desk-give-err').textContent = x.message; });
@@ -485,7 +496,7 @@
   }
   function devicesRow(email, list) {
     var tr = el('tr', 'desk-devrow'), td = el('td');
-    td.colSpan = 6;
+    td.colSpan = 7;
     if (!list.length) td.appendChild(el('span', 'muted', 'No device in this account.'));
     list.forEach(function (d) {
       var line = el('div', 'desk-devline');
@@ -504,6 +515,40 @@
     });
     tr.appendChild(td);
     return tr;
+  }
+  /* an account's Studio projects: name, size, when - and Delete */
+  var shownProjects = {};                           // email -> { projects, bytes, most, mostBytes }, while the row is open
+  var kb = function (n) { return n < 1e5 ? Math.ceil(n / 1024) + ' KB' : (n / 1048576).toFixed(1) + ' MB'; };
+  function projectsRow(email, r) {
+    var tr = el('tr', 'desk-devrow'), td = el('td');
+    td.colSpan = 7;
+    td.appendChild(el('div', 'muted', r.projects.length + ' of ' + r.most + ' projects, ' + kb(r.bytes) + ' together (one may be ' + kb(r.mostBytes) + ').'));
+    r.projects.forEach(function (p) {
+      var line = el('div', 'desk-devline');
+      line.appendChild(el('strong', null, p.name));
+      line.appendChild(el('span', null, kb(p.size) + ' · changed ' + day(p.updated) + ' · made ' + day(p.created)));
+      var del = el('button', 'acct-link', 'Delete');
+      del.type = 'button';
+      del.addEventListener('click', function () {
+        if (!confirm('Delete the Studio project "' + p.name + '" of ' + email + '? It cannot be brought back.')) return;
+        api(ACCOUNT, 'POST', '/admin/project', { email: email, id: p.id, action: 'delete' }).then(function () {
+          return loadProjects(email).then(loadAccounts);
+        }, function (x) { $('desk-give-err').textContent = x.message; });
+      });
+      line.appendChild(del);
+      td.appendChild(line);
+    });
+    tr.appendChild(td);
+    return tr;
+  }
+  function loadProjects(email) {
+    return api(ACCOUNT, 'GET', '/admin/projects?email=' + encodeURIComponent(email)).then(function (r) {
+      if (r.projects.length) shownProjects[email] = r; else delete shownProjects[email];
+    });
+  }
+  function toggleProjects(email) {
+    if (shownProjects[email]) { delete shownProjects[email]; return drawAccounts(); }
+    loadProjects(email).then(drawAccounts, function (x) { $('desk-give-err').textContent = x.message; });
   }
   function toggleDevices(email) {
     if (shown[email]) { delete shown[email]; return drawAccounts(); }
