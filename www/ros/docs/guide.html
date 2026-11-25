@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../assets/icon-180.png">
-<link rel="stylesheet" href="../assets/site.css?v=a6b65c0ece">
+<link rel="stylesheet" href="../assets/site.css?v=26a3154c31">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -35,7 +35,7 @@
   </div>
 </header>
 <main id="main">
-<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html">Overview &amp; download</a></li><li><a href="android.html">Coming from Android</a></li><li><a href="studio.html">Studio</a></li><li><a href="guide.html" aria-current=page>App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav><nav class="doc-toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="l2"><a href="#requirements">Requirements</a></li><li class="l2"><a href="#build-the-example">Build the example</a></li><li class="l3"><a href="#in-vs-code">In VS Code</a></li><li class="l2"><a href="#put-it-on-the-device">Put it on the device</a></li><li class="l2"><a href="#your-own-app">Your own app</a></li><li class="l2"><a href="#versions-updates-and-the-full-screen">Versions, updates and the full screen</a></li><li class="l2"><a href="#what-an-app-can-call">What an app can call</a></li><li class="l2"><a href="#rules-the-ones-that-restart-the-device-when-broken">Rules - the ones that restart the device when broken</a></li><li class="l2"><a href="#when-something-is-wrong">When something is wrong</a></li></ul></nav></aside><article class="docs-main"><h1>App kit guide</h1><p class="lead">The guide that comes with the app kit of Reload OS 1.5.9 (<code>README.md</code> in the kit), as it is in the kit.</p><p>Build your own apps for a Reload OS device - the ESP32-P4 touch kiosks by Reloader Co.,Ltd., and the ESP32-S3 4" board - without the firmware's source. An app is a small ELF file that you copy into the <code>apps/</code> folder of the device's flash drive or SD card; the launcher shows it as a tile, and the device loads it when the tile is tapped. <code>hello/</code> is a complete example. The kit matches the firmware version in <code>reloados/VERSION</code>.</p>
+<div class="docs"><aside class="docs-side"><nav aria-label="Developer docs"><p class="toc-title">Developers</p><ul class="docs-nav"><li><a href="index.html">Overview &amp; download</a></li><li><a href="android.html">Coming from Android</a></li><li><a href="studio.html">Studio</a></li><li><a href="guide.html" aria-current=page>App kit guide</a></li><li><a href="api.html">API reference</a></li></ul></nav><nav class="doc-toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="l2"><a href="#requirements">Requirements</a></li><li class="l2"><a href="#build-the-example">Build the example</a></li><li class="l3"><a href="#in-vs-code">In VS Code</a></li><li class="l2"><a href="#put-it-on-the-device">Put it on the device</a></li><li class="l2"><a href="#your-own-app">Your own app</a></li><li class="l2"><a href="#versions-updates-and-the-full-screen">Versions, updates and the full screen</a></li><li class="l2"><a href="#what-an-app-can-call">What an app can call</a></li><li class="l2"><a href="#rules-the-ones-that-restart-the-device-when-broken">Rules - the ones that restart the device when broken</a></li><li class="l2"><a href="#when-something-is-wrong">When something is wrong</a></li></ul></nav></aside><article class="docs-main"><h1>App kit guide</h1><p class="lead">The guide that comes with the app kit of Reload OS 1.5.10 (<code>README.md</code> in the kit), as it is in the kit.</p><p>Build your own apps for a Reload OS device - the ESP32-P4 touch kiosks by Reloader Co.,Ltd., and the ESP32-S3 4" board - without the firmware's source. An app is a small ELF file that you copy into the <code>apps/</code> folder of the device's flash drive or SD card; the launcher shows it as a tile, and the device loads it when the tile is tapped. <code>hello/</code> is a complete example. The kit matches the firmware version in <code>reloados/VERSION</code>.</p>
 <pre class="code"><code>appkit/
   README.md          this file
   build.sh           ./build.sh &lt;app&gt; [jc|jcv3|jc4880|jc8012|jc8012v3|ws101|evboard|matouch|jc4848|jc3248]   builds one app for one board
@@ -134,6 +134,15 @@ static void tick(lv_timer_t *t)            /* a timer of yours: what to show */
 <h2 id="what-an-app-can-call"><a class="anchor" href="#what-an-app-can-call">#</a>What an app can call</h2>
 <p>Only what the firmware exports: the names in <code>reloados/api.txt</code> (the Reload OS API from <code>ros.h</code>, the LVGL functions the firmware uses, the fonts, the C library, FreeRTOS and ESP-IDF basics) - for the ESP32-S3 boards (JC4848S040, JC3248W535) the names in <code>api-esp32s3.txt</code>, nearly the same list (what the ESP32-P4 does in hardware is not there). <code>build.sh</code> compares your app with its board's list and refuses to call it usable when a name is missing - on the device such an app is refused with "Needs a function this firmware doesn't have", and the device's log names it. If you need something that is not in the list, tell Reloader: the next firmware can export it (a name costs 8 bytes), and your app then needs that firmware or newer.</p>
 <p><code>double</code> needs the compiler's helpers (<code>__adddf3</code>, <code>__muldf3</code> ...), which are not in the list: use <code>float</code>, which the chips do in hardware, or integers. <code>build.sh</code> names them when an app uses them.</p>
+<p>The network: sockets are not in the list. A server on the site's own network is asked with <code>ros_http_request()</code> (<code>ros.h</code>, "HTTP client"; firmware after 1.5.9): one request, one answer - <code>http://</code> only, no TLS. It waits for the server, so it belongs on a task of your own, never on the LVGL task:</p>
+<pre class="code"><code class=lang-c>char answer[1024], why[100];
+int status;
+ros_http_req_t q = { .url = &quot;http://192.168.1.20:8080/readings&quot;, .body = &quot;{\&quot;value\&quot;:42}&quot; };   /* a body: a POST of JSON */
+if (ros_http_request(&amp;q, &amp;status, answer, sizeof(answer), NULL, why, sizeof(why)) == ESP_OK) {
+    /* an answer came, whatever it says: status is 200, 404 ...; answer is its body */
+} else {
+    /* no answer: why says it in words for the screen (&quot;Cannot connect to 192.168.1.20:8080&quot;) */
+}</code></pre>
 <p>The interface number <code>ROS_ELFAPP_ABI</code> (in <code>ros.h</code>) is checked when the app is opened: a kit of a later firmware may carry a new number, and apps are then rebuilt with it ("Made for app interface N, this firmware has M" on the screen). Apps built with this kit run on this firmware version and on later ones with the same number.</p>
 <h2 id="rules-the-ones-that-restart-the-device-when-broken"><a class="anchor" href="#rules-the-ones-that-restart-the-device-when-broken">#</a>Rules - the ones that restart the device when broken</h2>
 <p>An app runs with the firmware's full rights, in the firmware's memory: a crash in it restarts the device, and so does blocking the screen.</p>
@@ -145,7 +154,7 @@ static void tick(lv_timer_t *t)            /* a timer of yours: what to show */
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.5.9 · © 2026 Reloader Co.,Ltd. · <a href="mailto:adisak@re-loader.com">adisak@re-loader.com</a>
+      <p class="muted">Reload OS 1.5.10 · © 2026 Reloader Co.,Ltd. · <a href="mailto:adisak@re-loader.com">adisak@re-loader.com</a>
         ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>

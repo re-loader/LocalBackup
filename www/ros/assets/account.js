@@ -198,6 +198,29 @@
   /* The device's store - the apps its own Settings > Apps > Get apps offers (the public ones and those given to the
    * account): Install / Update here, and the device takes it at its next contact (within minutes), then says how it
    * went. Folded while nothing is under way. */
+  /* an app's tile as its device shows it: its picture (the update server has it), its drawn icon or symbol on its
+   * colour, else its first letter */
+  var APPS = API.replace(/api\/(account|studio)$/, 'api/v1/apps'), ICONS = box.dataset.root + 'assets/icons/';
+  var DRAWN = ['camera', 'chart', 'chip', 'clock', 'database', 'globe', 'heartbeat', 'hotspot', 'idcard', 'info', 'lan', 'mic', 'moon', 'person', 'screen', 'stopwatch', 'sun'];
+  function appIcon(a, board) {
+    var b = el('div', 'store-icon acct-store-icon' + (a.tile && a.white ? ' store-white' : ''));
+    b.setAttribute('aria-hidden', 'true');
+    if (!(a.tile && a.white) && a.color) b.style.background = a.color;
+    if (a.tile) {
+      var img = el('img', '');
+      img.alt = '';
+      img.loading = 'lazy';
+      img.src = APPS + '/' + board + '/' + a.id + '/tile';
+      b.append(img);
+    } else if (a.icon && a.icon.charAt(0) === '@' && DRAWN.indexOf(a.icon.slice(1)) >= 0) {
+      var pic = el('i', 'store-drawn'), url = 'url(' + ICONS + a.icon.slice(1) + '.png)';
+      pic.style.webkitMaskImage = url;
+      pic.style.maskImage = url;
+      b.append(pic);
+    } else if (a.icon && /^[0-9a-f]{4,5}$/.test(a.icon)) b.append(el('span', 'store-glyph', String.fromCodePoint(parseInt(a.icon, 16))));
+    else b.textContent = (a.name || a.id).charAt(0).toUpperCase();
+    return b;
+  }
   function store(d) {
     var box = el('details', 'acct-store'), list = el('div', 'acct-store-list');
     var busy = d.store.some(function (a) { return a.install && a.install.state === 'waiting'; });
@@ -210,7 +233,7 @@
     if (!d.store.length) list.append(el('p', 'muted', T.storeEmpty));
     d.store.forEach(function (a) {
       var line = el('div', 'acct-store-app'), txt = el('p', '');
-      txt.append(el('strong', '', a.name), ' ' + a.version + ' · ' + fill(T.size, (a.size / 1e6).toFixed(1)));
+      txt.append(el('strong', '', a.name), ' ' + a.version + ' · ' + (a.size < 1e5 ? Math.max(1, Math.ceil(a.size / 1000)) + ' KB' : fill(T.size, (a.size / 1e6).toFixed(1))));
       if (a.have != null) txt.append(' · ', el('span', 'muted', fill(T.installedAs, a.have || T.noVer)));
       var st = a.install, note = null, btn = null;
       if (st && st.state === 'waiting') note = el('span', 'muted', T.waiting);
@@ -233,7 +256,7 @@
           api('POST', '/devices/' + d.id + '/install', { app: a.id }).then(devices, function (e) { alert(e.message); btn.disabled = false; });
         });
       }
-      line.append(txt);
+      line.append(appIcon(a, d.board), txt);
       if (btn) { btn.type = 'button'; line.append(btn); }
       list.append(line);
     });

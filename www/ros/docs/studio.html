@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../assets/icon-180.png">
-<link rel="stylesheet" href="../assets/site.css?v=a6b65c0ece">
+<link rel="stylesheet" href="../assets/site.css?v=26a3154c31">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -111,12 +111,41 @@ cd appkit
 ./build.sh myapp jc         # -> myapp/jc1060p470c/myapp.elf</code></pre></li>
 </ol>
 
+<h2 id="app">The app itself</h2>
+<p>Click the app's name at the top of <b>Project</b>; Attributes then has what belongs to the whole app.</p>
+<ul>
+  <li><b>App icon.</b> The tile as the home screen shows it. Choose a symbol or one of the system's drawn icons from the
+    grid and a colour - or <i>My picture…</i>: a PNG, JPEG or SVG of yours, made the tile's size (92 px), filling the
+    icon or as a logo with a margin, on a white tile if you like. The picture is kept in the design and goes into the
+    app's file.</li>
+  <li><b>Full screen.</b> The app takes the whole screen: no status bar while it is open. Out of it is a swipe from the
+    left edge - give the app a button that goes back if its users need one.</li>
+  <li><b>Size.</b> About how large the app's file will be - code, pictures, sounds, fonts and icon - against the 4 MB a
+    device loads. Export › ELF then says the real size.</li>
+  <li><b>Font</b> and <b>Font size</b> for every text that names none.</li>
+</ul>
+
+<h2 id="fonts">Fonts and sounds of your own</h2>
+<ul>
+  <li><b>Fonts</b> (Project › Fonts › +): a TrueType or OpenType file (<code>.ttf</code>, <code>.otf</code>). A text's
+    <i>Font</i>, above its size, or the app's, names it. Studio draws the letters from your file - Latin with its
+    accents, the common marks, and Thai: those the file has - and the app carries them at the sizes the design uses
+    (<code>main/ui_font_&lt;name&gt;_&lt;size&gt;.c</code>), so the device shows what Studio shows. A letter the font
+    lacks comes from the system's font. A Thai font at a large size adds some 50 KB a size; the font file's licence must
+    allow putting it into your app. An app with a font of its own needs Reload OS 1.5.10 or newer.</li>
+  <li><b>Sounds</b> (Project › Assets): + adds a sound file (WAV, MP3, OGG, M4A), ● records one with the microphone -
+    press ■ to stop, a minute at most. Either becomes 16 kHz mono, as a device plays it; a widget's event or a screen
+    plays it (<i>Play a sound</i>).</li>
+</ul>
+
 <h2 id="project">What you get</h2>
 <table>
   <tr><th>File</th><th>What it is</th></tr>
   <tr><td><code>main/ui.c</code>, <code>main/ui.h</code></td><td>The screens, made from the design. Don't edit them: change
     the design and export again. <code>ui.h</code> has the widgets by their id, <code>ui.title</code>; a meter's needle is
     <code>ui.gauge_needle</code>, a spinbox's row of buttons <code>ui.qty_box</code>.</td></tr>
+  <tr><td><code>main/ui_font_*.c</code>, <code>main/app_tile.png</code></td><td>Your fonts at the sizes the design uses, and the
+    icon's picture - only when the design has them.</td></tr>
   <tr><td><code>main/app.c</code></td><td>Yours: the app's start, and the functions the widgets call. A function you have
     not written yet shows a message instead.</td></tr>
   <tr><td><code>myapp.design</code></td><td>The design. Open it in Studio to change the screens, then copy the new
@@ -156,7 +185,7 @@ cd appkit
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.5.9 · © 2026 Reloader Co.,Ltd. · <a href="mailto:adisak@re-loader.com">adisak@re-loader.com</a>
+      <p class="muted">Reload OS 1.5.10 · © 2026 Reloader Co.,Ltd. · <a href="mailto:adisak@re-loader.com">adisak@re-loader.com</a>
         ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>

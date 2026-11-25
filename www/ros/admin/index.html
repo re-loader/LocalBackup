@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../assets/icon-180.png">
-<link rel="stylesheet" href="../assets/site.css?v=a6b65c0ece">
+<link rel="stylesheet" href="../assets/site.css?v=26a3154c31">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -43,6 +43,7 @@
     <p class="lead">Make product keys for a customer, see every key and who used it, the keys bought online, and
       manage the apps devices can get. For
       people at Reloader: sign in with a Reload OS Account that is on the desk's list.</p>
+    <button type="button" class="btn small" id="desk-lang" hidden></button>
   </div>
 </section>
 
@@ -71,6 +72,7 @@
         <button type="button" data-tab="tab-orders" data-needs="desk-shop">Bought online</button>
         <button type="button" data-tab="tab-store" data-needs="desk-store">Apps</button>
         <button type="button" data-tab="tab-accounts" data-needs="desk-apps">Accounts</button>
+        <button type="button" data-tab="tab-log" id="desk-log-tab">Log</button>
       </div>
 
       <div class="tab-pane" id="tab-keys">
@@ -175,17 +177,30 @@
         <p class="muted" id="desk-apps-more"></p>
       </div>
       </div>
+      <div class="tab-pane" id="tab-log" hidden>
+        <h2>Log <span class="muted desk-count" id="desk-log-count"></span></h2>
+        <p class="muted">What was done at this desk, the newest first: keys by their numbers, never a key itself.</p>
+        <div class="acct-row desk-tools">
+          <input id="desk-log-find" type="search" placeholder="Find: who, what" aria-label="Find in the log">
+          <button type="button" class="btn small" id="desk-log-reload">Reload</button>
+        </div>
+        <div class="table-wrap"><table class="desk-table" id="desk-log">
+          <thead><tr><th>When</th><th>Who</th><th>What</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <p class="muted" id="desk-log-more"></p>
+      </div>
       <p class="acct-err" id="desk-err" role="alert"></p>
     </div>
   </div>
 </section>
-<script src="../assets/keydesk.js?v=d107ba82d6"></script>
+<script src="../assets/keydesk.js?v=c09bb04354"></script>
 
 </main>
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand small" href="../en/index.html"><img src="../assets/logo.svg" alt="" width="20" height="20"><span>Reload OS</span></a>
-      <p class="muted">Reload OS 1.5.9 · © 2026 Reloader Co.,Ltd. · <a href="mailto:adisak@re-loader.com">adisak@re-loader.com</a>
+      <p class="muted">Reload OS 1.5.10 · © 2026 Reloader Co.,Ltd. · <a href="mailto:adisak@re-loader.com">adisak@re-loader.com</a>
         ·&nbsp;<a href="https://www.facebook.com/reloados" aria-label="Reload OS on Facebook">Facebook</a></p></div>
     <div class="foot-links"><a href="../en/features.html">Features</a>
 <a href="../en/boards.html">Boards</a>

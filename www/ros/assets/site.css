@@ -368,7 +368,10 @@ esp-web-install-button[hidden] { display: none; }
 .acct-store-list { margin-top: 6px; display: grid; gap: 6px; }
 .acct-store-app { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
   padding: 6px 0; border-top: 1px solid var(--border); }
-.acct-store-app p { flex: 1 1 200px; }
+.acct-store-app p { flex: 1 1 160px; }
+.acct-store-icon { width: 44px; height: 44px; border-radius: 11px; font-size: 1.3rem; }
+.acct-store-icon .store-glyph { font-size: 1.2rem; }
+.acct-store-icon .store-drawn { width: 26px; height: 26px; }
 .acct-code { margin-bottom: 20px; }
 .acct-code .acct-row input { flex: 1 1 180px; width: auto; margin: 0; max-width: 240px; text-transform: uppercase; font-family: var(--mono); letter-spacing: .08em; }
 .acct-prefs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; margin-bottom: 16px; }
@@ -425,7 +428,7 @@ esp-web-install-button[hidden] { display: none; }
 .desk-tools label { margin: 0; font-weight: 400; }
 .desk-table { width: 100%; font-size: .92rem; }
 .desk-table td { vertical-align: top; white-space: nowrap; }
-.desk-table td.desk-notecell, .desk-table td.desk-wrap { white-space: normal; overflow-wrap: anywhere; }
+.desk-table td.desk-notecell, .desk-table td.desk-wrap { white-space: normal; overflow-wrap: anywhere; min-width: 190px; }      /* a phone: the table scrolls sideways, an address is not cut into four letters a line */
 .desk h2 { margin-top: 36px; }
 .desk-key, .desk-dev { font-family: var(--mono); font-size: .85rem; white-space: nowrap; }
 .desk-notecell { min-width: 180px; }
@@ -476,6 +479,7 @@ details[open] > summary .store-fold { transform: rotate(225deg); margin-bottom: 
 .store-boards li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--border); }
 .store-board { flex: 1 1 auto; min-width: 0; display: grid; }
 .store-board .muted { font-size: .8rem; }
+.store-need { justify-self: start; padding: 0; font-size: .8rem; }
 .store-switch { position: relative; flex: none; width: 44px; height: 26px; margin: 0; cursor: pointer; }
 .store-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .store-switch span { position: absolute; inset: 0; border-radius: var(--pill); background: var(--dim); transition: background .15s; pointer-events: none; }
