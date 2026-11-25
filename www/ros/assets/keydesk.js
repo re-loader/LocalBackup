@@ -193,7 +193,9 @@
 
   var storeApps = [], storeTiles = {}, upFile = null, upApp = null;
   var sizeText = function (n) { return n < 1e5 ? Math.ceil(n / 1000) + ' KB' : (n / 1e6).toFixed(1) + ' MB'; };
-  /* an app's tile as its device shows it: its picture, or its first letter on its colour */
+  /* an app's tile as its device shows it: its picture, or its icon on its colour - a drawn one ("@globe": icons/) or a
+   * glyph of the devices' symbol font ("f067"); its first letter when it names neither */
+  var DRAWN = ['camera', 'chart', 'chip', 'clock', 'database', 'globe', 'heartbeat', 'hotspot', 'idcard', 'info', 'lan', 'mic', 'moon', 'person', 'screen', 'stopwatch', 'sun'];
   function icon(box, a) {
     box.replaceChildren();
     box.className = 'store-icon' + (a.white ? ' store-white' : '');
@@ -203,6 +205,13 @@
       img.src = storeTiles[a.id];
       img.alt = '';
       box.appendChild(img);
+    } else if (a.icon && a.icon.charAt(0) === '@' && DRAWN.indexOf(a.icon.slice(1)) >= 0) {
+      var pic = el('i', 'store-drawn'), url = 'url(' + ROOT + 'assets/icons/' + a.icon.slice(1) + '.png)';
+      pic.style.webkitMaskImage = url;
+      pic.style.maskImage = url;
+      box.appendChild(pic);
+    } else if (a.icon && /^[0-9a-f]{4,5}$/.test(a.icon)) {
+      box.appendChild(el('span', 'store-glyph', String.fromCodePoint(parseInt(a.icon, 16))));
     } else box.textContent = (a.name || a.id).charAt(0).toUpperCase();
     return box;
   }
@@ -276,6 +285,7 @@
     $('desk-up').hidden = !r.upload;
     $('desk-up-off').hidden = r.upload;
     drawStore();
+    drawPick();
   }
   function storeCall(p, body) {
     $('desk-store-err').textContent = '';
@@ -333,6 +343,37 @@
   // ---------------------------------------------------------------- apps given to accounts (the account server's)
 
   var accounts = [];
+  /* Give: the apps on the update server to choose from, "Another id" for one that is not there yet; without that
+   * list (a server from before it) the id is typed */
+  function drawPick() {
+    var pick = $('desk-give-pick'), was = pick.value, seen = {};
+    pick.replaceChildren();
+    var first = el('option', null, 'Choose an app…');
+    first.value = '';
+    pick.appendChild(first);
+    storeApps.slice().sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (a) {
+      if (seen[a.id]) return;
+      seen[a.id] = true;
+      var n = storeApps.filter(function (x) { return x.id === a.id; }).length;
+      var o = el('option', null, a.name + ' (' + a.id + ') · ' + n + (n === 1 ? ' board' : ' boards'));
+      o.value = a.id;
+      pick.appendChild(o);
+    });
+    var other = el('option', null, 'Another id…');
+    other.value = '*';
+    pick.appendChild(other);
+    pick.value = seen[was] || was === '*' ? was : '';
+    $('desk-give-pick-box').hidden = !storeApps.length;
+    pickChanged();
+  }
+  function pickChanged() {
+    var typed = $('desk-give-pick-box').hidden || $('desk-give-pick').value === '*';
+    $('desk-give-app-box').hidden = !typed;
+  }
+  function pickedApp() {
+    return $('desk-give-app-box').hidden ? $('desk-give-pick').value : $('desk-give-app').value.trim().toLowerCase();
+  }
+  $('desk-give-pick').addEventListener('change', function () { pickChanged(); if (this.value === '*') $('desk-give-app').focus(); });
   function drawAccounts() {
     var find = $('desk-apps-find').value.trim().toLowerCase(), all = $('desk-apps-all').checked;
     var rows = accounts.filter(function (a) {
@@ -362,7 +403,11 @@
       });
       var add = el('button', 'acct-link', '+ app');
       add.type = 'button';
-      add.addEventListener('click', function () { $('desk-give-email').value = a.email; $('desk-give-app').focus(); });
+      add.addEventListener('click', function () {
+        $('desk-give-email').value = a.email;
+        $('desk-give').scrollIntoView({ block: 'nearest' });
+        ($('desk-give-app-box').hidden ? $('desk-give-pick') : $('desk-give-app')).focus();
+      });
       td.appendChild(add);
       tr.appendChild(td);
       body.appendChild(tr);
@@ -396,10 +441,10 @@
   }
   $('desk-give').addEventListener('submit', function (e) {
     e.preventDefault();
-    var go = $('desk-give-go'), email = $('desk-give-email').value.trim(), app = $('desk-give-app').value.trim().toLowerCase();
-    if (!email || !app) { $('desk-give-err').textContent = 'The account\'s email and the app\'s id'; return; }
+    var go = $('desk-give-go'), email = $('desk-give-email').value.trim(), app = pickedApp();
+    if (!email || !app) { $('desk-give-err').textContent = 'The account\'s email and the app'; return; }
     go.disabled = true;
-    give(email, app, true).then(function () { $('desk-give-app').value = ''; }, function () { /* said */ })
+    give(email, app, true).then(function () { $('desk-give-app').value = ''; if ($('desk-give-pick').value !== '*') $('desk-give-pick').value = ''; }, function () { /* said */ })
       .then(function () { go.disabled = false; });
   });
   ['desk-apps-find', 'desk-apps-all'].forEach(function (id) { $(id).addEventListener('input', drawAccounts); });

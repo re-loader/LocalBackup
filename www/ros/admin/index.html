@@ -12,7 +12,7 @@
 <meta property="og:image" content="https://server.re-loader.com/ros/assets/shots/launcher.png">
 <meta name="theme-color" content="#0A0E17">
 <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="../assets/site.css?v=cd28b59d00">
+<link rel="stylesheet" href="../assets/site.css?v=aa02ddfd89">
 <script>try{var t=localStorage.getItem('ros-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -147,7 +147,8 @@
           ones. It must be published on the update server for the device's board.</p>
         <form class="desk-new" id="desk-give" novalidate>
           <label class="desk-note">Account's email <input id="desk-give-email" type="email" maxlength="254" list="desk-emails" placeholder="someone@example.com"></label>
-          <label>App id <input id="desk-give-app" maxlength="15" placeholder="apgar" autocapitalize="off" spellcheck="false"></label>
+          <label id="desk-give-pick-box" hidden>App <select id="desk-give-pick" aria-label="App"></select></label>
+          <label id="desk-give-app-box">App id <input id="desk-give-app" maxlength="15" placeholder="apgar" autocapitalize="off" spellcheck="false"></label>
           <button type="submit" class="btn primary" id="desk-give-go">Give</button>
         </form>
         <datalist id="desk-emails"></datalist>
@@ -168,7 +169,7 @@
     </div>
   </div>
 </section>
-<script src="../assets/keydesk.js?v=8fa16e30bb"></script>
+<script src="../assets/keydesk.js?v=8c765702ac"></script>
 
 </main>
 <footer class="foot">
