@@ -198,14 +198,17 @@
   /* The device's store - the apps its own Settings > Apps > Get apps offers (the public ones and those given to the
    * account): Install / Update here, and the device takes it at its next contact (within minutes), then says how it
    * went. Folded while nothing is under way. */
-  /* an app's tile as its device shows it: its picture (the update server has it), its drawn icon or symbol on its
-   * colour, else its first letter */
+  /* an app's tile as its device shows it (main/ros_elfapp.c, ros_shell.c): its picture (the update server has it) -
+   * on white when the app asks for that -, else its drawn icon (the firmware's ICONS - build.py checks the list) or
+   * symbol on its colour; an icon the firmware does not draw, or none, leaves a file app's own look there: the SD card
+   * symbol on violet */
   var APPS = API.replace(/api\/(account|studio)$/, 'api/v1/apps'), ICONS = box.dataset.root + 'assets/icons/';
-  var DRAWN = ['camera', 'chart', 'chip', 'clock', 'database', 'globe', 'heartbeat', 'hotspot', 'idcard', 'info', 'lan', 'mic', 'moon', 'person', 'screen', 'stopwatch', 'sun'];
+  var DRAWN = ['camera', 'chart', 'chip', 'clock', 'database', 'globe', 'globe_s', 'heartbeat', 'hotspot', 'idcard', 'idcard_s', 'info', 'lan', 'mic', 'moon', 'screen', 'stopwatch', 'sun'];
   function appIcon(a, board) {
-    var b = el('div', 'store-icon acct-store-icon' + (a.tile && a.white ? ' store-white' : ''));
+    var white = Boolean(a.tile && a.white);
+    var b = el('div', 'store-icon acct-store-icon' + (white ? ' store-white' : ''));
     b.setAttribute('aria-hidden', 'true');
-    if (!(a.tile && a.white) && a.color) b.style.background = a.color;
+    if (!white) b.style.background = a.color || '#6b4fbb';                       // 0x6B4FBB
     if (a.tile) {
       var img = el('img', '');
       img.alt = '';
@@ -217,9 +220,8 @@
       pic.style.webkitMaskImage = url;
       pic.style.maskImage = url;
       b.append(pic);
-    } else if (a.icon && /^[0-9a-f]{4,5}$/.test(a.icon)) b.append(el('span', 'store-glyph', String.fromCodePoint(parseInt(a.icon, 16))));
-    else b.textContent = (a.name || a.id).charAt(0).toUpperCase();
-    return b;
+    } else b.append(el('span', 'store-glyph', String.fromCodePoint(parseInt(a.icon && /^[0-9a-f]{4,5}$/.test(a.icon) ? a.icon : 'f7c2', 16))));
+    return b;                                                                     // f7c2: LV_SYMBOL_SD_CARD
   }
   function store(d) {
     var box = el('details', 'acct-store'), list = el('div', 'acct-store-list');

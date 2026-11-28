@@ -315,16 +315,21 @@
   var storeApps = [], storeTiles = {}, upFile = null, upApp = null;
   var unfolded = {};                                // app id -> its boards are shown (a card starts folded)
   var sizeText = function (n) { return n < 1e5 ? Math.ceil(n / 1000) + ' KB' : (n / 1e6).toFixed(1) + ' MB'; };
-  /* an app's tile as its device shows it: its picture, or its icon on its colour - a drawn one ("@globe": icons/) or a
-   * glyph of the devices' symbol font ("f067"); its first letter when it names neither */
-  var DRAWN = ['camera', 'chart', 'chip', 'clock', 'database', 'globe', 'heartbeat', 'hotspot', 'idcard', 'info', 'lan', 'mic', 'moon', 'person', 'screen', 'stopwatch', 'sun'];
-  function icon(box, a) {
+  /* an app's tile as its device shows it (main/ros_elfapp.c, ros_shell.c): its picture - on white when the app asks
+   * for that -, else its icon on its colour: a drawn one ("@globe": icons/, the firmware's ICONS - build.py checks the
+   * list) or a glyph of the devices' symbol font ("f067"); an icon the firmware does not draw, or none, leaves a file
+   * app's own look there: the SD card symbol on violet. own: the look of a file being uploaded (its picture comes with
+   * it), not the store's */
+  var DRAWN = ['camera', 'chart', 'chip', 'clock', 'database', 'globe', 'globe_s', 'heartbeat', 'hotspot', 'idcard', 'idcard_s', 'info', 'lan', 'mic', 'moon', 'screen', 'stopwatch', 'sun'];
+  var FILE_ICON = 'f7c2', FILE_COLOR = '#6b4fbb';   // LV_SYMBOL_SD_CARD, 0x6B4FBB
+  function icon(box, a, own) {
+    var tile = own ? a.tile : storeTiles[a.id], white = Boolean(tile && a.white);
     box.replaceChildren();
-    box.className = 'store-icon' + (a.white ? ' store-white' : '');
-    box.style.background = a.white ? '' : a.color || '';
-    if (storeTiles[a.id]) {
+    box.className = 'store-icon' + (white ? ' store-white' : '');
+    box.style.background = white ? '' : a.color || FILE_COLOR;
+    if (tile) {
       var img = el('img');
-      img.src = storeTiles[a.id];
+      img.src = tile;
       img.alt = '';
       box.appendChild(img);
     } else if (a.icon && a.icon.charAt(0) === '@' && DRAWN.indexOf(a.icon.slice(1)) >= 0) {
@@ -332,9 +337,10 @@
       pic.style.webkitMaskImage = url;
       pic.style.maskImage = url;
       box.appendChild(pic);
-    } else if (a.icon && /^[0-9a-f]{4,5}$/.test(a.icon)) {
-      box.appendChild(el('span', 'store-glyph', String.fromCodePoint(parseInt(a.icon, 16))));
-    } else box.textContent = (a.name || a.id).charAt(0).toUpperCase();
+    } else {
+      var glyph = a.icon && /^[0-9a-f]{4,5}$/.test(a.icon) ? a.icon : FILE_ICON;
+      box.appendChild(el('span', 'store-glyph', String.fromCodePoint(parseInt(glyph, 16))));
+    }
     return box;
   }
   function drawStore() {
@@ -454,7 +460,7 @@
       if (upFile !== f) return;                              // another file was picked meanwhile
       upApp = r;
       $('desk-up-name').textContent = r.name + ' ' + r.version;
-      icon($('desk-up-icon'), r);
+      icon($('desk-up-icon'), r, true);
       $('desk-up-what').textContent = r.id + ' · ' + sizeText(r.size) + ' · ' + T('for {0}', r.boards.map(function (b) {
         return b.board + ' - ' + (b.version ? T('{0} there now', b.version) : T('new there'));
       }).join(', ')) + (r.newer ? '' : '. ' + T('Not newer: raise its version.txt and build it again.'));
